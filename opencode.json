@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": "allow",
+    "shell": "allow"
+  },
+  "agent": {
+    "Gsd-Executor": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-executor": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    }
+  }
+}
