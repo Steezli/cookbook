@@ -19,6 +19,7 @@ See: .planning/config.json
 - commit_docs: true
 - workflow agents: research=true, plan_check=true, verifier=true
 - model_profile: balanced
+- git.branching_strategy: none
 
 ## Planning Artifacts
 
