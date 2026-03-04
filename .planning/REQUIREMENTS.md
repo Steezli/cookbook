@@ -11,7 +11,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 
 - [ ] **DESIGN-01**: Design token system (tokens.ts) extracting all cookbook.pen $ variables as TypeScript constants
 - [ ] **DESIGN-02**: Breakpoint detection hook (useBreakpoint) returning mobile/tablet/web at 390/768/1440px thresholds
-- [ ] **DESIGN-03**: Font loading for Bricolage Grotesque (display) and DM Sans (body) via @expo-google-fonts
+- [x] **DESIGN-03**: Font loading for Bricolage Grotesque (display) and DM Sans (body) via @expo-google-fonts
 - [ ] **DESIGN-04**: Missing screen designs created in cookbook.pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review (all 3 breakpoints each)
 
 ### Navigation
@@ -86,7 +86,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | DESIGN-01 | Phase 8 | Pending |
 | DESIGN-02 | Phase 8 | Pending |
-| DESIGN-03 | Phase 8 | Pending |
+| DESIGN-03 | Phase 8 | Complete |
 | DESIGN-04 | Phase 8 | Pending |
 | NAV-01 | Phase 9 | Pending |
 | NAV-02 | Phase 9 | Pending |

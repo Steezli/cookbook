@@ -3,15 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: active
-stopped_at: null
-last_updated: "2026-03-03"
-last_activity: 2026-03-03 - Roadmap created for v1.1 (Phases 8-13)
+last_updated: "2026-03-04"
+last_activity: 2026-03-04 — 08-02 font loading complete (DESIGN-03)
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -28,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 8 of 13 (Design Foundation)
-Plan: — of —
-Status: Ready to plan
-Last activity: 2026-03-03 — v1.1 roadmap created, Phase 8 is next
+Plan: 2 of 3 complete (08-02 done)
+Status: In progress
+Last activity: 2026-03-04 — 08-02 completed (font loading + splash screen hold, DESIGN-03)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Pending TODOs
 
@@ -58,6 +57,11 @@ Progress: [░░░░░░░░░░] 0%
 - position:fixed does not work in React Native — use Modal component
 - Expo Router for navigation, typed routes
 - Supabase RLS enforces all access control server-side
+
+### Phase 8 Decisions
+
+- **08-02 Font loading:** `useFonts` from `expo-font` directly (single call) rather than per-package hooks; loads BricolageGrotesque 400/600/700 + DMSans 400/500/700 at app root via `app/_layout.tsx`
+- **Splash screen pattern:** `SplashScreen.preventAutoHideAsync()` at module level + `return null` guard + `hideAsync()` in `useEffect` — prevents FOUT; graceful degradation on font error
 
 ### For v1.1
 
