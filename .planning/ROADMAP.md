@@ -62,7 +62,7 @@ Plans:
   3. On a tablet-width viewport, the tab bar is replaced by a header navigation matching the cookbook.pen spec
   4. A `PageContainer` component wraps every screen, applying consistent max-width and horizontal padding per breakpoint
   5. No existing screen is broken or unreachable after the route group restructure
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 09-01-PLAN.md — PageContainer, nav types, lucide install, jest config
@@ -125,7 +125,7 @@ Plans:
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | 2/3 | In Progress|  | - |
-| 9. Navigation Restructure | 1/3 | In Progress|  | - |
+| 9. Navigation Restructure | 2/3 | In Progress|  | - |
 | 10. Core Screens | v1.1 | 0/TBD | Not started | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
