@@ -23,7 +23,7 @@ type SidebarItemProps = TabTriggerSlotProps & {
   ref?: Ref<View>;
 };
 
-export function SidebarItem({ isFocused, icon, label, onPress, onLongPress, ref, ...rest }: SidebarItemProps) {
+export function SidebarItem({ isFocused, icon, label, onPress, onLongPress, ref }: SidebarItemProps) {
   return (
     <Pressable
       ref={ref}
@@ -39,7 +39,6 @@ export function SidebarItem({ isFocused, icon, label, onPress, onLongPress, ref,
         backgroundColor: isFocused ? accentWarm : "transparent",
         width: "100%",
       }}
-      {...rest}
     >
       {cloneElement(icon as ReactElement<{ size: number; color: string }>, {
         size: 20,

@@ -13,7 +13,7 @@ type TabButtonProps = TabTriggerSlotProps & {
   ref?: Ref<View>;
 };
 
-export function TabButton({ isFocused, icon, onPress, onLongPress, ref, ...rest }: TabButtonProps) {
+export function TabButton({ isFocused, icon, onPress, onLongPress, ref }: TabButtonProps) {
   const iconColor = isFocused ? accentWarm : textDisabled;
 
   return (
@@ -21,12 +21,7 @@ export function TabButton({ isFocused, icon, onPress, onLongPress, ref, ...rest 
       ref={ref}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      {...rest}
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
     >
       {cloneElement(icon as ReactElement<{ color: string; size: number }>, {
         color: iconColor,

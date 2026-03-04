@@ -28,17 +28,15 @@ export function MobileTabBar() {
         alignItems: "center",
       }}
     >
-      <TabTrigger name="index" asChild style={{ flex: 1 }}>
+      <TabTrigger name="index" asChild>
         <TabButton icon={<Home />} />
       </TabTrigger>
 
-      <TabTrigger name="my-recipes" asChild style={{ flex: 1 }}>
+      <TabTrigger name="my-recipes" asChild>
         <TabButton icon={<BookOpen />} />
       </TabTrigger>
 
-      {/* Scan: open modal overlay instead of switching tabs.
-          Plain Pressable avoids ambiguity of whether TabTrigger onPress
-          overrides or supplements the tab-switch (Research Open Question 1). */}
+      {/* Scan: plain Pressable opens modal overlay (not a tab route) */}
       <Pressable
         onPress={() => router.push("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -46,11 +44,11 @@ export function MobileTabBar() {
         <Camera color={textDisabled} size={28} />
       </Pressable>
 
-      <TabTrigger name="family" asChild style={{ flex: 1 }}>
+      <TabTrigger name="family" asChild>
         <TabButton icon={<Heart />} />
       </TabTrigger>
 
-      <TabTrigger name="profile" asChild style={{ flex: 1 }}>
+      <TabTrigger name="profile" asChild>
         <TabButton icon={<User />} />
       </TabTrigger>
     </View>
