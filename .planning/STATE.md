@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
-status: active
-last_updated: "2026-03-04"
-last_activity: 2026-03-04 — 08-02 font loading complete (DESIGN-03)
+status: executing
+last_updated: "2026-03-04T05:08:51.950Z"
+last_activity: 2026-03-04 — 08-02 completed (font loading + splash screen hold, DESIGN-03)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 33
 ---
 
@@ -60,6 +60,8 @@ Progress: [███░░░░░░░] 33%
 
 ### Phase 8 Decisions
 
+- **08-01 Token naming:** Flat-with-category-prefix (accentBlue, bgCard, radiusMd) over nested objects — ergonomic for StyleSheet.create, no destructuring overhead
+- **08-01 Breakpoint hook:** Pure getBreakpoint(width) extracted from hook for Jest node-environment testability; react-native mocked in test file
 - **08-02 Font loading:** `useFonts` from `expo-font` directly (single call) rather than per-package hooks; loads BricolageGrotesque 400/600/700 + DMSans 400/500/700 at app root via `app/_layout.tsx`
 - **Splash screen pattern:** `SplashScreen.preventAutoHideAsync()` at module level + `return null` guard + `hideAsync()` in `useEffect` — prevents FOUT; graceful degradation on font error
 

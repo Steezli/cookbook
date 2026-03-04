@@ -45,7 +45,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
   2. A `useBreakpoint()` hook returns `mobile`, `tablet`, or `web` correctly on all platforms (native devices by screen size, web by window resize)
   3. Bricolage Grotesque and DM Sans fonts load via `@expo-google-fonts` and render without fallback on first paint
   4. cookbook.pen contains designed layouts (all 3 breakpoints) for Sign Up, Forgot Password, Profile/Settings, Invite, and Draft Review screens
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 08-01-PLAN.md — Design tokens and breakpoint hook (TDD)
@@ -119,7 +119,7 @@ Plans:
 | 4. Trust + Collaboration | v1.0 | 6/6 | Complete | 2026-02-07 |
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
-| 8. Design Foundation | 1/3 | In Progress|  | - |
+| 8. Design Foundation | 2/3 | In Progress|  | - |
 | 9. Navigation Restructure | v1.1 | 0/TBD | Not started | - |
 | 10. Core Screens | v1.1 | 0/TBD | Not started | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
