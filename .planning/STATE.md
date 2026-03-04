@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
-status: completed
-last_updated: "2026-03-04T21:37:05.665Z"
-last_activity: "2026-03-04 — 10-00 created recipeCardUtils + cookingModeUtils with TDD coverage (29 new tests, 180 total)"
+status: executing
+last_updated: "2026-03-04T21:40:16Z"
+last_activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 fully complete
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 13
-  completed_plans: 8
-  percent: 100
+  completed_plans: 10
+  percent: 69
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 10 of 13 (Core Screens)
-Plan: 1 of 5 — 10-00 complete (Wave 0 test stubs)
-Status: Phase 10 in progress — Wave 0 utility modules and tests complete, ready for Plan 01
-Last activity: 2026-03-04 — 10-00 created recipeCardUtils + cookingModeUtils with full TDD coverage (29 new tests, 180 total passing)
+Plan: 5 of 5 — 10-05 complete (Cooking Mode screen)
+Status: Phase 10 fully complete — all 5 plans executed (Wave 0 utilities, RecipeCard, Home, RecipeDetail, CookingMode)
+Last activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 done
 
-Progress: [██████░░░░] 62%
+Progress: [███████░░░] 69%
 
 ## Pending TODOs
 
@@ -70,6 +70,9 @@ Progress: [██████░░░░] 62%
 - **10-00 Pure utility module pattern:** Extract pure logic into *Utils.ts files alongside their feature — no React imports, no side effects — so tests run in node jest environment without renderer. Plans 01 and 05 import from these modules rather than inlining the logic.
 - **10-00 formatMetadataLine separator:** Uses ' . ' (space-dot-space) between time and servings parts, matching cookbook.pen spec.
 - **10-00 getCookingProgress step-complete semantics:** (currentStepIndex + 1) / totalSteps — current step is treated as already completed, so step 0 of 5 = 20% (not 0%).
+- **10-05 Cooking mode is a dedicated route:** [id]/cook.tsx is a plain Expo Router route (not Modal or overlay) — exits via router.back() to recipe detail, clean navigation.
+- **10-05 Full ingredient list on every step:** RecipeStep has no per-step ingredient assignment, so all ingredients shown on every step per CONTEXT.md discretion decision.
+- **10-05 Percentage-based progress bar:** width as template literal `${percent}%` avoids Dimensions.get per project constraint (dimension-sensitive styles must come from useBreakpoint).
 
 ### Phase 9 Decisions
 
