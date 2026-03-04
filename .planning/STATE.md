@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: verifying
-last_updated: "2026-03-04T05:55:29.139Z"
-last_activity: 2026-03-04 — 08-03 completed (5 missing screen designs, DESIGN-04)
+last_updated: "2026-03-04T07:06:00Z"
+last_activity: 2026-03-04 — 09-01 completed (lucide icons, jest tsx config, nav types, PageContainer)
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 33
+  total_plans: 6
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -22,16 +22,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Families can save and share treasured recipes (like Grandma's) without losing control over who gets to see them.
-**Current focus:** Phase 8 — Design Foundation
+**Current focus:** Phase 9 — Navigation Restructure
 
 ## Current Position
 
-Phase: 8 of 13 (Design Foundation)
-Plan: 3 of 3 complete (08-03 done)
-Status: All plans complete — pending verification
-Last activity: 2026-03-04 — 08-03 completed (5 missing screen designs, DESIGN-04)
+Phase: 9 of 13 (Navigation Restructure)
+Plan: 1 of 3 complete (09-01 done)
+Status: In progress — Plan 02 next
+Last activity: 2026-03-04 — 09-01 completed (lucide icons, jest tsx config, nav types, PageContainer)
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Pending TODOs
 
@@ -64,6 +64,12 @@ Progress: [███░░░░░░░] 33%
 - **08-01 Breakpoint hook:** Pure getBreakpoint(width) extracted from hook for Jest node-environment testability; react-native mocked in test file
 - **08-02 Font loading:** `useFonts` from `expo-font` directly (single call) rather than per-package hooks; loads BricolageGrotesque 400/600/700 + DMSans 400/500/700 at app root via `app/_layout.tsx`
 - **Splash screen pattern:** `SplashScreen.preventAutoHideAsync()` at module level + `return null` guard + `hideAsync()` in `useEffect` — prevents FOUT; graceful degradation on font error
+
+### Phase 9 Decisions
+
+- **09-01 tsx test config:** ts-jest transform with `jsx: 'react'` override — tsconfig extends expo/tsconfig.base (jsx: react-native) which requires a native renderer; for node environment testing pure functions, jsx:react compiles to React.createElement without renderer
+- **09-01 react-native mock:** `__mocks__/react-native.js` stub mapped via moduleNameMapper in jest.config.js — applies globally to all nav component tests without per-file jest.mock() calls
+- **09-01 getContainerStyle exported:** Pure function extracted from PageContainer and exported for direct unit testing; no React renderer required, works in node jest environment
 
 ### For v1.1
 
