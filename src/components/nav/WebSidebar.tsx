@@ -52,7 +52,7 @@ export function WebSidebar() {
       </View>
 
       {/* Nav items */}
-      <View style={{ gap: 4 }}>
+      <View style={{ gap: 4, alignItems: "stretch" }}>
         <TabTrigger name="index" asChild>
           <SidebarItem icon={<LayoutGrid />} label="Home" />
         </TabTrigger>
@@ -65,14 +65,14 @@ export function WebSidebar() {
         <SidebarItem
           icon={<Folder />}
           label="Collections"
-          onPress={() => router.push("/collections" as any)}
+          onPress={() => router.navigate("/collections" as any)}
         />
 
         {/* Scan: opens modal overlay on all breakpoints */}
         <SidebarItem
           icon={<Camera />}
           label="Scan Recipe"
-          onPress={() => router.push("/scan")}
+          onPress={() => router.navigate("/scan")}
         />
 
         <TabTrigger name="family" asChild>
