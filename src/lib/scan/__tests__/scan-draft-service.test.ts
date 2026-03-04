@@ -165,7 +165,10 @@ describe('ScanDraftService', () => {
       expect(insertArg).not.toHaveProperty('user_id');
 
       // MUST use steps (not instructions)
-      expect(insertArg).toHaveProperty('steps', ['Mix ingredients', 'Bake at 350']);
+      expect(insertArg).toHaveProperty('steps', [
+        { sort_order: 0, text: 'Mix ingredients' },
+        { sort_order: 1, text: 'Bake at 350' },
+      ]);
       expect(insertArg).not.toHaveProperty('instructions');
 
       // MUST NOT have status column
@@ -247,7 +250,9 @@ describe('ScanDraftService', () => {
       // Verify standard columns are present
       expect(insertArg).toHaveProperty('title', 'Test Recipe');
       expect(insertArg).toHaveProperty('ingredients');
-      expect(insertArg).toHaveProperty('steps', ['Step 1']);
+      expect(insertArg).toHaveProperty('steps', [
+        { sort_order: 0, text: 'Step 1' },
+      ]);
       expect(insertArg).toHaveProperty('owner_user_id', 'user-1');
       expect(insertArg).toHaveProperty('visibility', 'private');
       expect(insertArg).toHaveProperty('tags');

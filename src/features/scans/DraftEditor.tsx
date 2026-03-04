@@ -137,7 +137,7 @@ export function DraftEditor({ draftId, onSave, onCancel }: DraftEditorProps) {
   }, []);
 
   const handleDraftDiscarded = useCallback(() => {
-    router.replace('/(scan)');
+    router.replace('/scan');
   }, []);
 
   // Ingredient updates

@@ -157,7 +157,12 @@ export class ConfidenceScoringService {
     reason: string;
     priority: 'high' | 'medium' | 'low';
   }> {
-    const flagged = [];
+    const flagged: Array<{
+      field: string;
+      confidence: number;
+      reason: string;
+      priority: 'high' | 'medium' | 'low';
+    }> = [];
 
     for (const [field, confidence] of Object.entries(fieldConfidence)) {
       if (confidence < thresholds.low) {
@@ -194,7 +199,7 @@ export class ConfidenceScoringService {
    * Generate improvement recommendations
    */
   private generateRecommendations(
-    flaggedFields: Array<{ field: string; confidence: number; priority: string }>,
+    flaggedFields: Array<{ field: string; confidence: number; priority: 'high' | 'medium' | 'low' }>,
     structuredData?: any,
     fieldConfidence?: Record<string, number>
   ): Array<{
@@ -397,7 +402,7 @@ export class ConfidenceScoringService {
     if (structuredData.ingredients && Array.isArray(structuredData.ingredients)) {
       const quantities = structuredData.ingredients
         .map((ing: any) => ing.quantity)
-        .filter(q => q !== undefined && q !== null && q > 0);
+        .filter((q: any) => q !== undefined && q !== null && q > 0);
 
       if (quantities.length > 1) {
         // Check for reasonable quantity ranges

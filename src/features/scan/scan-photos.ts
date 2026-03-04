@@ -49,7 +49,7 @@ export async function uploadScanPhotos(
 
   // Generate base timestamp for this batch
   const batchTimestamp = Date.now();
-  const uploadedPhotos: Array<{ photoUrl: string; storagePath: string }> = [];
+  const uploadedPhotos: Array<{ photoUrl: string; storagePath: string; index: number }> = [];
   const failedUploads: Array<{ index: number; name: string; error: string }> = [];
 
   // Upload photos with controlled concurrency (max 3 simultaneous)
@@ -126,7 +126,7 @@ export async function uploadScanPhotos(
   }
 
   // Sort by index to maintain order
-  uploadedPhotos.sort((a, b) => a.index! - b.index!);
+  uploadedPhotos.sort((a, b) => a.index - b.index);
   const photoUrls = uploadedPhotos.map(p => p.photoUrl);
 
   // Create multi-photo scan job
@@ -295,7 +295,7 @@ export async function deleteScanPhoto(jobId: string): Promise<void> {
   const photoUrls = job.photo_urls || [job.photo_url];
 
   // Extract storage paths from URLs
-  const storagePaths = photoUrls.map(photoUrl => {
+  const storagePaths = photoUrls.map((photoUrl: string) => {
     const url = new URL(photoUrl);
     const pathParts = url.pathname.split('/');
     const fileName = pathParts[pathParts.length - 1];

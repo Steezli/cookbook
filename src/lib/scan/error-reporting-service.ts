@@ -573,8 +573,8 @@ export class ErrorReportingService {
       // Simple metrics calculation (in production, this would be more sophisticated)
       const uniqueUsers = new Set((errors || []).map((e: any) => e.scan_jobs.user_id)).size
       const errorsByCategory: Record<string, number> = {}
-      
-      (errors || []).forEach((error: any) => {
+
+      ;(errors || []).forEach((error: any) => {
         errorsByCategory[error.category] = (errorsByCategory[error.category] || 0) + 1
       })
 
@@ -582,8 +582,8 @@ export class ErrorReportingService {
         totalAffectedUsers: uniqueUsers,
         errorsByCategory: {} as Record<ErrorCategory, { count: number; users: number }>,
         avgResolutionTime: 2.5, // Placeholder
-        userSatisfactionByCategory: {}, // Would come from feedback analysis
-        topContributingErrors: [] // Would come from trend analysis
+        userSatisfactionByCategory: {} as Record<ErrorCategory, number>, // Would come from feedback analysis
+        topContributingErrors: [] as Array<{ pattern: string; impact: number; count: number }> // Would come from trend analysis
       }
 
     } catch (error) {
@@ -598,7 +598,7 @@ export class ErrorReportingService {
   static async generateAutomatedAlerts(): Promise<void> {
     try {
       // Check for critical error patterns
-      const recentCriticalErrors = await supabase
+      const { data: recentCriticalErrors } = await supabase
         .from('job_errors')
         .select('job_id, message, category')
         .eq('severity', 'critical')
@@ -609,9 +609,9 @@ export class ErrorReportingService {
           'critical_error',
           'critical',
           'Critical Errors Detected',
-          `${recentCriticalErrors.length} critical errors occurred in the last hour. Immediate attention required.`,
+          `${(recentCriticalErrors || []).length} critical errors occurred in the last hour. Immediate attention required.`,
           {
-            affectedJobs: recentCriticalErrors.map(e => e.job_id),
+            affectedJobs: (recentCriticalErrors || []).map((e: any) => e.job_id),
             errorPattern: 'critical_errors_spike'
           }
         )
@@ -659,12 +659,18 @@ export class ErrorReportingService {
     try {
       // Analyze error trends and user feedback to generate suggestions
       const trends = await this.getErrorTrends(20)
-      const suggestions = []
+      const suggestions: Array<{
+        category: string
+        suggestion: string
+        impact: 'high' | 'medium' | 'low'
+        estimatedEffort: 'high' | 'medium' | 'low'
+        priority: number
+      }> = []
 
       // Analyze top error categories
       const categoryCounts: Record<string, number> = {}
       trends.forEach(trend => {
-        categoryCounts[trend.errorCategory] = (categoryCounts[trend.errorCategory] || 0) + trend.occurrence_count
+        categoryCounts[trend.errorCategory] = (categoryCounts[trend.errorCategory] || 0) + trend.occurrenceCount
       })
 
       // Generate suggestions based on patterns
@@ -700,7 +706,7 @@ export class ErrorReportingService {
         }
       })
 
-      return (suggestions as any[]).sort((a: any, b: any) => a.priority - b.priority)
+      return suggestions.sort((a, b) => a.priority - b.priority)
 
     } catch (error) {
       console.error('Failed to get improvement suggestions:', error)

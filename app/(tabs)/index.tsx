@@ -28,7 +28,7 @@ export default function Index() {
             <Link href={"/family" as any} style={styles.link}>
               Families
             </Link>
-            <Link href="/(scan)" style={styles.link}>
+            <Link href="/scan" style={styles.link}>
               Scan Recipes
             </Link>
             <Link href={"/profile" as any} style={styles.link}>

@@ -35,7 +35,6 @@ export default function TabsLayout() {
       >
         <TabTrigger name="index" href="/" />
         <TabTrigger name="my-recipes" href={"/my-recipes" as any} />
-        <TabTrigger name="scan" href={"/scan" as any} />
         <TabTrigger name="family" href={"/family" as any} />
         <TabTrigger name="profile" href={"/profile" as any} />
       </TabList>
