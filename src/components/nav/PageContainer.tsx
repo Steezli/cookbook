@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
+import { Platform, View, ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import type { Breakpoint } from '@/lib/hooks/useBreakpoint';
 import { PADDING_BY_BREAKPOINT, MAX_WIDTH_BY_VARIANT } from './types';
@@ -28,10 +29,11 @@ export function getContainerStyle(
 
 export function PageContainer({ children, variant = 'default', style }: PageContainerProps) {
   const { breakpoint } = useBreakpoint();
+  const insets = useSafeAreaInsets();
   const containerStyle = getContainerStyle(breakpoint, variant);
 
   return (
-    <View style={[containerStyle, style]}>
+    <View style={[containerStyle, { paddingTop: insets.top }, style]}>
       {children}
     </View>
   );

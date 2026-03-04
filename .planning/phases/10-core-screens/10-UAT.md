@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 10-core-screens
 source: [10-00-SUMMARY.md, 10-01-SUMMARY.md, 10-02-SUMMARY.md, 10-03-SUMMARY.md, 10-04-SUMMARY.md, 10-05-SUMMARY.md]
 started: 2026-03-04T22:30:00Z

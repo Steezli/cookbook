@@ -9,12 +9,14 @@ import {
   Text,
   View
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSession } from "@/features/auth/session";
 import { getUnitPreference, setUnitPreference } from "@/features/units/api";
 import type { UnitSystem } from "@/features/units/types";
 
 export default function SettingsScreen() {
   const { session, isLoading: sessionLoading } = useSession();
+  const insets = useSafeAreaInsets();
   const [unitPreference, setUnitPreferenceState] = useState<UnitSystem>('imperial');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,7 +65,7 @@ export default function SettingsScreen() {
     return (
       <>
         <Stack.Screen options={{ title: "Settings" }} />
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingTop: insets.top }]}>
           <ActivityIndicator />
         </View>
       </>
@@ -74,7 +76,7 @@ export default function SettingsScreen() {
     return (
       <>
         <Stack.Screen options={{ title: "Settings" }} />
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingTop: insets.top }]}>
           <Text style={styles.error}>Please log in to access settings</Text>
         </View>
       </>
@@ -84,7 +86,7 @@ export default function SettingsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Settings" }} />
-      <ScrollView style={styles.container}>
+      <ScrollView style={[styles.container, { paddingTop: insets.top }]}>
         {/* Unit Preference Section */}
         <Text style={styles.sectionHeader}>Measurement System</Text>
         <View style={styles.section}>

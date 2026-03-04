@@ -29,12 +29,14 @@ export default function TabsLayout() {
       <TabList
         style={{
           height: 0,
+          width: 0,
           overflow: "hidden",
           position: "absolute",
+          pointerEvents: "none",
         }}
       >
         <TabTrigger name="index" href="/" />
-        <TabTrigger name="my-recipes" href={"/my-recipes" as any} />
+        <TabTrigger name="my-recipes" href={"/recipes" as any} />
         <TabTrigger name="family" href={"/family" as any} />
         <TabTrigger name="profile" href={"/profile" as any} />
       </TabList>

@@ -13,6 +13,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider } from "@/features/auth/session";
 
 // Hold the splash screen until fonts finish loading.
@@ -42,16 +43,18 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(public)" />
-        <Stack.Screen
-          name="scan"
-          options={{ presentation: "modal", headerShown: false }}
-        />
-      </Stack>
-    </SessionProvider>
+    <SafeAreaProvider>
+      <SessionProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(public)" />
+          <Stack.Screen
+            name="scan"
+            options={{ presentation: "modal", headerShown: false }}
+          />
+        </Stack>
+      </SessionProvider>
+    </SafeAreaProvider>
   );
 }
