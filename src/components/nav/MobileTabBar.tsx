@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Home, BookOpen, Camera, Heart, User } from "lucide-react-native";
 import { TabButton } from "./TabButton";
-import { accentWarm, bgPage, borderSubtle } from "@/lib/tokens";
+import { bgPage, borderSubtle, textDisabled } from "@/lib/tokens";
 
 export function MobileTabBar() {
   const insets = useSafeAreaInsets();
@@ -26,14 +26,13 @@ export function MobileTabBar() {
         paddingBottom: 28 + insets.bottom,
         paddingHorizontal: 12,
         alignItems: "center",
-        justifyContent: "space-between",
       }}
     >
-      <TabTrigger name="index" asChild>
+      <TabTrigger name="index" asChild style={{ flex: 1 }}>
         <TabButton icon={<Home />} />
       </TabTrigger>
 
-      <TabTrigger name="my-recipes" asChild>
+      <TabTrigger name="my-recipes" asChild style={{ flex: 1 }}>
         <TabButton icon={<BookOpen />} />
       </TabTrigger>
 
@@ -44,14 +43,14 @@ export function MobileTabBar() {
         onPress={() => router.push("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
-        <Camera color={accentWarm} size={28} />
+        <Camera color={textDisabled} size={28} />
       </Pressable>
 
-      <TabTrigger name="family" asChild>
+      <TabTrigger name="family" asChild style={{ flex: 1 }}>
         <TabButton icon={<Heart />} />
       </TabTrigger>
 
-      <TabTrigger name="profile" asChild>
+      <TabTrigger name="profile" asChild style={{ flex: 1 }}>
         <TabButton icon={<User />} />
       </TabTrigger>
     </View>
