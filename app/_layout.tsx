@@ -43,11 +43,15 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <Stack
-        screenOptions={{
-          headerTitle: "Cookbook"
-        }}
-      />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(public)" />
+        <Stack.Screen
+          name="(scan)"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+      </Stack>
     </SessionProvider>
   );
 }

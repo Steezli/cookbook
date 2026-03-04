@@ -25,13 +25,13 @@ export default function Index() {
       <View style={styles.links}>
         {session ? (
           <>
-            <Link href="/family" style={styles.link}>
+            <Link href={"/family" as any} style={styles.link}>
               Families
             </Link>
             <Link href="/(scan)" style={styles.link}>
               Scan Recipes
             </Link>
-            <Link href="/profile" style={styles.link}>
+            <Link href={"/profile" as any} style={styles.link}>
               Settings
             </Link>
             <Link href="/(auth)/logout" style={styles.link}>
