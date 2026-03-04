@@ -1,9 +1,10 @@
 import { Redirect } from "expo-router";
 import { Tabs, TabList, TabTrigger, TabSlot } from "expo-router/ui";
-import { View, Text } from "react-native";
 
 import { useSession } from "@/features/auth/session";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
+import { MobileTabBar } from "@/components/nav/MobileTabBar";
+import { WebSidebar } from "@/components/nav/WebSidebar";
 
 export default function TabsLayout() {
   const { session, isLoading } = useSession();
@@ -23,8 +24,8 @@ export default function TabsLayout() {
   return (
     <Tabs style={{ flex: 1, flexDirection: isWeb ? "row" : "column" }}>
       {/* Hidden TabList registers all 5 tab routes with expo-router/ui.
-          Actual nav chrome is rendered as inline placeholders below.
-          Plan 03 replaces these placeholders with MobileTabBar / WebSidebar. */}
+          height:0/overflow:hidden ensures invisible on both native and web
+          without layout side effects (per research pitfall 1 / pitfall 3). */}
       <TabList
         style={{
           height: 0,
@@ -39,38 +40,16 @@ export default function TabsLayout() {
         <TabTrigger name="profile" href={"/profile" as any} />
       </TabList>
 
-      {/* Web: fixed sidebar placeholder (260px) */}
-      {isWeb && (
-        <View
-          style={{
-            width: 260,
-            backgroundColor: "#F6F7F8",
-            borderRightWidth: 1,
-            borderRightColor: "#F3F4F6",
-          }}
-        >
-          <Text>Sidebar placeholder</Text>
-        </View>
-      )}
+      {/* Web: 260px left sidebar with logo, 6 nav items, cookbook.pen styling */}
+      {isWeb ? <WebSidebar /> : null}
 
       {/* Main content area */}
       <TabSlot style={{ flex: 1 }} />
 
-      {/* Mobile/tablet: bottom tab bar placeholder (84px) */}
-      {!isWeb && (
-        <View
-          style={{
-            height: 84,
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#F3F4F6",
-          }}
-        >
-          <Text style={{ textAlign: "center", paddingTop: 12 }}>
-            Tab bar placeholder
-          </Text>
-        </View>
-      )}
+      {/* Mobile/tablet: bottom tab bar (5 tabs, 84px + safe area).
+          Tablet shows tab bar (not sidebar) per cookbook.pen spec.
+          isWeb is only true for 'web' breakpoint — tablet uses 'tablet'. */}
+      {!isWeb ? <MobileTabBar /> : null}
     </Tabs>
   );
 }
