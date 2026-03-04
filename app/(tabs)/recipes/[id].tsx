@@ -1,35 +1,81 @@
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { 
-  ActivityIndicator, 
-  Alert, 
-  Pressable, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  View 
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
-import { Image, FlatList, Dimensions } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { ChevronLeft, UtensilsCrossed } from "lucide-react-native";
 import { getRecipeById, deleteRecipe } from "@/features/recipes/api";
 import type { Recipe } from "@/features/recipes/types";
 import { useSession } from "@/features/auth/session";
-import { getCollections, addRecipeToCollection, getRecipeCollections, removeRecipeFromCollection } from "@/features/collections/api";
+import {
+  getCollections,
+  addRecipeToCollection,
+  getRecipeCollections,
+  removeRecipeFromCollection,
+} from "@/features/collections/api";
 import type { Collection, CollectionWithRecipeCount } from "@/features/collections/types";
-import { getRecipePhotos, deleteRecipePhoto, getPhotoUrl, type RecipePhoto } from "@/features/recipes/photos";
+import {
+  getRecipePhotos,
+  deleteRecipePhoto,
+  getPhotoUrl,
+  type RecipePhoto,
+} from "@/features/recipes/photos";
 import { CommentThread } from "@/features/comments/CommentThread";
-import { displayAmount, canConvert } from "@/features/units/conversions";
+import { displayAmount } from "@/features/units/conversions";
 import { getUnitPreference } from "@/features/units/api";
 import type { UnitSystem } from "@/features/units/types";
 import { StarRating } from "@/features/ratings/StarRating";
 import { getUserRating, upsertRating } from "@/features/ratings/api";
 import type { RatingAggregate } from "@/features/ratings/types";
+import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
+import {
+  accentBlue,
+  accentCoral,
+  accentWarm,
+  accentGreen,
+  badgeCoralBg,
+  badgeGreenBg,
+  badgeYellowBg,
+  bgCard,
+  bgPage,
+  borderDefault,
+  borderSubtle,
+  fontFamilyBody,
+  fontFamilyBodyBold,
+  fontFamilyDisplay,
+  fontSizeBase,
+  fontSizeLg,
+  fontSizeSm,
+  fontSizeXs,
+  fontSize2xl,
+  radiusMd,
+  radiusPill,
+  radiusSm,
+  shadowMd,
+  shadowSm,
+  textPrimary,
+  textSecondary,
+  white,
+} from "@/lib/tokens";
+
+// No-photo placeholder color (from cookbook.pen spec — no token exists)
+const noPhotoBg = '#E8E0D8';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session, isLoading: sessionLoading } = useSession();
+  const { breakpoint } = useBreakpoint();
+
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [unitPreference, setUnitPreference] = useState<UnitSystem>('imperial');
+  const [unitPreference, setUnitPreference] = useState<UnitSystem>("imperial");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [collections, setCollections] = useState<CollectionWithRecipeCount[]>([]);
@@ -38,7 +84,12 @@ export default function RecipeDetailScreen() {
   const [isLoadingCollectionMembership, setIsLoadingCollectionMembership] = useState(false);
   const [photos, setPhotos] = useState<RecipePhoto[]>([]);
   const [userRating, setUserRating] = useState<number>(0);
-  const [ratingAggregate, setRatingAggregate] = useState<RatingAggregate>({ average: null, count: 0 });
+  const [ratingAggregate, setRatingAggregate] = useState<RatingAggregate>({
+    average: null,
+    count: 0,
+  });
+
+  const isWideLayout = breakpoint === "tablet" || breakpoint === "web";
 
   async function loadRecipe() {
     if (!id) return;
@@ -48,25 +99,21 @@ export default function RecipeDetailScreen() {
     try {
       const data = await getRecipeById(id);
       setRecipe(data);
-      
-      // Load photos
+
       if (data) {
         const photoData = await getRecipePhotos(data.id);
         setPhotos(photoData);
 
-        // Load rating aggregate from recipe data
         setRatingAggregate({
           average: data.rating_average,
-          count: data.rating_count ?? 0
+          count: data.rating_count ?? 0,
         });
 
-        // Load user's rating if authenticated
         if (session?.user) {
           try {
             const userRatingData = await getUserRating(data.id);
             setUserRating(userRatingData?.rating ?? 0);
-          } catch (e) {
-            // User not authenticated or no rating - that's fine
+          } catch {
             setUserRating(0);
           }
         }
@@ -89,8 +136,8 @@ export default function RecipeDetailScreen() {
       try {
         const data = await getCollections();
         setCollections(data);
-      } catch (e) {
-        // Silent fail - collection picker optional
+      } catch {
+        // Silent fail — collection picker is optional
       }
     }
 
@@ -102,49 +149,37 @@ export default function RecipeDetailScreen() {
   useEffect(() => {
     async function loadPreference() {
       if (!session) return;
-
       try {
         const preference = await getUnitPreference();
         setUnitPreference(preference);
-      } catch (e) {
-        // Silent fail - use default imperial
+      } catch {
+        // Silent fail — use default imperial
       }
     }
 
     void loadPreference();
   }, [session]);
 
-  function displayIngredient(ing: Recipe['ingredients'][0]): string {
-    // If ingredient has canonical fields, try to display with conversion
-    if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
-      const convertedText = displayAmount(
-        ing.amount,
-        ing.unit,
-        unitPreference,
-        ing.original_text || ing.text
-      );
+  const isOwner =
+    !sessionLoading && recipe != null && session?.user.id === recipe.owner_user_id;
+  const recipeCollectionIdSet = new Set(recipeCollections.map((c) => c.id));
 
-      // Extract ingredient name from original text (everything after amount and unit)
-      const ingredientMatch = ing.text.match(/(?:\d+\.?\d*\s*(?:[a-z]+\s+)?)?(.+)$/i);
-      const ingredientName = ingredientMatch ? ingredientMatch[1].trim() : ing.text;
-
-      // If conversion happened, displayAmount includes the ingredient name already
-      if (convertedText !== (ing.original_text || ing.text)) {
-        return convertedText;
+  useEffect(() => {
+    async function loadMembership() {
+      if (!recipe || !isOwner) return;
+      setIsLoadingCollectionMembership(true);
+      try {
+        const data = await getRecipeCollections(recipe.id);
+        setRecipeCollections(data);
+      } catch {
+        // Silent fail
+      } finally {
+        setIsLoadingCollectionMembership(false);
       }
-
-      // No conversion needed or possible, return original
-      return ing.text;
     }
 
-    // If ambiguous, show with subtle indicator
-    if (ing.is_ambiguous) {
-      return `${ing.text} (approx.)`;
-    }
-
-    // Legacy ingredient or no canonical fields - show as-is
-    return ing.text;
-  }
+    void loadMembership();
+  }, [recipe?.id, isOwner]);
 
   async function handleDelete() {
     if (!recipe) return;
@@ -162,53 +197,35 @@ export default function RecipeDetailScreen() {
               await deleteRecipe(recipe.id);
               router.back();
             } catch (e) {
-              Alert.alert("Error", e instanceof Error ? e.message : "Failed to delete recipe");
+              Alert.alert(
+                "Error",
+                e instanceof Error ? e.message : "Failed to delete recipe"
+              );
             }
-          }
-        }
+          },
+        },
       ]
     );
   }
 
-  const isOwner = !sessionLoading && recipe && session?.user.id === recipe.owner_user_id;
-  const recipeCollectionIdSet = new Set(recipeCollections.map((c) => c.id));
-
-  useEffect(() => {
-    async function loadMembership() {
-      if (!recipe || !isOwner) return;
-      setIsLoadingCollectionMembership(true);
-      try {
-        const data = await getRecipeCollections(recipe.id);
-        setRecipeCollections(data);
-      } catch {
-        // Silent fail - membership UI is non-critical enhancement
-      } finally {
-        setIsLoadingCollectionMembership(false);
-      }
-    }
-
-    void loadMembership();
-  }, [recipe?.id, isOwner]);
-
   async function handleRatingChange(newRating: number) {
     if (!recipe || !session?.user) return;
-
     try {
       await upsertRating(recipe.id, newRating);
       setUserRating(newRating);
 
-      // Refetch recipe to get updated aggregates after trigger fires
+      // Refetch aggregates after DB trigger fires
       setTimeout(async () => {
         try {
-          const updatedRecipe = await getRecipeById(recipe.id);
-          if (updatedRecipe) {
+          const updated = await getRecipeById(recipe.id);
+          if (updated) {
             setRatingAggregate({
-              average: updatedRecipe.rating_average,
-              count: updatedRecipe.rating_count ?? 0
+              average: updated.rating_average,
+              count: updated.rating_count ?? 0,
             });
           }
-        } catch (e) {
-          // Silent fail - aggregate will update on next page load
+        } catch {
+          // Silent fail — aggregates will refresh on next load
         }
       }, 500);
     } catch (e) {
@@ -218,7 +235,6 @@ export default function RecipeDetailScreen() {
 
   async function toggleCollectionMembership(collection: CollectionWithRecipeCount) {
     if (!recipe) return;
-
     const alreadyIn = recipeCollectionIdSet.has(collection.id);
     try {
       if (alreadyIn) {
@@ -226,7 +242,6 @@ export default function RecipeDetailScreen() {
         setRecipeCollections((prev) => prev.filter((c) => c.id !== collection.id));
       } else {
         await addRecipeToCollection(collection.id, recipe.id);
-        // We only need id+name for display; keep the returned list lightweight.
         setRecipeCollections((prev) => [
           ...prev,
           {
@@ -236,505 +251,906 @@ export default function RecipeDetailScreen() {
             name: collection.name,
             description: collection.description ?? null,
             created_at: collection.created_at,
-            updated_at: collection.updated_at
-          }
+            updated_at: collection.updated_at,
+          },
         ]);
       }
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to update collection membership");
+      Alert.alert(
+        "Error",
+        e instanceof Error ? e.message : "Failed to update collection membership"
+      );
     }
   }
 
-  return (
-    <>
-      <Stack.Screen options={{ title: recipe?.title || "Recipe" }} />
-      <View style={styles.container}>
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : error ? (
-          <Text style={styles.error}>{error}</Text>
-        ) : !recipe ? (
-          <Text style={styles.error}>Recipe not found or you don't have access</Text>
-        ) : (
-          <ScrollView>
-            <Text style={styles.title}>{recipe.title}</Text>
-            <Text style={styles.meta}>
-              {recipe.visibility} • Created {new Date(recipe.created_at).toLocaleDateString()}
+  function displayIngredient(ing: Recipe["ingredients"][0]): string {
+    if (
+      ing.amount !== undefined &&
+      ing.unit !== undefined &&
+      !ing.is_ambiguous
+    ) {
+      return displayAmount(
+        ing.amount ?? null,
+        ing.unit ?? null,
+        unitPreference,
+        ing.original_text || ing.text
+      );
+    }
+    if (ing.is_ambiguous) {
+      return `${ing.text} (approx.)`;
+    }
+    return ing.text;
+  }
+
+  function getVisibilityLabel(visibility: string): string {
+    if (visibility === "private") return "Private";
+    if (visibility === "family") return "Family";
+    return "Public";
+  }
+
+  function getVisibilityBadgeStyle(visibility: string) {
+    if (visibility === "private") {
+      return {
+        backgroundColor: badgeCoralBg,
+        color: accentCoral,
+      };
+    }
+    if (visibility === "family") {
+      return {
+        backgroundColor: badgeYellowBg,
+        color: accentWarm,
+      };
+    }
+    return {
+      backgroundColor: badgeGreenBg,
+      color: accentGreen,
+    };
+  }
+
+  function formatMetadata(recipe: Recipe): string {
+    const parts: string[] = [];
+    if (recipe.prep_time_minutes) parts.push(`Prep ${recipe.prep_time_minutes}m`);
+    if (recipe.cook_time_minutes) parts.push(`Cook ${recipe.cook_time_minutes}m`);
+    if (recipe.servings) parts.push(`${recipe.servings} servings`);
+    return parts.join(" · ");
+  }
+
+  // ------------------------------------------------------------------
+  // Sub-components (inline for single-file layout)
+  // ------------------------------------------------------------------
+
+  function renderHeroImage() {
+    if (photos.length > 0) {
+      return (
+        <Image
+          source={{ uri: getPhotoUrl(photos[0].storage_path) }}
+          style={{
+            width: "100%",
+            height: isWideLayout ? 360 : 280,
+            resizeMode: "cover",
+          }}
+        />
+      );
+    }
+    return (
+      <View
+        style={{
+          width: "100%",
+          height: 200,
+          backgroundColor: noPhotoBg,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <UtensilsCrossed size={48} color={textSecondary} />
+      </View>
+    );
+  }
+
+  function renderPhotoGallery() {
+    if (photos.length <= 1) return null;
+    return (
+      <FlatList
+        horizontal
+        data={photos}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              marginRight: 8,
+              borderRadius: radiusSm,
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            <Image
+              source={{ uri: getPhotoUrl(item.storage_path) }}
+              style={{ width: 80, height: 80 }}
+              resizeMode="cover"
+            />
+            {isOwner && (
+              <Pressable
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  borderRadius: 10,
+                  width: 20,
+                  height: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={async () => {
+                  try {
+                    await deleteRecipePhoto(item.id);
+                    setPhotos((prev) => prev.filter((p) => p.id !== item.id));
+                  } catch {
+                    Alert.alert("Error", "Failed to delete photo");
+                  }
+                }}
+              >
+                <Text style={{ color: white, fontSize: 10, lineHeight: 12 }}>✕</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+        showsHorizontalScrollIndicator={false}
+        style={{ marginTop: 12 }}
+      />
+    );
+  }
+
+  function renderIngredientsSection() {
+    if (!recipe) return null;
+    return (
+      <View style={{ marginBottom: 24 }}>
+        <Text
+          style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyDisplay,
+            color: textPrimary,
+            marginBottom: 12,
+          }}
+        >
+          Ingredients
+        </Text>
+        {recipe.ingredients.map((ing, i) => (
+          <View
+            key={i}
+            style={{
+              paddingVertical: 10,
+              borderBottomWidth: i < recipe.ingredients.length - 1 ? 1 : 0,
+              borderBottomColor: borderSubtle,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: fontSizeBase,
+                fontFamily: fontFamilyBody,
+                color: textPrimary,
+                lineHeight: 22,
+              }}
+            >
+              {displayIngredient(ing)}
             </Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
 
-            {recipe.description && (
-              <Text style={styles.description}>{recipe.description}</Text>
-            )}
-
-            {recipe.tags.length > 0 && (
-              <View style={styles.tagContainer}>
-                {recipe.tags.map((tag, i) => (
-                  <Text key={i} style={styles.tag}>{tag}</Text>
-                ))}
-              </View>
-            )}
-
-            <View style={styles.metadataRow}>
-              {recipe.servings && <Text>Servings: {recipe.servings}</Text>}
-              {recipe.prep_time_minutes && <Text>Prep: {recipe.prep_time_minutes}m</Text>}
-              {recipe.cook_time_minutes && <Text>Cook: {recipe.cook_time_minutes}m</Text>}
+  function renderStepsSection() {
+    if (!recipe) return null;
+    return (
+      <View style={{ marginBottom: 24 }}>
+        <Text
+          style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyDisplay,
+            color: textPrimary,
+            marginBottom: 12,
+          }}
+        >
+          Steps
+        </Text>
+        {recipe.steps.map((step, i) => (
+          <View
+            key={i}
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              marginBottom: 16,
+              gap: 12,
+            }}
+          >
+            <View
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: accentBlue,
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                marginTop: 1,
+              }}
+            >
+              <Text
+                style={{
+                  color: white,
+                  fontSize: fontSizeXs,
+                  fontFamily: fontFamilyBodyBold,
+                }}
+              >
+                {i + 1}
+              </Text>
             </View>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: fontSizeBase,
+                fontFamily: fontFamilyBody,
+                color: textPrimary,
+                lineHeight: 24,
+              }}
+            >
+              {step.text}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
 
-            {/* Rating Section */}
-            <View style={styles.ratingSection}>
-              {/* Average Rating Display */}
-              <View style={styles.averageRatingRow}>
-                <Text style={styles.ratingLabel}>Rating:</Text>
-                <StarRating
-                  value={ratingAggregate.average ?? 0}
-                  size={20}
-                />
-                <Text style={styles.ratingCount}>
-                  {ratingAggregate.count > 0
-                    ? `${ratingAggregate.average?.toFixed(1) ?? '0.0'} (${ratingAggregate.count} ${ratingAggregate.count === 1 ? 'rating' : 'ratings'})`
-                    : 'No ratings yet'}
-                </Text>
-              </View>
+  function renderStorySection() {
+    if (!recipe?.source_story) return null;
+    return (
+      <View
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          backgroundColor: bgCard,
+          borderRadius: radiusMd,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyDisplay,
+            color: textPrimary,
+            marginBottom: 10,
+          }}
+        >
+          The Story Behind This Recipe
+        </Text>
+        <Text
+          style={{
+            fontSize: fontSizeBase,
+            fontFamily: fontFamilyBody,
+            color: textSecondary,
+            lineHeight: 24,
+            fontStyle: "italic",
+          }}
+        >
+          {recipe.source_story}
+        </Text>
+      </View>
+    );
+  }
 
-              {/* User Rating (Interactive) */}
-              {session?.user && (
-                <View style={styles.userRatingRow}>
-                  <Text style={styles.ratingLabel}>Your rating:</Text>
-                  <StarRating
-                    value={userRating}
-                    onChange={handleRatingChange}
-                    size={36}
-                  />
-                  {userRating > 0 && (
-                    <Text style={styles.userRatingValue}>{userRating.toFixed(1)}</Text>
-                  )}
-                </View>
-              )}
-            </View>
+  function renderRatingsSection() {
+    if (!recipe) return null;
+    return (
+      <View style={{ marginBottom: 24 }}>
+        <Text
+          style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyDisplay,
+            color: textPrimary,
+            marginBottom: 12,
+          }}
+        >
+          Ratings
+        </Text>
 
-            {photos.length > 0 && (
-              <FlatList
-                horizontal
-                data={photos}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.photoContainer}>
-                    <Image
-                      source={{ uri: getPhotoUrl(item.storage_path) }}
-                      style={styles.photo}
-                      resizeMode="contain"
-                    />
-                    {isOwner && (
-                      <Pressable
-                        style={styles.photoDeleteButton}
-                        onPress={async () => {
-                          try {
-                            await deleteRecipePhoto(item.id);
-                            setPhotos(photos.filter(p => p.id !== item.id));
-                          } catch (e) {
-                            Alert.alert("Error", "Failed to delete photo");
-                          }
-                        }}
-                      >
-                        <Text style={styles.photoDeleteButtonText}>✕</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                )}
-                showsHorizontalScrollIndicator={false}
-                style={styles.photoGallery}
-              />
-            )}
+        {/* Aggregate display */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 12,
+          }}
+        >
+          <StarRating value={ratingAggregate.average ?? 0} size={20} />
+          <Text
+            style={{
+              fontSize: fontSizeSm,
+              fontFamily: fontFamilyBody,
+              color: textSecondary,
+            }}
+          >
+            {ratingAggregate.count > 0
+              ? `${ratingAggregate.average?.toFixed(1) ?? "0.0"} · ${ratingAggregate.count} ${ratingAggregate.count === 1 ? "rating" : "ratings"}`
+              : "No ratings yet"}
+          </Text>
+        </View>
 
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.ingredients.map((ing, i) => (
-              <Text key={i} style={styles.listItem}>• {displayIngredient(ing)}</Text>
-            ))}
-
-            <Text style={styles.sectionTitle}>Steps</Text>
-            {recipe.steps.map((step, i) => (
-              <View key={i} style={styles.stepItem}>
-                <Text style={styles.stepNumber}>{i + 1}.</Text>
-                <Text style={styles.stepText}>{step.text}</Text>
-              </View>
-            ))}
-
-            {recipe.source_story && (
-              <>
-                <Text style={styles.sectionTitle}>Story</Text>
-                <Text style={styles.story}>{recipe.source_story}</Text>
-              </>
-            )}
-
-            {!sessionLoading && session ? (
-              <>
-                <Text style={styles.sectionTitle}>Comments</Text>
-                <CommentThread
-                  recipeId={recipe.id}
-                  recipeOwnerId={recipe.owner_user_id}
-                  recipeFamilyId={recipe.family_id}
-                />
-              </>
-            ) : !sessionLoading ? (
-              <>
-                <Text style={styles.sectionTitle}>Comments</Text>
-                <Text style={styles.loginPrompt}>Log in to view and post comments.</Text>
-              </>
-            ) : null}
-
-            {isOwner && collections.length > 0 && (
-              <>
-                <Pressable
-                  style={styles.addToCollectionButton}
-                  onPress={() => setShowCollectionPicker(!showCollectionPicker)}
-                >
-                  <Text style={styles.addToCollectionButtonText}>
-                    {showCollectionPicker ? "Hide Collections" : "Collections"}
-                  </Text>
-                </Pressable>
-
-                <Text style={styles.collectionMembershipHint}>
-                  {recipeCollections.length > 0
-                    ? `In: ${recipeCollections.map((c) => c.name).sort().join(", ")}`
-                    : "Not in any collections yet"}
-                </Text>
-
-                {showCollectionPicker && (
-                  <View style={styles.collectionPicker}>
-                    {isLoadingCollectionMembership && (
-                      <View style={styles.collectionMembershipLoading}>
-                        <ActivityIndicator />
-                      </View>
-                    )}
-                    {collections.map((collection) => {
-                      const added = recipeCollectionIdSet.has(collection.id);
-                      return (
-                        <View key={collection.id} style={styles.collectionRow}>
-                          <Text style={styles.collectionPickerItemText}>{collection.name}</Text>
-                          <Pressable
-                            style={[
-                              styles.collectionActionButton,
-                              added ? styles.collectionActionRemove : styles.collectionActionAdd
-                            ]}
-                            onPress={() => toggleCollectionMembership(collection)}
-                          >
-                            <Text
-                              style={[
-                                styles.collectionActionText,
-                                added ? styles.collectionActionTextRemove : styles.collectionActionTextAdd
-                              ]}
-                            >
-                              {added ? "Remove" : "Add"}
-                            </Text>
-                          </Pressable>
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </>
-            )}
-
-            {!sessionLoading ? (
-              isOwner && (
-                <View style={styles.actions}>
-                  <Link href={`/recipes/${recipe.id}/edit`} asChild>
-                    <Pressable style={styles.editButton}>
-                      <Text style={styles.editButtonText}>Edit Recipe</Text>
-                    </Pressable>
-                  </Link>
-                  <Pressable style={styles.deleteButton} onPress={handleDelete}>
-                    <Text style={styles.deleteButtonText}>Delete Recipe</Text>
-                  </Pressable>
-                </View>
-              )
-            ) : (
-              <View style={styles.actions}>
-                <View style={[styles.editButton, styles.disabledButton]}>
-                  <Text style={styles.editButtonText}>Loading...</Text>
-                </View>
-                <View style={[styles.deleteButton, styles.disabledButton]}>
-                  <Text style={styles.deleteButtonText}>Loading...</Text>
-                </View>
-              </View>
-            )}
-          </ScrollView>
+        {/* Interactive user rating */}
+        {session?.user && (
+          <View
+            style={{
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: borderSubtle,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyBold,
+                color: textSecondary,
+                marginBottom: 8,
+              }}
+            >
+              Your rating
+            </Text>
+            <StarRating value={userRating} onChange={handleRatingChange} size={32} />
+          </View>
         )}
       </View>
-    </>
+    );
+  }
+
+  function renderCommentsSection() {
+    if (!recipe) return null;
+    return (
+      <View style={{ marginBottom: 32 }}>
+        <Text
+          style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyDisplay,
+            color: textPrimary,
+            marginBottom: 12,
+          }}
+        >
+          Comments
+        </Text>
+
+        {!sessionLoading && session ? (
+          <CommentThread
+            recipeId={recipe.id}
+            recipeOwnerId={recipe.owner_user_id}
+            recipeFamilyId={recipe.family_id}
+          />
+        ) : !sessionLoading ? (
+          <Text
+            style={{
+              fontSize: fontSizeSm,
+              fontFamily: fontFamilyBody,
+              color: textSecondary,
+              fontStyle: "italic",
+              textAlign: "center",
+              paddingVertical: 16,
+            }}
+          >
+            Log in to view and post comments.
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  function renderCollectionPicker() {
+    if (!isOwner || collections.length === 0) return null;
+    return (
+      <View style={{ marginBottom: 24 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 6,
+          }}
+        >
+          <Pressable
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              backgroundColor: bgCard,
+              borderRadius: radiusSm,
+              borderWidth: 1,
+              borderColor: borderDefault,
+            }}
+            onPress={() => setShowCollectionPicker(!showCollectionPicker)}
+          >
+            <Text
+              style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyBold,
+                color: textPrimary,
+              }}
+            >
+              {showCollectionPicker ? "Hide Collections" : "Add to Collection"}
+            </Text>
+          </Pressable>
+          {recipeCollections.length > 0 && (
+            <Text
+              style={{
+                fontSize: fontSizeXs,
+                fontFamily: fontFamilyBody,
+                color: textSecondary,
+              }}
+            >
+              In: {recipeCollections.map((c) => c.name).sort().join(", ")}
+            </Text>
+          )}
+        </View>
+
+        {showCollectionPicker && (
+          <View
+            style={{
+              backgroundColor: bgPage,
+              borderRadius: radiusMd,
+              borderWidth: 1,
+              borderColor: borderDefault,
+              overflow: "hidden",
+              ...shadowMd,
+            }}
+          >
+            {isLoadingCollectionMembership && (
+              <View style={{ paddingVertical: 12, alignItems: "center" }}>
+                <ActivityIndicator />
+              </View>
+            )}
+            {collections.map((collection, idx) => {
+              const added = recipeCollectionIdSet.has(collection.id);
+              return (
+                <View
+                  key={collection.id}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    borderBottomWidth: idx < collections.length - 1 ? 1 : 0,
+                    borderBottomColor: borderSubtle,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: fontSizeBase,
+                      fontFamily: fontFamilyBody,
+                      color: textPrimary,
+                      flex: 1,
+                    }}
+                  >
+                    {collection.name}
+                  </Text>
+                  <Pressable
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 14,
+                      borderRadius: radiusSm,
+                      borderWidth: 1,
+                      backgroundColor: added ? bgPage : accentBlue,
+                      borderColor: added ? accentCoral : accentBlue,
+                    }}
+                    onPress={() => toggleCollectionMembership(collection)}
+                  >
+                    <Text
+                      style={{
+                        fontSize: fontSizeSm,
+                        fontFamily: fontFamilyBodyBold,
+                        color: added ? accentCoral : white,
+                      }}
+                    >
+                      {added ? "Remove" : "Add"}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  function renderOwnerActions() {
+    if (!isOwner) return null;
+    return (
+      <View style={{ flexDirection: "row", gap: 10, marginBottom: 32 }}>
+        <Pressable
+          style={{
+            flex: 1,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            borderWidth: 1,
+            borderColor: borderDefault,
+            alignItems: "center",
+          }}
+          onPress={() => router.push(`/recipes/${id}/edit`)}
+        >
+          <Text
+            style={{
+              fontSize: fontSizeBase,
+              fontFamily: fontFamilyBodyBold,
+              color: textPrimary,
+            }}
+          >
+            Edit Recipe
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={{
+            flex: 1,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            backgroundColor: badgeCoralBg,
+            borderRadius: radiusMd,
+            borderWidth: 1,
+            borderColor: accentCoral,
+            alignItems: "center",
+          }}
+          onPress={handleDelete}
+        >
+          <Text
+            style={{
+              fontSize: fontSizeBase,
+              fontFamily: fontFamilyBodyBold,
+              color: accentCoral,
+            }}
+          >
+            Delete Recipe
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  function renderRecipeContent() {
+    if (!recipe) return null;
+
+    const badgeStyle = getVisibilityBadgeStyle(recipe.visibility);
+    const metaLine = formatMetadata(recipe);
+
+    return (
+      <View style={{ flex: 1 }}>
+        {/* Title + metadata block */}
+        <View style={{ marginBottom: 20 }}>
+          <Text
+            style={{
+              fontSize: fontSize2xl,
+              fontFamily: fontFamilyDisplay,
+              color: textPrimary,
+              marginBottom: 8,
+              lineHeight: 32,
+            }}
+          >
+            {recipe.title}
+          </Text>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+            <View
+              style={{
+                paddingVertical: 3,
+                paddingHorizontal: 10,
+                borderRadius: radiusPill,
+                backgroundColor: badgeStyle.backgroundColor,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: fontSizeXs,
+                  fontFamily: fontFamilyBodyBold,
+                  color: badgeStyle.color,
+                }}
+              >
+                {getVisibilityLabel(recipe.visibility)}
+              </Text>
+            </View>
+
+            {metaLine.length > 0 && (
+              <Text
+                style={{
+                  fontSize: fontSizeSm,
+                  fontFamily: fontFamilyBody,
+                  color: textSecondary,
+                }}
+              >
+                {metaLine}
+              </Text>
+            )}
+          </View>
+
+          {recipe.description && (
+            <Text
+              style={{
+                fontSize: fontSizeBase,
+                fontFamily: fontFamilyBody,
+                color: textSecondary,
+                lineHeight: 24,
+                marginTop: 8,
+              }}
+            >
+              {recipe.description}
+            </Text>
+          )}
+
+          {/* Tags */}
+          {recipe.tags.length > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 6,
+                marginTop: 10,
+              }}
+            >
+              {recipe.tags.map((tag, i) => (
+                <View
+                  key={i}
+                  style={{
+                    paddingVertical: 3,
+                    paddingHorizontal: 10,
+                    borderRadius: radiusPill,
+                    backgroundColor: bgCard,
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: fontSizeXs,
+                      fontFamily: fontFamilyBody,
+                      color: textSecondary,
+                    }}
+                  >
+                    {tag}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {renderIngredientsSection()}
+        {renderStepsSection()}
+        {renderStorySection()}
+        {renderRatingsSection()}
+        {renderCollectionPicker()}
+        {renderCommentsSection()}
+        {renderOwnerActions()}
+      </View>
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Main render
+  // ------------------------------------------------------------------
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: bgPage,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color={accentBlue} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: bgPage,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: fontSizeBase,
+            fontFamily: fontFamilyBody,
+            color: textSecondary,
+            textAlign: "center",
+            marginBottom: 16,
+          }}
+        >
+          {error}
+        </Text>
+        <Pressable
+          style={{
+            paddingVertical: 10,
+            paddingHorizontal: 24,
+            backgroundColor: accentBlue,
+            borderRadius: radiusMd,
+          }}
+          onPress={() => void loadRecipe()}
+        >
+          <Text
+            style={{
+              fontSize: fontSizeBase,
+              fontFamily: fontFamilyBodyBold,
+              color: white,
+            }}
+          >
+            Retry
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: bgPage,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: fontSizeBase,
+            fontFamily: fontFamilyBody,
+            color: textSecondary,
+            textAlign: "center",
+          }}
+        >
+          Recipe not found or you don't have access.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: bgPage }}>
+      {/* Sticky action header — outside ScrollView */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: borderDefault,
+          backgroundColor: bgPage,
+          ...shadowSm,
+        }}
+      >
+        {/* Left: Back button */}
+        <Pressable
+          onPress={() => router.back()}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            padding: 4,
+          }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <ChevronLeft size={22} color={textPrimary} />
+        </Pressable>
+
+        {/* Right: action buttons */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {isOwner && (
+            <Pressable
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: radiusMd,
+                borderWidth: 1,
+                borderColor: borderDefault,
+                backgroundColor: bgPage,
+              }}
+              onPress={() => router.push(`/recipes/${id}/edit`)}
+            >
+              <Text
+                style={{
+                  fontSize: fontSizeSm,
+                  fontFamily: fontFamilyBodyBold,
+                  color: textPrimary,
+                }}
+              >
+                Edit
+              </Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 18,
+              borderRadius: radiusMd,
+              backgroundColor: accentBlue,
+            }}
+            onPress={() => router.push(`/recipes/${id}/cook`)}
+          >
+            <Text
+              style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyBold,
+                color: white,
+              }}
+            >
+              Start Cooking
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Scrollable content */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {isWideLayout ? (
+          /* Tablet / Web: two-column layout */
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 32,
+              padding: 32,
+              alignItems: "flex-start",
+            }}
+          >
+            {/* Left column: hero image + gallery */}
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  borderRadius: radiusMd,
+                  overflow: "hidden",
+                  backgroundColor: noPhotoBg,
+                }}
+              >
+                {renderHeroImage()}
+              </View>
+              {renderPhotoGallery()}
+            </View>
+
+            {/* Right column: all recipe content */}
+            <View style={{ flex: 1 }}>{renderRecipeContent()}</View>
+          </View>
+        ) : (
+          /* Mobile: single column */
+          <View>
+            {/* Hero image — full width, no radius on mobile */}
+            <View style={{ backgroundColor: noPhotoBg }}>
+              {renderHeroImage()}
+            </View>
+            {renderPhotoGallery() && (
+              <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+                {renderPhotoGallery()}
+              </View>
+            )}
+
+            {/* Recipe content */}
+            <View style={{ padding: 16 }}>{renderRecipeContent()}</View>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: "#f5f5f5",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 12,
-    color: "#333",
-  },
-  meta: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 16,
-  },
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 16,
-    color: "#333",
-  },
-  tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
-  tag: {
-    backgroundColor: "#007AFF",
-    color: "white",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 4,
-    fontSize: 12,
-  },
-  metadataRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-    backgroundColor: "white",
-    padding: 12,
-    borderRadius: 8,
-  },
-  ratingSection: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  averageRatingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  userRatingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  ratingLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginRight: 12,
-    minWidth: 80,
-  },
-  ratingCount: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 8,
-  },
-  userRatingValue: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFD700",
-    marginLeft: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 24,
-    marginBottom: 12,
-    color: "#333",
-  },
-  listItem: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 8,
-    color: "#333",
-  },
-  stepItem: {
-    flexDirection: "row",
-    marginBottom: 16,
-    alignItems: "flex-start",
-  },
-  stepNumber: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 12,
-    color: "#007AFF",
-    minWidth: 24,
-  },
-  stepText: {
-    fontSize: 16,
-    lineHeight: 24,
-    flex: 1,
-    color: "#333",
-  },
-  story: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontStyle: "italic",
-    color: "#666",
-  },
-  actions: {
-    marginTop: 32,
-    flexDirection: "row",
-    gap: 12,
-  },
-  editButton: {
-    backgroundColor: "#007AFF",
-    padding: 16,
-    borderRadius: 8,
-    flex: 1,
-    alignItems: "center",
-  },
-  editButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    backgroundColor: "#FF3B30",
-    padding: 16,
-    borderRadius: 8,
-    flex: 1,
-    alignItems: "center",
-  },
-  deleteButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  addToCollectionButton: {
-    padding: 12,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 8
-  },
-  addToCollectionButtonText: {
-    fontSize: 14,
-    color: "#333"
-  },
-  collectionMembershipHint: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 12,
-    textAlign: "center"
-  },
-  collectionMembershipLoading: {
-    paddingVertical: 8
-  },
-  collectionPicker: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3
-  },
-  collectionPickerItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
-  },
-  collectionPickerItemText: {
-    fontSize: 14
-  },
-  collectionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
-  },
-  collectionActionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1
-  },
-  collectionActionAdd: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF"
-  },
-  collectionActionRemove: {
-    backgroundColor: "#fff",
-    borderColor: "#d32f2f"
-  },
-  collectionActionText: {
-    fontSize: 12,
-    fontWeight: "600"
-  },
-  collectionActionTextAdd: {
-    color: "#fff"
-  },
-  collectionActionTextRemove: {
-    color: "#d32f2f"
-  },
-  error: {
-    color: "red",
-    textAlign: "center",
-    marginTop: 20,
-  },
-  loginPrompt: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginVertical: 8,
-  },
-  photoGallery: {
-    marginVertical: 16
-  },
-  photoContainer: {
-    width: Dimensions.get("window").width * 0.7,
-    height: 250,
-    marginRight: 12,
-    position: "relative",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 12,
-    overflow: "hidden"
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12
-  },
-  photoDeleteButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: 16,
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  photoDeleteButtonText: {
-    color: "#fff",
-    fontSize: 18
-  },
-});
