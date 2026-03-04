@@ -29,6 +29,10 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ### Active
 
+<!-- v1.1: Design & Responsive -->
+- [ ] All screens match cookbook.pen designs across mobile (390px), tablet (768px), and web (1440px)
+- [ ] Missing screen designs created in .pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
+- [ ] Responsive layout system supporting all three breakpoints
 - [ ] Public recipe browsing (list + detail) without family membership
 - [ ] Public recipe attribution to the user who added them
 - [ ] Minimal ads on public browsing screens only
@@ -45,12 +49,26 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - Offline mode — real-time sync and RLS are core
 - Full version history for recipes — "duplicate and edit" covers needs
 
+## Current Milestone: v1.1 Design & Responsive
+
+**Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, and implement deferred v1.0 features (public browsing, home navigation, monetization hooks).
+
+**Target features:**
+- Design-first UI rebuild matching cookbook.pen across all 3 breakpoints
+- Missing .pen designs: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
+- Responsive layout system (mobile 390px, tablet 768px, web 1440px)
+- Public recipe browsing and attribution
+- Home screen navigation to recipe features
+- Monetization hooks (ads, subscription gating)
+- Scan photo display and photo thumbnails
+
 ## Context
 
 Shipped v1.0 with 20,548 LOC TypeScript across 86 files.
 Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, edge functions, real-time), Google Cloud Vision API.
 6 phases completed over 29 days. Photo scanning with confidence scoring and multi-image support is the headline feature.
-Initial UAT confirmed all core flows work on device. Home navigation and public browsing are the main gaps for next milestone.
+cookbook.pen contains 9 screens × 3 breakpoints + 8 reusable components. Missing 5 screens that need design before implementation.
+v1.0 was mobile-only; v1.1 expands to fully responsive mobile/tablet/web.
 
 ## Constraints
 
@@ -78,4 +96,4 @@ Initial UAT confirmed all core flows work on device. Home navigation and public 
 | Volume conversions via milliliter intermediate | Simplifies conversion matrix | ✓ Good |
 
 ---
-*Last updated: 2026-03-04 after v1.0 milestone*
+*Last updated: 2026-03-03 after v1.1 milestone start*
