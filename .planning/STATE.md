@@ -76,6 +76,9 @@ Progress: [████████░░] 77%
 - **10-05 Cooking mode is a dedicated route:** [id]/cook.tsx is a plain Expo Router route (not Modal or overlay) — exits via router.back() to recipe detail, clean navigation.
 - **10-05 Full ingredient list on every step:** RecipeStep has no per-step ingredient assignment, so all ingredients shown on every step per CONTEXT.md discretion decision.
 - **10-05 Percentage-based progress bar:** width as template literal `${percent}%` avoids Dimensions.get per project constraint (dimension-sensitive styles must come from useBreakpoint).
+- **10-04 PendingPhoto type:** extends { uri, name, type } to match uploadRecipePhoto's existing file-object signature; onSubmit receives (input: CreateRecipeInput, newPhotos: PendingPhoto[]) so wrappers can upload photos after create/update with correct recipeId
+- **10-04 parseIngredient at add-time:** Called immediately when ingredient is added (single-add or bulk), skipping the old confirm/dismiss UX — simpler flow, data still stored correctly
+- **10-04 RecipeForm as shared component:** create.tsx reduced from 574 to 37 lines, edit.tsx from 687 to 92 lines; wrapper screens own submit side-effects, RecipeForm owns form state only
 
 ### Phase 9 Decisions
 
