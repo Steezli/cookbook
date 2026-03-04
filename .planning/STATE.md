@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: executing
-last_updated: "2026-03-04T07:11:01.104Z"
-last_activity: 2026-03-04 — 09-03 nav chrome built (MobileTabBar, WebSidebar, TabButton, SidebarItem); awaiting human verification
+last_updated: "2026-03-04T19:31:00Z"
+last_activity: 2026-03-04 — 09-04 gap closure complete (MobileTabBar spacing + Scan icon color, WebSidebar routing + item widths); Phase 09 ready to close
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 83
+  total_plans: 7
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 9 of 13 (Navigation Restructure)
-Plan: 3 of 3 — code complete, awaiting human verification (Task 3 checkpoint)
-Status: At checkpoint — human-verify adaptive navigation at all breakpoints
-Last activity: 2026-03-04 — 09-03 nav chrome built (MobileTabBar, WebSidebar, TabButton, SidebarItem); awaiting human verification
+Plan: 4 of 4 — all plans complete, Phase 09 complete
+Status: Phase 09 complete — all UAT gaps closed, ready for Phase 10
+Last activity: 2026-03-04 — 09-04 fixed MobileTabBar even spacing + Scan icon color; WebSidebar router.navigate routing + alignItems:stretch
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Pending TODOs
 
@@ -75,6 +75,9 @@ Progress: [████████░░] 83%
 - **09-03 Scan button as plain Pressable:** TabTrigger onPress behavior is ambiguous (override vs supplement tab-switch); plain Pressable calling router.push('/(scan)') is unambiguous per research recommendation
 - **09-03 Collections as plain SidebarItem:** Not a registered tab route — TabTrigger without TabList entry would be undefined behavior; plain onPress + router.push('/collections') is correct
 - **09-03 forwardRef pattern for nav components:** TabButton and SidebarItem use React.forwardRef<View, TabTriggerSlotProps & OwnProps> for expo-router/ui asChild compatibility; React.cloneElement passes {color, size} to lucide icon children
+- **09-04 router.navigate() for cross-navigator routing on web:** router.push() silently fails for scan (root stack modal) and collections (non-tab route in tabs group) on web; router.navigate() resolves from root navigator on all platforms
+- **09-04 flex:1 on TabTrigger wrappers:** TabTrigger elements default to shrink-wrap width; must add flex:1 to achieve even 5-way horizontal split in MobileTabBar
+- **09-04 textDisabled for inactive Scan icon:** accentWarm on Camera icon caused Scan to appear permanently active; textDisabled matches other inactive tab icons
 
 ### For v1.1
 
