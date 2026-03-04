@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: executing
-last_updated: "2026-03-04T07:04:54.882Z"
-last_activity: 2026-03-04 — 09-01 completed (lucide icons, jest tsx config, nav types, PageContainer)
+last_updated: "2026-03-04T07:11:01.104Z"
+last_activity: 2026-03-04 — 09-03 nav chrome built (MobileTabBar, WebSidebar, TabButton, SidebarItem); awaiting human verification
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 83
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 9 of 13 (Navigation Restructure)
-Plan: 2 of 3 complete (09-02 done)
-Status: In progress — Plan 03 next
-Last activity: 2026-03-04 — 09-02 completed (screen migration to (tabs)/, root Stack groups, headless Tabs layout)
+Plan: 3 of 3 — code complete, awaiting human verification (Task 3 checkpoint)
+Status: At checkpoint — human-verify adaptive navigation at all breakpoints
+Last activity: 2026-03-04 — 09-03 nav chrome built (MobileTabBar, WebSidebar, TabButton, SidebarItem); awaiting human verification
 
 Progress: [████████░░] 83%
 
@@ -72,6 +72,9 @@ Progress: [████████░░] 83%
 - **09-01 getContainerStyle exported:** Pure function extracted from PageContainer and exported for direct unit testing; no React renderer required, works in node jest environment
 - **09-02 Hidden TabList pattern:** `height:0, overflow:hidden, position:absolute` registers all 5 tab routes with expo-router/ui without visible UI chrome — Plan 03 replaces inline placeholders with real MobileTabBar/WebSidebar
 - **09-02 Route flattening:** `(family)/family/[id]` double-nesting flattened to `(tabs)/family/[id]`; (tabs) prefix stripped from URLs so `/family` resolves to the family tab; all internal links updated
+- **09-03 Scan button as plain Pressable:** TabTrigger onPress behavior is ambiguous (override vs supplement tab-switch); plain Pressable calling router.push('/(scan)') is unambiguous per research recommendation
+- **09-03 Collections as plain SidebarItem:** Not a registered tab route — TabTrigger without TabList entry would be undefined behavior; plain onPress + router.push('/collections') is correct
+- **09-03 forwardRef pattern for nav components:** TabButton and SidebarItem use React.forwardRef<View, TabTriggerSlotProps & OwnProps> for expo-router/ui asChild compatibility; React.cloneElement passes {color, size} to lucide icon children
 
 ### For v1.1
 

@@ -28,7 +28,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 **Milestone Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, ship public recipe browsing, and add monetization hooks (ads on public screens).
 
 - [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
-- [ ] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar)
+- [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar) (completed 2026-03-04)
 - [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec
 - [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
@@ -62,7 +62,7 @@ Plans:
   3. On a tablet-width viewport, the tab bar is replaced by a header navigation matching the cookbook.pen spec
   4. A `PageContainer` component wraps every screen, applying consistent max-width and horizontal padding per breakpoint
   5. No existing screen is broken or unreachable after the route group restructure
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 09-01-PLAN.md — PageContainer, nav types, lucide install, jest config
@@ -125,7 +125,7 @@ Plans:
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | 2/3 | In Progress|  | - |
-| 9. Navigation Restructure | 2/3 | In Progress|  | - |
+| 9. Navigation Restructure | 3/3 | Complete   | 2026-03-04 | - |
 | 10. Core Screens | v1.1 | 0/TBD | Not started | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |

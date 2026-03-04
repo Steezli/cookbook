@@ -17,9 +17,9 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 ### Navigation
 
 - [x] **NAV-01**: Root navigation converted from flat Stack to Tabs route group with (tabs)/, (public)/, (auth)/ separation
-- [ ] **NAV-02**: Mobile bottom tab bar matching cookbook.pen spec (5 tabs: Home, Search, Scan, Favorites, Profile)
-- [ ] **NAV-03**: Web left sidebar (260px) matching cookbook.pen spec (Home, My Recipes, Collections, Scan Recipe, Family, Settings)
-- [ ] **NAV-04**: Tablet header navigation matching cookbook.pen spec
+- [x] **NAV-02**: Mobile bottom tab bar matching cookbook.pen spec (5 tabs: Home, Search, Scan, Favorites, Profile)
+- [x] **NAV-03**: Web left sidebar (260px) matching cookbook.pen spec (Home, My Recipes, Collections, Scan Recipe, Family, Settings)
+- [x] **NAV-04**: Tablet header navigation matching cookbook.pen spec
 - [x] **NAV-05**: Page container component providing consistent padding/max-width per breakpoint
 
 ### Screen Rebuilds
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DESIGN-03 | Phase 8 | Complete |
 | DESIGN-04 | Phase 8 | Pending |
 | NAV-01 | Phase 9 | Complete |
-| NAV-02 | Phase 9 | Pending |
-| NAV-03 | Phase 9 | Pending |
-| NAV-04 | Phase 9 | Pending |
+| NAV-02 | Phase 9 | Complete |
+| NAV-03 | Phase 9 | Complete |
+| NAV-04 | Phase 9 | Complete |
 | NAV-05 | Phase 9 | Complete |
 | SCREEN-01 | Phase 10 | Pending |
 | SCREEN-02 | Phase 10 | Pending |
