@@ -84,38 +84,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DESIGN-01 | — | Pending |
-| DESIGN-02 | — | Pending |
-| DESIGN-03 | — | Pending |
-| DESIGN-04 | — | Pending |
-| NAV-01 | — | Pending |
-| NAV-02 | — | Pending |
-| NAV-03 | — | Pending |
-| NAV-04 | — | Pending |
-| NAV-05 | — | Pending |
-| SCREEN-01 | — | Pending |
-| SCREEN-02 | — | Pending |
-| SCREEN-03 | — | Pending |
-| SCREEN-04 | — | Pending |
-| SCREEN-05 | — | Pending |
-| SCREEN-06 | — | Pending |
-| SCREEN-07 | — | Pending |
-| SCREEN-08 | — | Pending |
-| SCREEN-09 | — | Pending |
-| SCREEN-10 | — | Pending |
-| PUB-01 | — | Pending |
-| PUB-02 | — | Pending |
-| PUB-03 | — | Pending |
-| PUB-04 | — | Pending |
-| ADS-01 | — | Pending |
-| ADS-02 | — | Pending |
-| ADS-03 | — | Pending |
+| DESIGN-01 | Phase 8 | Pending |
+| DESIGN-02 | Phase 8 | Pending |
+| DESIGN-03 | Phase 8 | Pending |
+| DESIGN-04 | Phase 8 | Pending |
+| NAV-01 | Phase 9 | Pending |
+| NAV-02 | Phase 9 | Pending |
+| NAV-03 | Phase 9 | Pending |
+| NAV-04 | Phase 9 | Pending |
+| NAV-05 | Phase 9 | Pending |
+| SCREEN-01 | Phase 10 | Pending |
+| SCREEN-02 | Phase 10 | Pending |
+| SCREEN-03 | Phase 10 | Pending |
+| SCREEN-04 | Phase 10 | Pending |
+| PUB-01 | Phase 11 | Pending |
+| PUB-02 | Phase 11 | Pending |
+| PUB-03 | Phase 11 | Pending |
+| PUB-04 | Phase 11 | Pending |
+| SCREEN-05 | Phase 12 | Pending |
+| SCREEN-06 | Phase 12 | Pending |
+| SCREEN-07 | Phase 12 | Pending |
+| SCREEN-08 | Phase 12 | Pending |
+| SCREEN-09 | Phase 12 | Pending |
+| SCREEN-10 | Phase 12 | Pending |
+| ADS-01 | Phase 13 | Pending |
+| ADS-02 | Phase 13 | Pending |
+| ADS-03 | Phase 13 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 26 total
-- Mapped to phases: 0
-- Unmapped: 26 ⚠️
+- Mapped to phases: 26
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation*

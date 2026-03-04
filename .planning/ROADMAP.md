@@ -5,6 +5,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1-4, 6-7 (shipped 2026-03-04)
+- 🚧 **v1.1 Design & Responsive** — Phases 8-13 (in progress)
 
 ## Phases
 
@@ -22,12 +23,86 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 </details>
 
-### Deferred from v1.0
+### 🚧 v1.1 Design & Responsive (In Progress)
 
-The following phases were in v1.0 scope but deferred to the next milestone:
+**Milestone Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, ship public recipe browsing, and add monetization hooks (ads on public screens).
 
-- [ ] Phase 5: Public + Monetization — PUB-01, PUB-02, MON-01, MON-02
-- [ ] Phase 8: Home Navigation + Photo Polish — REC-04, home nav, scan photo display
+- [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
+- [ ] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar)
+- [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec
+- [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
+- [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
+- [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
+
+## Phase Details
+
+### Phase 8: Design Foundation
+**Goal**: The design system primitives exist and are usable by all subsequent phases — tokens, breakpoint detection, fonts, and every missing screen design.
+**Depends on**: Phase 7 (v1.0 complete)
+**Requirements**: DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04
+**Success Criteria** (what must be TRUE):
+  1. A `tokens.ts` file exists with all cookbook.pen `$` variables as TypeScript constants and is importable from any screen
+  2. A `useBreakpoint()` hook returns `mobile`, `tablet`, or `web` correctly on all platforms (native devices by screen size, web by window resize)
+  3. Bricolage Grotesque and DM Sans fonts load via `@expo-google-fonts` and render without fallback on first paint
+  4. cookbook.pen contains designed layouts (all 3 breakpoints) for Sign Up, Forgot Password, Profile/Settings, Invite, and Draft Review screens
+**Plans**: TBD
+
+### Phase 9: Navigation Restructure
+**Goal**: The app's root navigation is converted from a flat Stack to a Tabs route group with breakpoint-aware adaptive nav, and all existing screens remain accessible in their new file locations.
+**Depends on**: Phase 8
+**Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
+**Success Criteria** (what must be TRUE):
+  1. Authenticated users land on the Home tab after login and can reach all five tab destinations on mobile (Home, Search, Scan, Favorites, Profile)
+  2. On a web-width viewport, the bottom tab bar is replaced by a 260px fixed left sidebar matching the cookbook.pen spec
+  3. On a tablet-width viewport, the tab bar is replaced by a header navigation matching the cookbook.pen spec
+  4. A `PageContainer` component wraps every screen, applying consistent max-width and horizontal padding per breakpoint
+  5. No existing screen is broken or unreachable after the route group restructure
+**Plans**: TBD
+
+### Phase 10: Core Screens
+**Goal**: Home, recipe list, recipe detail, and create/edit screens match cookbook.pen at all three breakpoints and the home screen provides clear navigation to all recipe features.
+**Depends on**: Phase 9
+**Requirements**: SCREEN-01, SCREEN-02, SCREEN-03, SCREEN-04
+**Success Criteria** (what must be TRUE):
+  1. The home screen displays a greeting, search entry point, featured recipes, and quick-action buttons that navigate to Scan, Recipes, Collections, and Family
+  2. The recipe list displays photo thumbnails and adapts to a 1-column (mobile), 2-column (tablet), and 3-column (web) grid
+  3. The recipe detail screen renders correctly at all three breakpoints with the full cookbook.pen layout
+  4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
+**Plans**: TBD
+
+### Phase 11: Public Browsing
+**Goal**: Unauthenticated users can browse and read public recipes without logging in, and every public recipe shows who added it.
+**Depends on**: Phase 9
+**Requirements**: PUB-01, PUB-02, PUB-03, PUB-04
+**Success Criteria** (what must be TRUE):
+  1. A user who has never logged in can open the app and browse public recipes using a search bar and filter chips
+  2. Tapping a public recipe shows a read-only detail view with the recipe author's display name (not raw email)
+  3. The public browsing surface has its own navigation header (logo, Sign In, and Get Started CTA) — no authenticated chrome appears
+  4. The recipe list loads the next page of results when the user scrolls to the bottom (cursor-based pagination)
+**Plans**: TBD
+
+### Phase 12: Remaining Screens
+**Goal**: All screens not covered in Phase 10 (collections, family, scan/draft, auth, profile/settings, invite) match cookbook.pen at all three breakpoints, including scan photo display in draft review.
+**Depends on**: Phase 10
+**Requirements**: SCREEN-05, SCREEN-06, SCREEN-07, SCREEN-08, SCREEN-09, SCREEN-10
+**Success Criteria** (what must be TRUE):
+  1. The collections list and detail screens render correctly at all three breakpoints matching cookbook.pen
+  2. The family management screens render correctly at all three breakpoints matching cookbook.pen
+  3. The scan upload and draft review screens render correctly at all three breakpoints, and the draft review screen displays the uploaded photo alongside the extracted draft
+  4. Auth screens (Login, Sign Up, Forgot Password) render correctly at all three breakpoints matching cookbook.pen
+  5. Profile/Settings and Invite screens are implemented (these are net-new screens) and match cookbook.pen at all three breakpoints
+**Plans**: TBD
+
+### Phase 13: Advertising
+**Goal**: Ad banners appear on public browsing screens only, the AdMob SDK is isolated from the web build, and iOS users are prompted for ad tracking permission.
+**Depends on**: Phase 11
+**Requirements**: ADS-01, ADS-02, ADS-03
+**Success Criteria** (what must be TRUE):
+  1. An ad banner renders on the public recipe list and detail screens on iOS and Android (320x50 mobile, 728x90 tablet)
+  2. No ad component appears on any authenticated screen — logged-in users never see ads
+  3. All platform builds succeed (`expo export --platform web`, iOS, Android) without errors from AdMob SDK isolation
+  4. On iOS, the ATT permission prompt appears before the first ad request and the app handles both allow and deny gracefully
+**Plans**: TBD
 
 ## Progress
 
@@ -39,5 +114,9 @@ The following phases were in v1.0 scope but deferred to the next milestone:
 | 4. Trust + Collaboration | v1.0 | 6/6 | Complete | 2026-02-07 |
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
-| 5. Public + Monetization | deferred | 0/? | Not started | - |
-| 8. Home Nav + Photo Polish | deferred | 0/? | Not started | - |
+| 8. Design Foundation | v1.1 | 0/TBD | Not started | - |
+| 9. Navigation Restructure | v1.1 | 0/TBD | Not started | - |
+| 10. Core Screens | v1.1 | 0/TBD | Not started | - |
+| 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
+| 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
+| 13. Advertising | v1.1 | 0/TBD | Not started | - |
