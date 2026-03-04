@@ -39,4 +39,24 @@ describe('getContainerStyle', () => {
       expect(style.width).toBe('100%');
     });
   });
+
+  describe('style merging', () => {
+    it('getContainerStyle output can be merged with a custom style object', () => {
+      const base = getContainerStyle('mobile');
+      const custom = { backgroundColor: 'red' };
+      // The component uses [containerStyle, style] — verify the output is a plain object
+      const merged = Object.assign({}, base, custom);
+      expect(merged.paddingHorizontal).toBe(20);
+      expect(merged.backgroundColor).toBe('red');
+    });
+  });
+
+  describe('default variant', () => {
+    it('default variant applies flex:1 and no max-width constraint', () => {
+      const style = getContainerStyle('tablet', 'default');
+      expect(style.flex).toBe(1);
+      expect(style.maxWidth).toBeUndefined();
+      expect(style.alignSelf).toBeUndefined();
+    });
+  });
 });
