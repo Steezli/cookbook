@@ -1,98 +1,67 @@
 # Requirements: Cookbook (Family Recipe Vault)
 
-**Defined:** 2026-02-02
-**Core Value:** Families can save and share treasured recipes (like Grandma’s) without losing control over who gets to see them.
+**Defined:** 2026-03-03
+**Core Value:** Families can save and share treasured recipes (like Grandma's) without losing control over who gets to see them.
 
-## v1 Requirements
+## v1.1 Requirements
 
-Requirements for initial release. Each maps to roadmap phases.
+Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases.
 
-### Authentication
+### Design Foundation
 
-- [ ] **AUTH-01**: User can create an account with email/password
-- [ ] **AUTH-02**: User can log in and stay logged in across sessions
-- [ ] **AUTH-03**: User can reset password via email link
-- [ ] **AUTH-04**: User can log out from any screen
+- [ ] **DESIGN-01**: Design token system (tokens.ts) extracting all cookbook.pen $ variables as TypeScript constants
+- [ ] **DESIGN-02**: Breakpoint detection hook (useBreakpoint) returning mobile/tablet/web at 390/768/1440px thresholds
+- [ ] **DESIGN-03**: Font loading for Bricolage Grotesque (display) and DM Sans (body) via @expo-google-fonts
+- [ ] **DESIGN-04**: Missing screen designs created in cookbook.pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review (all 3 breakpoints each)
 
-### Family Spaces
+### Navigation
 
-- [ ] **FAM-01**: User can create a family space
-- [ ] **FAM-02**: Family admins can invite members to join a family space
-- [ ] **FAM-03**: Invitee can accept an invite and join the family space
-- [ ] **FAM-04**: Family space has roles (at least admin/member) controlling invites and member management
-- [ ] **FAM-05**: Admin can remove a member; member can leave a family space
+- [ ] **NAV-01**: Root navigation converted from flat Stack to Tabs route group with (tabs)/, (public)/, (auth)/ separation
+- [ ] **NAV-02**: Mobile bottom tab bar matching cookbook.pen spec (5 tabs: Home, Search, Scan, Favorites, Profile)
+- [ ] **NAV-03**: Web left sidebar (260px) matching cookbook.pen spec (Home, My Recipes, Collections, Scan Recipe, Family, Settings)
+- [ ] **NAV-04**: Tablet header navigation matching cookbook.pen spec
+- [ ] **NAV-05**: Page container component providing consistent padding/max-width per breakpoint
 
-### Recipe Visibility & Access Control
+### Screen Rebuilds
 
-- [ ] **VIS-01**: Recipe can be set to one visibility level: private / family / public
-- [ ] **VIS-02**: Users can only view recipes they are allowed to access (privacy enforced server-side, not only in UI)
+- [ ] **SCREEN-01**: Home screen rebuilt to cookbook.pen spec at all 3 breakpoints with feature navigation (greeting, search, featured recipes, quick actions)
+- [ ] **SCREEN-02**: Recipe list screen rebuilt with responsive grid (1-col mobile, 2-col tablet, 3-col web) and photo thumbnails
+- [ ] **SCREEN-03**: Recipe detail screen rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-04**: Create/Edit recipe screens rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-05**: Collections screens rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-06**: Family management screens rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-07**: Scan/Draft screens rebuilt to cookbook.pen spec at all 3 breakpoints with scan photo display in draft review
+- [ ] **SCREEN-08**: Auth screens (Login, Sign Up, Forgot Password) rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-09**: Profile/Settings screen implemented to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-10**: Invite screen implemented to cookbook.pen spec at all 3 breakpoints
 
-### Recipes
+### Public Browsing
 
-- [x] **REC-01**: User can create a recipe manually with ingredients and steps
-- [x] **REC-02**: User can edit a recipe (ingredients, steps, metadata)
-- [x] **REC-03**: User can delete a recipe they own (and/or have permission to manage)
-- [ ] **REC-04**: User can attach one or more photos to a recipe
-- [x] **REC-05**: Recipe supports optional fields: servings, prep time, cook time, tags, and source story
+- [ ] **PUB-01**: Public recipe browse screen with search bar and filter chips (unauthenticated)
+- [ ] **PUB-02**: Public recipe detail screen with read-only view and author attribution
+- [ ] **PUB-03**: Public navigation header with logo, Sign In, and Get Started CTA
+- [ ] **PUB-04**: Cursor-based pagination for public recipe listing
 
-### Collections & Organization
+### Advertising
 
-- [ ] **COLL-01**: User can tag recipes for easy filtering (e.g., “Holiday”, “Dessert”)
-- [ ] **COLL-02**: User can create named collections and add/remove recipes (personal and/or family collections)
+- [ ] **ADS-01**: Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
+- [ ] **ADS-02**: Ad placement on public browsing screens only (never authenticated screens)
+- [ ] **ADS-03**: ATT permission prompt on iOS for ad tracking
 
-### Search & Browse
+## v1.2 Requirements
 
-- [ ] **SRCH-01**: User can search recipes by title and tags
-- [ ] **SRCH-02**: User can browse recipes by visibility and by family space
+Deferred to next milestone. Tracked but not in current roadmap.
 
-### Scan → Draft (AI-assisted)
+### Monetization
 
-- [x] **SCAN-01**: User can upload a recipe photo to start a scan job
-- [x] **SCAN-02**: Scan job produces a structured draft (ingredients, steps, and units) and retains the raw extracted text for reference
-- [x] **SCAN-03**: User can review and edit any field in the draft before saving as a normal recipe
-- [x] **SCAN-04**: User can see scan status and retry failed scans
+- **SUB-01**: Subscription gating on scan feature via RevenueCat entitlement
+- **SUB-02**: Paywall UI displayed when non-subscriber accesses scan
+- **SUB-03**: Web subscription checkout via RevenueCat Web Billing / Stripe
 
-### Units (Metric/Imperial)
+### SEO
 
-- [x] **UNIT-01**: Ingredients support canonical amount+unit storage where possible, while preserving as-entered text for ambiguous cases
-- [x] **UNIT-02**: User can set a preferred unit system (metric/imperial) and recipes display accordingly
-
-### Comments & Ratings
-
-- [x] **SOC-01**: Users can comment on recipes they can access (family-only discussion for private/family; public discussion for public recipes)
-- [ ] **SOC-02**: Users can rate recipes with 0–5 stars in 0.5 increments; recipes display average rating and count
-
-### Public Discovery & Monetization
-
-- [ ] **PUB-01**: Users can browse public recipes (list + detail)
-- [ ] **PUB-02**: Public recipes show attribution to the user who added them
-- [ ] **MON-01**: Minimal ads appear only in public browsing (no ads in private/family areas)
-- [ ] **MON-02**: Scanning feature can be gated by subscription entitlement (v1 hypothesis)
-
-## v2 Requirements
-
-Deferred to future release. Tracked but not in current roadmap.
-
-### Scan Enhancements
-
-- **SCAN-05**: Draft UI highlights low-confidence fields and suggests fixes
-- **SCAN-06**: Multi-photo stitching for long recipes (front/back pages)
-- **SCAN-07**: Auto-tagging and category suggestions from recipe content
-
-### Units & Cooking Utilities
-
-- **UNIT-03**: User can scale recipe amounts by servings (with safe rounding and overrides)
-- **UNIT-04**: Ingredient conversions support common ingredient densities (user-editable)
-
-### Offline & Sync
-
-- **OFF-01**: Recipes are readable offline
-- **OFF-02**: Edits made offline sync safely when reconnected
-
-### Monetization & Business
-
-- **MON-03**: User can subscribe/cancel and see entitlement status on all platforms
-- **MON-04**: Family plan tiers (e.g., more scan credits, larger storage)
+- **SEO-01**: Recipe structured data markup (schema.org/Recipe) for search engine indexing
+- **SEO-02**: Server-rendered public recipe pages for SEO crawlers
 
 ## Out of Scope
 
@@ -100,10 +69,14 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Aggressive ads (layout shift, popups, autoplay) | Conflicts with “easy for Grandma” and reading flow |
-| Default-public recipes | Violates privacy-first “family secret” promise |
-| Auto-publish scans without review | Handwriting OCR is error-prone; trust requires editing |
-| Full version history for recipes | Complexity; “duplicate and edit” covers most needs early |
+| Ads on authenticated/family screens | Destroys family vault trust proposition — conflicts with core value |
+| Interstitial/full-screen ads | Breaks cooking flow, violates AdMob best practices for recipe apps |
+| Auto-redirect unauthenticated users to login | Blocks organic discovery funnel and SEO crawlers |
+| Paywall at cold start | Users must experience scan value before being asked to pay |
+| Bottom tab bar on web | Web users find it jarring and keyboard-inaccessible |
+| Offline mode | Conflicts with real-time RLS model; Supabase offline story immature |
+| Grocery list integration | Expands scope significantly, needs product validation first |
+| Affiliate ingredient links | Meaningful revenue only at significant traffic volume |
 
 ## Traceability
 
@@ -111,44 +84,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| FAM-01 | Phase 1 | Pending |
-| FAM-02 | Phase 1 | Pending |
-| FAM-03 | Phase 1 | Pending |
-| FAM-04 | Phase 1 | Pending |
-| FAM-05 | Phase 1 | Pending |
-| VIS-01 | Phase 1 | Pending |
-| VIS-02 | Phase 1 | Pending |
-| REC-01 | Phase 2 | Pending |
-| REC-02 | Phase 2 | Pending |
-| REC-03 | Phase 2 | Pending |
-| REC-04 | Phase 8 | Pending |
-| REC-05 | Phase 2 | Pending |
-| COLL-01 | Phase 2 | Complete |
-| COLL-02 | Phase 2 | Pending |
-| SRCH-01 | Phase 2 | Pending |
-| SRCH-02 | Phase 2 | Pending |
-| SCAN-01 | Phase 6 | Complete |
-| SCAN-02 | Phase 3 | Complete |
-| SCAN-03 | Phase 6 | Complete |
-| SCAN-04 | Phase 6 | Complete |
-| UNIT-01 | Phase 4 | Complete |
-| UNIT-02 | Phase 4 | Complete |
-| SOC-01 | Phase 4 | Complete |
-| SOC-02 | Phase 4 | Pending |
-| PUB-01 | Phase 5 | Pending |
-| PUB-02 | Phase 5 | Pending |
-| MON-01 | Phase 5 | Pending |
-| MON-02 | Phase 5 | Pending |
+| DESIGN-01 | — | Pending |
+| DESIGN-02 | — | Pending |
+| DESIGN-03 | — | Pending |
+| DESIGN-04 | — | Pending |
+| NAV-01 | — | Pending |
+| NAV-02 | — | Pending |
+| NAV-03 | — | Pending |
+| NAV-04 | — | Pending |
+| NAV-05 | — | Pending |
+| SCREEN-01 | — | Pending |
+| SCREEN-02 | — | Pending |
+| SCREEN-03 | — | Pending |
+| SCREEN-04 | — | Pending |
+| SCREEN-05 | — | Pending |
+| SCREEN-06 | — | Pending |
+| SCREEN-07 | — | Pending |
+| SCREEN-08 | — | Pending |
+| SCREEN-09 | — | Pending |
+| SCREEN-10 | — | Pending |
+| PUB-01 | — | Pending |
+| PUB-02 | — | Pending |
+| PUB-03 | — | Pending |
+| PUB-04 | — | Pending |
+| ADS-01 | — | Pending |
+| ADS-02 | — | Pending |
+| ADS-03 | — | Pending |
 
 **Coverage:**
-- v1 requirements: 31 total
-- Mapped to phases: 31
-- Unmapped: 0 ✓
+- v1.1 requirements: 26 total
+- Mapped to phases: 0
+- Unmapped: 26 ⚠️
 
 ---
-*Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Requirements defined: 2026-03-03*
+*Last updated: 2026-03-03 after initial definition*
