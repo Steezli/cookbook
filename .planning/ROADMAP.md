@@ -45,7 +45,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
   2. A `useBreakpoint()` hook returns `mobile`, `tablet`, or `web` correctly on all platforms (native devices by screen size, web by window resize)
   3. Bricolage Grotesque and DM Sans fonts load via `@expo-google-fonts` and render without fallback on first paint
   4. cookbook.pen contains designed layouts (all 3 breakpoints) for Sign Up, Forgot Password, Profile/Settings, Invite, and Draft Review screens
-**Plans:** 2/3 plans executed
+**Plans:** 3 plans
 
 Plans:
 - [ ] 08-01-PLAN.md — Design tokens and breakpoint hook (TDD)
@@ -62,7 +62,12 @@ Plans:
   3. On a tablet-width viewport, the tab bar is replaced by a header navigation matching the cookbook.pen spec
   4. A `PageContainer` component wraps every screen, applying consistent max-width and horizontal padding per breakpoint
   5. No existing screen is broken or unreachable after the route group restructure
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — PageContainer, nav types, lucide install, jest config
+- [ ] 09-02-PLAN.md — Route group restructure and tabs layout
+- [ ] 09-03-PLAN.md — Nav chrome components (tab bar, sidebar) and wiring
 
 ### Phase 10: Core Screens
 **Goal**: Home, recipe list, recipe detail, and create/edit screens match cookbook.pen at all three breakpoints and the home screen provides clear navigation to all recipe features.
@@ -120,7 +125,7 @@ Plans:
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | 2/3 | In Progress|  | - |
-| 9. Navigation Restructure | v1.1 | 0/TBD | Not started | - |
+| 9. Navigation Restructure | v1.1 | 0/3 | Planned | - |
 | 10. Core Screens | v1.1 | 0/TBD | Not started | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
