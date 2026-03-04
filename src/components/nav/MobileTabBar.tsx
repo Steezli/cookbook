@@ -24,7 +24,7 @@ export function MobileTabBar() {
         flexDirection: "row",
         paddingTop: 12,
         paddingBottom: 28 + insets.bottom,
-        paddingHorizontal: 32,
+        paddingHorizontal: 12,
         alignItems: "center",
         justifyContent: "space-between",
       }}
@@ -41,7 +41,7 @@ export function MobileTabBar() {
           Plain Pressable avoids ambiguity of whether TabTrigger onPress
           overrides or supplements the tab-switch (Research Open Question 1). */}
       <Pressable
-        onPress={() => router.push("/(scan)")}
+        onPress={() => router.push("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
         <Camera color={accentWarm} size={28} />

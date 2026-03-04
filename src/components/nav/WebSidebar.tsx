@@ -72,7 +72,7 @@ export function WebSidebar() {
         <SidebarItem
           icon={<Camera />}
           label="Scan Recipe"
-          onPress={() => router.push("/(scan)")}
+          onPress={() => router.push("/scan")}
         />
 
         <TabTrigger name="family" asChild>

@@ -48,7 +48,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(public)" />
         <Stack.Screen
-          name="(scan)"
+          name="scan"
           options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
