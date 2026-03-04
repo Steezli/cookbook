@@ -24,7 +24,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 
 ### Screen Rebuilds
 
-- [ ] **SCREEN-01**: Home screen rebuilt to cookbook.pen spec at all 3 breakpoints with feature navigation (greeting, search, featured recipes, quick actions)
+- [x] **SCREEN-01**: Home screen rebuilt to cookbook.pen spec at all 3 breakpoints with feature navigation (greeting, search, featured recipes, quick actions)
 - [x] **SCREEN-02**: Recipe list screen rebuilt with responsive grid (1-col mobile, 2-col tablet, 3-col web) and photo thumbnails
 - [ ] **SCREEN-03**: Recipe detail screen rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-04**: Create/Edit recipe screens rebuilt to cookbook.pen spec at all 3 breakpoints
@@ -94,7 +94,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-03 | Phase 9 | Complete |
 | NAV-04 | Phase 9 | Complete |
 | NAV-05 | Phase 9 | Complete |
-| SCREEN-01 | Phase 10 | Pending |
+| SCREEN-01 | Phase 10 | Complete |
 | SCREEN-02 | Phase 10 | Complete |
 | SCREEN-03 | Phase 10 | Pending |
 | SCREEN-04 | Phase 10 | Pending |

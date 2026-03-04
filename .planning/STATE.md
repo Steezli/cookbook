@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
-status: executing
-last_updated: "2026-03-04T21:40:16Z"
-last_activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 fully complete
+status: completed
+last_updated: "2026-03-04T21:42:22.515Z"
+last_activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 done
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 13
-  completed_plans: 10
-  percent: 69
+  completed_plans: 11
+  percent: 77
 ---
 
 # Project State
@@ -31,7 +31,7 @@ Plan: 5 of 5 — 10-05 complete (Cooking Mode screen)
 Status: Phase 10 fully complete — all 5 plans executed (Wave 0 utilities, RecipeCard, Home, RecipeDetail, CookingMode)
 Last activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 done
 
-Progress: [███████░░░] 69%
+Progress: [████████░░] 77%
 
 ## Pending TODOs
 
@@ -70,6 +70,9 @@ Progress: [███████░░░] 69%
 - **10-00 Pure utility module pattern:** Extract pure logic into *Utils.ts files alongside their feature — no React imports, no side effects — so tests run in node jest environment without renderer. Plans 01 and 05 import from these modules rather than inlining the logic.
 - **10-00 formatMetadataLine separator:** Uses ' . ' (space-dot-space) between time and servings parts, matching cookbook.pen spec.
 - **10-00 getCookingProgress step-complete semantics:** (currentStepIndex + 1) / totalSteps — current step is treated as already completed, so step 0 of 5 = 20% (not 0%).
+- **10-01 RecipeCard no-photo state:** #E8E0D8 warm placeholder + UtensilsCrossed icon (size 32, #8B7355) per cookbook.pen spec
+- **10-01 Home screen batch thumbnails:** All recipe IDs passed to getRecipeThumbnailUrlMap before render — not fetched per-card in renderItem
+- **10-01 Home screen FlatList pattern:** Featured horizontal (220px fixed cards); recent vertical grid with numColumns + key={numColumns}; columnWrapperStyle only when numColumns > 1
 - **10-05 Cooking mode is a dedicated route:** [id]/cook.tsx is a plain Expo Router route (not Modal or overlay) — exits via router.back() to recipe detail, clean navigation.
 - **10-05 Full ingredient list on every step:** RecipeStep has no per-step ingredient assignment, so all ingredients shown on every step per CONTEXT.md discretion decision.
 - **10-05 Percentage-based progress bar:** width as template literal `${percent}%` avoids Dimensions.get per project constraint (dimension-sensitive styles must come from useBreakpoint).
