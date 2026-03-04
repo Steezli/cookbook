@@ -28,6 +28,12 @@ export default function Index() {
             <Link href="/(family)" style={styles.link}>
               Families
             </Link>
+            <Link href="/(scan)" style={styles.link}>
+              Scan Recipes
+            </Link>
+            <Link href={"/settings" as any} style={styles.link}>
+              Settings
+            </Link>
             <Link href="/(auth)/logout" style={styles.link}>
               Log out
             </Link>

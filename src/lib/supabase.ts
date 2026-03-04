@@ -35,7 +35,12 @@ export const supabase = createClient(url, anonKey, {
     storage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false
+    detectSessionInUrl: false,
+    // React Native has no Web Locks API (navigator.locks).
+    // Provide a simple sequential lock to prevent the abort timeout error.
+    lock: async (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
+      return await fn();
+    },
   }
 });
 

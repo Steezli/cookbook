@@ -2,61 +2,80 @@
 
 ## What This Is
 
-An app (web + phone) to capture handwritten family recipes, translate them into clean, searchable recipes, and keep them safely organized. It’s built around family sharing: recipes can stay private, be shared within an invite-only family space, or (optionally) be shared publicly.
+A cross-platform app (Expo/React Native) for capturing handwritten family recipes via photo scanning, translating them into clean searchable recipes with AI-powered OCR, and organizing them within privacy-controlled family spaces. Built on Supabase with RLS-enforced access control.
 
 ## Core Value
 
-Families can save and share treasured recipes (like Grandma’s) without losing control over who gets to see them.
+Families can save and share treasured recipes (like Grandma's) without losing control over who gets to see them.
 
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Users can create an account, log in, stay logged in, reset password, and log out — v1.0
+- ✓ Users can create/join invite-only family spaces with admin/member roles — v1.0
+- ✓ Users can add recipes manually with ingredients, steps, and metadata — v1.0
+- ✓ Users can organize recipes into personal/family collections with tags — v1.0
+- ✓ Users can search recipes by title and tags, browse by visibility/family — v1.0
+- ✓ Users can upload a photo and get an editable draft from AI extraction — v1.0
+- ✓ Users can review/edit any draft field before saving as a recipe — v1.0
+- ✓ Failed scans show errors and support retry — v1.0
+- ✓ Multi-image upload for multi-page recipes — v1.0
+- ✓ Per-recipe visibility: private/family/public enforced server-side — v1.0
+- ✓ Comments: family-only for private/family, public for public recipes — v1.0
+- ✓ Half-star ratings with averages and counts — v1.0
+- ✓ Ingredients stored canonically with metric/imperial display preference — v1.0
+- ✓ Scan UI renders natively on iOS/Android (React Native components) — v1.0
 
 ### Active
 
-- [ ] Users can create an account, create/join an invite-only family space, and manage family members
-- [ ] Users can add recipes manually and organize them into a personal/family collection
-- [ ] Users can upload a photo of a handwritten recipe and get an editable draft (ingredients, steps, units) from AI extraction
-- [ ] Users can set each recipe’s visibility: private / family / public (public is opt-in)
-- [ ] Users can comment on and rate recipes (5-star with half stars); private/family recipes use family-only discussion, public recipes have public discussion
-- [ ] Recipes support both metric and imperial display, based on a canonical stored representation and user preferences
-- [ ] Public browsing includes minimal, non-intrusive ads; AI scanning is monetizable via subscription (v1 hypothesis)
+- [ ] Public recipe browsing (list + detail) without family membership
+- [ ] Public recipe attribution to the user who added them
+- [ ] Minimal ads on public browsing screens only
+- [ ] Scan feature gated by subscription entitlement (v1 hypothesis)
+- [ ] Home screen navigation to recipe features (currently undiscoverable)
+- [ ] Scan photo display in draft review (currently placeholder)
+- [ ] Photo thumbnails in recipe list views
 
 ### Out of Scope
 
-- Aggressive ad experiences (popovers, layout shift, autoplay media) — conflicts with usability and “heirloom” vibe
+- Aggressive ad experiences (popovers, layout shift, autoplay media) — conflicts with usability
 - Forced public sharing or default-public recipes — families must control visibility
-- Fully-automated “no review needed” AI publishing — OCR/parsing must be user-reviewable for accuracy
-- Mobile-native-only experience — web remains a first-class surface
+- Fully-automated "no review needed" AI publishing — OCR must be user-reviewable
+- Offline mode — real-time sync and RLS are core
+- Full version history for recipes — "duplicate and edit" covers needs
 
 ## Context
 
-- Primary differentiator is family sharing with privacy control (private / family / public) per recipe.
-- AI is primarily for extracting and structuring content from photos; users must be able to review and correct any field.
-- Recipe data includes at minimum ingredients + steps; likely also servings, prep/cook time, photos, tags, and an optional source story.
-- Monetization should avoid “recipe blog” ad overload; preference is minimal ads on public browsing and optional subscription for scanning.
+Shipped v1.0 with 20,548 LOC TypeScript across 86 files.
+Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, edge functions, real-time), Google Cloud Vision API.
+6 phases completed over 29 days. Photo scanning with confidence scoring and multi-image support is the headline feature.
+Initial UAT confirmed all core flows work on device. Home navigation and public browsing are the main gaps for next milestone.
 
 ## Constraints
 
-- **Platforms**: Web + phone — cross-platform approach preferred.
-- **Usability**: “Grandma-friendly” — adding recipes (manual or scan) and finding recipes must be simple and direct.
-- **Data**: SQL-based database preferred — reliability and queryability for search/collections.
-- **Units**: Must support metric + imperial — store canonical values and render in user preference.
-- **Tech preference**: JavaScript-based stack preferred; TypeScript is acceptable when it provides clear value.
+- **Platforms**: Expo/React Native — iOS, Android, web
+- **Usability**: "Grandma-friendly" — simple recipe entry and discovery
+- **Data**: Supabase (PostgreSQL) with RLS — reliability and privacy enforcement
+- **Units**: Canonical storage with metric/imperial display preference
+- **Tech**: TypeScript, React Native components only (no web HTML elements)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Invite-only family space | Sharing is centered on trusted family membership | — Pending |
-| Per-recipe visibility: private / family / public | Families keep control of “secret” recipes | — Pending |
-| Attribution on public recipes is to the user (family attribution is “maybe”) | Keeps authorship clear without exposing family identity by default | — Pending |
-| AI scan creates a structured draft (ingredients/steps/units) | Minimizes manual effort while keeping review/edit control | — Pending |
-| Comments/ratings: family-only for private/family; public discussion for public | Privacy for family recipes; community for public | — Pending |
-| Units stored canonically, displayed in user preference | Enables consistent scaling/conversion across recipes | — Pending |
-| Monetization: minimal ads on public + subscription unlocks AI scanning | Aligns with usability; scanning is paid value | — Pending |
+| Invite-only family space | Sharing centered on trusted family membership | ✓ Good |
+| Per-recipe visibility: private/family/public | Families keep control of "secret" recipes | ✓ Good |
+| AI scan creates structured draft | Minimizes effort while keeping review control | ✓ Good |
+| Supabase RLS for access control | Server-side privacy enforcement | ✓ Good |
+| JSONB for ingredients/steps | Flexible structured data without extra tables | ✓ Good |
+| Canonical unit storage with preference display | Enables conversion without data loss | ✓ Good |
+| React Native Modal for dialogs | Cross-platform, replaces web position:fixed overlays | ✓ Good |
+| getDraftByJobId bridge pattern | Scan job ID → draft FK lookup resolves navigation | ✓ Good |
+| Confidence badges as { bg, text } objects | Dynamic styling without Tailwind on native | ✓ Good |
+| security_definer for recursive comments CTE | Avoids RLS recursion performance issues | ✓ Good |
+| Denormalized rating aggregates on recipes | Eliminates expensive joins in list views | ✓ Good |
+| Volume conversions via milliliter intermediate | Simplifies conversion matrix | ✓ Good |
 
 ---
-*Last updated: 2026-02-02 after initialization*
+*Last updated: 2026-03-04 after v1.0 milestone*

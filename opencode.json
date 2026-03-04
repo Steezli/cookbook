@@ -5,13 +5,67 @@
     "shell": "allow"
   },
   "agent": {
-    "Gsd-Executor": {
+    "gsd-executor": {
       "permission": {
         "bash": "allow",
         "shell": "allow"
       }
     },
-    "gsd-executor": {
+    "gsd-codebase-mapper": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-debugger": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-integration-checker": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-phase-researcher": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-plan-checker": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-planner": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-project-researcher": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-research-synthesizer": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-roadmapper": {
+      "permission": {
+        "bash": "allow",
+        "shell": "allow"
+      }
+    },
+    "gsd-verifier": {
       "permission": {
         "bash": "allow",
         "shell": "allow"

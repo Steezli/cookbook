@@ -1,4 +1,5 @@
 import { Link, router, useLocalSearchParams } from "expo-router";
+import type { Href } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -29,7 +30,7 @@ export default function SignupScreen() {
       });
       if (error) throw error;
       const target = typeof next === "string" && next.startsWith("/") ? next : "/";
-      router.replace(target);
+      router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sign up failed";
       Alert.alert("Sign up failed", msg);

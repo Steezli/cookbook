@@ -23,6 +23,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       .then(({ data }) => {
         if (!isMounted) return;
         setSession(data.session ?? null);
+        if (data.session?.user) {
+          ensureProfile(data.session.user.id, data.session.user.email ?? '');
+        }
         setIsLoading(false);
       })
       .catch(() => {
@@ -32,6 +35,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
+      if (nextSession?.user) {
+        ensureProfile(nextSession.user.id, nextSession.user.email ?? '');
+      }
     });
 
     return () => {
@@ -42,6 +48,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({ session, isLoading }), [session, isLoading]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+}
+
+async function ensureProfile(userId: string, email: string) {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ user_id: userId, email: email.toLowerCase() }, { onConflict: 'user_id' });
+  if (error) console.warn('Profile ensure failed:', error.message);
 }
 
 export function useSession() {

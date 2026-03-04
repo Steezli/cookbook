@@ -29,11 +29,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Recipes
 
-- [ ] **REC-01**: User can create a recipe manually with ingredients and steps
-- [ ] **REC-02**: User can edit a recipe (ingredients, steps, metadata)
-- [ ] **REC-03**: User can delete a recipe they own (and/or have permission to manage)
+- [x] **REC-01**: User can create a recipe manually with ingredients and steps
+- [x] **REC-02**: User can edit a recipe (ingredients, steps, metadata)
+- [x] **REC-03**: User can delete a recipe they own (and/or have permission to manage)
 - [ ] **REC-04**: User can attach one or more photos to a recipe
-- [ ] **REC-05**: Recipe supports optional fields: servings, prep time, cook time, tags, and source story
+- [x] **REC-05**: Recipe supports optional fields: servings, prep time, cook time, tags, and source story
 
 ### Collections & Organization
 
@@ -47,19 +47,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Scan → Draft (AI-assisted)
 
-- [ ] **SCAN-01**: User can upload a recipe photo to start a scan job
-- [ ] **SCAN-02**: Scan job produces a structured draft (ingredients, steps, and units) and retains the raw extracted text for reference
-- [ ] **SCAN-03**: User can review and edit any field in the draft before saving as a normal recipe
-- [ ] **SCAN-04**: User can see scan status and retry failed scans
+- [x] **SCAN-01**: User can upload a recipe photo to start a scan job
+- [x] **SCAN-02**: Scan job produces a structured draft (ingredients, steps, and units) and retains the raw extracted text for reference
+- [x] **SCAN-03**: User can review and edit any field in the draft before saving as a normal recipe
+- [x] **SCAN-04**: User can see scan status and retry failed scans
 
 ### Units (Metric/Imperial)
 
-- [ ] **UNIT-01**: Ingredients support canonical amount+unit storage where possible, while preserving as-entered text for ambiguous cases
-- [ ] **UNIT-02**: User can set a preferred unit system (metric/imperial) and recipes display accordingly
+- [x] **UNIT-01**: Ingredients support canonical amount+unit storage where possible, while preserving as-entered text for ambiguous cases
+- [x] **UNIT-02**: User can set a preferred unit system (metric/imperial) and recipes display accordingly
 
 ### Comments & Ratings
 
-- [ ] **SOC-01**: Users can comment on recipes they can access (family-only discussion for private/family; public discussion for public recipes)
+- [x] **SOC-01**: Users can comment on recipes they can access (family-only discussion for private/family; public discussion for public recipes)
 - [ ] **SOC-02**: Users can rate recipes with 0–5 stars in 0.5 increments; recipes display average rating and count
 
 ### Public Discovery & Monetization
@@ -125,19 +125,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REC-01 | Phase 2 | Pending |
 | REC-02 | Phase 2 | Pending |
 | REC-03 | Phase 2 | Pending |
-| REC-04 | Phase 2 | Pending |
+| REC-04 | Phase 8 | Pending |
 | REC-05 | Phase 2 | Pending |
-| COLL-01 | Phase 2 | Pending |
+| COLL-01 | Phase 2 | Complete |
 | COLL-02 | Phase 2 | Pending |
 | SRCH-01 | Phase 2 | Pending |
 | SRCH-02 | Phase 2 | Pending |
-| SCAN-01 | Phase 3 | Pending |
-| SCAN-02 | Phase 3 | Pending |
-| SCAN-03 | Phase 3 | Pending |
-| SCAN-04 | Phase 3 | Pending |
-| UNIT-01 | Phase 4 | Pending |
-| UNIT-02 | Phase 4 | Pending |
-| SOC-01 | Phase 4 | Pending |
+| SCAN-01 | Phase 6 | Complete |
+| SCAN-02 | Phase 3 | Complete |
+| SCAN-03 | Phase 6 | Complete |
+| SCAN-04 | Phase 6 | Complete |
+| UNIT-01 | Phase 4 | Complete |
+| UNIT-02 | Phase 4 | Complete |
+| SOC-01 | Phase 4 | Complete |
 | SOC-02 | Phase 4 | Pending |
 | PUB-01 | Phase 5 | Pending |
 | PUB-02 | Phase 5 | Pending |
