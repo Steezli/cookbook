@@ -28,7 +28,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 **Milestone Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, ship public recipe browsing, and add monetization hooks (ads on public screens).
 
 - [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
-- [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar) (completed 2026-03-04)
+- [ ] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar); UAT gap closure in progress
 - [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec
 - [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
@@ -62,12 +62,13 @@ Plans:
   3. On a tablet-width viewport, the tab bar is replaced by a header navigation matching the cookbook.pen spec
   4. A `PageContainer` component wraps every screen, applying consistent max-width and horizontal padding per breakpoint
   5. No existing screen is broken or unreachable after the route group restructure
-**Plans:** 3/3 plans complete
+**Plans:** 4 plans (3 complete + 1 gap closure)
 
 Plans:
-- [ ] 09-01-PLAN.md — PageContainer, nav types, lucide install, jest config
-- [ ] 09-02-PLAN.md — Route group restructure and tabs layout
-- [ ] 09-03-PLAN.md — Nav chrome components (tab bar, sidebar) and wiring
+- [x] 09-01-PLAN.md — PageContainer, nav types, lucide install, jest config
+- [x] 09-02-PLAN.md — Route group restructure and tabs layout
+- [x] 09-03-PLAN.md — Nav chrome components (tab bar, sidebar) and wiring
+- [ ] 09-04-PLAN.md — UAT gap closure: tab bar spacing, scan icon color, sidebar routing
 
 ### Phase 10: Core Screens
 **Goal**: Home, recipe list, recipe detail, and create/edit screens match cookbook.pen at all three breakpoints and the home screen provides clear navigation to all recipe features.
@@ -124,8 +125,8 @@ Plans:
 | 4. Trust + Collaboration | v1.0 | 6/6 | Complete | 2026-02-07 |
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
-| 8. Design Foundation | 2/3 | In Progress|  | - |
-| 9. Navigation Restructure | 3/3 | Complete   | 2026-03-04 | - |
+| 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
+| 9. Navigation Restructure | v1.1 | 3/4 | Gap closure | - |
 | 10. Core Screens | v1.1 | 0/TBD | Not started | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
