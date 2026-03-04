@@ -29,7 +29,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 - [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
 - [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar); UAT gap closure in progress (completed 2026-03-04)
-- [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec
+- [x] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec (completed 2026-03-04)
 - [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
 - [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
@@ -80,7 +80,7 @@ Plans:
   3. The recipe detail screen renders correctly at all three breakpoints with ratings, comments, and cookbook.pen layout
   4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
   5. Cooking mode displays one step at a time with per-step ingredients, progress bar, and previous/next navigation
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 - [ ] 10-00-PLAN.md — Wave 0: TDD test stubs + utility modules for RecipeCard and Cooking Mode
@@ -136,7 +136,7 @@ Plans:
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | 4/4 | Complete   | 2026-03-04 | - |
-| 10. Core Screens | 5/6 | In Progress|  | - |
+| 10. Core Screens | 6/6 | Complete   | 2026-03-04 | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |

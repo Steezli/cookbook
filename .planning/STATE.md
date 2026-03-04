@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-04T22:10:00.000Z"
-last_activity: 2026-03-04 — 10-02 recipe detail screen rebuilt to cookbook.pen spec (sticky header, responsive 2-col layout, tokens, ratings, comments)
+last_updated: "2026-03-04T21:48:24.146Z"
+last_activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 done
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 13
-  completed_plans: 12
-  percent: 92
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 10 of 13 (Core Screens)
-Plan: 5 of 5 — 10-05 complete (Cooking Mode screen)
-Status: Phase 10 fully complete — all 5 plans executed (Wave 0 utilities, RecipeCard, Home, RecipeDetail, CookingMode)
-Last activity: 2026-03-04 — 10-05 created cooking mode walkthrough screen at [id]/cook.tsx — Phase 10 done
+Plan: 3 of 5 — 10-03 complete (Recipe List screen)
+Status: 10-03 complete — recipe list rebuilt with responsive grid, search, filters, batch thumbnails
+Last activity: 2026-03-04 — 10-03 rebuilt recipe list screen with responsive FlatList grid, design tokens, RecipeCard, batch thumbnails
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Pending TODOs
 
@@ -81,6 +81,9 @@ Progress: [█████████░] 92%
 - **10-04 PendingPhoto type:** extends { uri, name, type } to match uploadRecipePhoto's existing file-object signature; onSubmit receives (input: CreateRecipeInput, newPhotos: PendingPhoto[]) so wrappers can upload photos after create/update with correct recipeId
 - **10-04 parseIngredient at add-time:** Called immediately when ingredient is added (single-add or bulk), skipping the old confirm/dismiss UX — simpler flow, data still stored correctly
 - **10-04 RecipeForm as shared component:** create.tsx reduced from 574 to 37 lines, edit.tsx from 687 to 92 lines; wrapper screens own submit side-effects, RecipeForm owns form state only
+- **10-03 Filter toggle as pill chip:** Small pill-shaped toggle button opens collapsible filter panel; keeps header clean and avoids always-visible clutter
+- **10-03 isFiltered flag for empty state:** "No recipes found" when any search/filter is active; "No recipes yet" + Create CTA only when user has no recipes and no filters applied
+- **10-03 Stale-while-loading for filter queries:** Initial load shows ActivityIndicator; filter re-queries show stale data while fetching — prevents empty state flash on every keystroke
 
 ### Phase 9 Decisions
 
