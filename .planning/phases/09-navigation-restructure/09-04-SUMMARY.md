@@ -69,7 +69,7 @@ Each task was committed atomically:
 1. **Task 1: Fix MobileTabBar spacing and Scan icon color** - `e9c96e0` (fix)
 2. **Task 2: Fix WebSidebar routing and item width consistency** - `4dcba32` (fix)
 
-**Plan metadata:** (docs commit pending)
+**Plan metadata:** `a101429` (docs: complete navigation gap closure plan)
 
 ## Files Created/Modified
 
@@ -101,6 +101,16 @@ None — no external service configuration required.
   - Tab 3–8 (sidebar navigation + widths): Fixed by router.navigate + alignItems:stretch
 - Phase 09 is ready to close and Phase 10 can begin
 - No open blockers
+
+---
+## Self-Check: PASSED
+
+- FOUND: src/components/nav/MobileTabBar.tsx
+- FOUND: src/components/nav/WebSidebar.tsx
+- FOUND: .planning/phases/09-navigation-restructure/09-04-SUMMARY.md
+- FOUND commit: e9c96e0 (Task 1)
+- FOUND commit: 4dcba32 (Task 2)
+- FOUND commit: a101429 (Plan metadata)
 
 ---
 *Phase: 09-navigation-restructure*
