@@ -71,14 +71,15 @@ Plans:
 - [ ] 09-04-PLAN.md — UAT gap closure: tab bar spacing, scan icon color, sidebar routing
 
 ### Phase 10: Core Screens
-**Goal**: Home, recipe list, recipe detail, and create/edit screens match cookbook.pen at all three breakpoints and the home screen provides clear navigation to all recipe features.
+**Goal**: Home, recipe list, recipe detail, create/edit screens, and cooking mode walkthrough match cookbook.pen at all three breakpoints.
 **Depends on**: Phase 9
-**Requirements**: SCREEN-01, SCREEN-02, SCREEN-03, SCREEN-04
+**Requirements**: SCREEN-01, SCREEN-02, SCREEN-03, SCREEN-04, SCREEN-04a
 **Success Criteria** (what must be TRUE):
-  1. The home screen displays a greeting, search entry point, featured recipes, and quick-action buttons that navigate to Scan, Recipes, Collections, and Family
+  1. The home screen displays a greeting, search entry point, featured recipes, and recent recipes per cookbook.pen spec
   2. The recipe list displays photo thumbnails and adapts to a 1-column (mobile), 2-column (tablet), and 3-column (web) grid
-  3. The recipe detail screen renders correctly at all three breakpoints with the full cookbook.pen layout
+  3. The recipe detail screen renders correctly at all three breakpoints with ratings, comments, and cookbook.pen layout
   4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
+  5. Cooking mode displays one step at a time with per-step ingredients, progress bar, and previous/next navigation
 **Plans**: TBD
 
 ### Phase 11: Public Browsing

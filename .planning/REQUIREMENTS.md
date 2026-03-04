@@ -28,6 +28,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 - [ ] **SCREEN-02**: Recipe list screen rebuilt with responsive grid (1-col mobile, 2-col tablet, 3-col web) and photo thumbnails
 - [ ] **SCREEN-03**: Recipe detail screen rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-04**: Create/Edit recipe screens rebuilt to cookbook.pen spec at all 3 breakpoints
+- [ ] **SCREEN-04a**: Cooking Mode walkthrough screen at all 3 breakpoints — step-by-step guided cooking with per-step ingredients
 - [ ] **SCREEN-05**: Collections screens rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-06**: Family management screens rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-07**: Scan/Draft screens rebuilt to cookbook.pen spec at all 3 breakpoints with scan photo display in draft review
