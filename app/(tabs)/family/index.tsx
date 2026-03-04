@@ -52,7 +52,7 @@ export default function FamiliesHomeScreen() {
       if (error) throw error;
       setFamilyName("");
       const familyId = data as string;
-      router.push(`/(family)/family/${familyId}`);
+      router.push(`/family/${familyId}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to create family";
       Alert.alert("Create family failed", msg);
@@ -114,7 +114,7 @@ export default function FamiliesHomeScreen() {
           <Text style={styles.meta}>No families yet.</Text>
         ) : (
           families.map((f) => (
-            <Link key={f.id} href={`/(family)/family/${f.id}`} style={styles.familyLink}>
+            <Link key={f.id} href={`/family/${f.id}`} style={styles.familyLink}>
               {f.name}
             </Link>
           ))

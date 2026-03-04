@@ -28,7 +28,7 @@ export default function AcceptInviteScreen() {
       });
       if (error) throw error;
       const familyId = data as string;
-      router.replace(`/(family)/family/${familyId}`);
+      router.replace(`/family/${familyId}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Invalid invite";
       Alert.alert("Invite error", msg);
