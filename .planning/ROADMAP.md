@@ -80,7 +80,7 @@ Plans:
   3. The recipe detail screen renders correctly at all three breakpoints with ratings, comments, and cookbook.pen layout
   4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
   5. Cooking mode displays one step at a time with per-step ingredients, progress bar, and previous/next navigation
-**Plans:** 6 plans
+**Plans:** 1/6 plans executed
 
 Plans:
 - [ ] 10-00-PLAN.md — Wave 0: TDD test stubs + utility modules for RecipeCard and Cooking Mode
@@ -136,7 +136,7 @@ Plans:
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | 4/4 | Complete   | 2026-03-04 | - |
-| 10. Core Screens | v1.1 | 0/6 | Not started | - |
+| 10. Core Screens | 1/6 | In Progress|  | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
