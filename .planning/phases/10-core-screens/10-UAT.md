@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 10-core-screens
 source: [10-00-SUMMARY.md, 10-01-SUMMARY.md, 10-02-SUMMARY.md, 10-03-SUMMARY.md, 10-04-SUMMARY.md, 10-05-SUMMARY.md, 10-06-SUMMARY.md]
 started: 2026-03-05T05:00:00Z
@@ -90,17 +90,23 @@ skipped: 3
   reason: "User reported: generally passes but does not respect the safe boundaries"
   severity: major
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Recipe detail screen outer View has no safe area padding. Stack _layout.tsx has headerShown:false so no native header provides offset. Unlike recipe list (uses PageContainer with paddingTop:insets.top), recipe detail applies zero top padding."
+  artifacts:
+    - path: "app/(tabs)/recipes/[id].tsx"
+      issue: "Outer wrapper View at line 1026 has no safe area padding; sticky header at line 1028 uses paddingVertical:12 but no insets.top offset"
+  missing:
+    - "Import useSafeAreaInsets and apply paddingTop:insets.top to the sticky header View"
+  debug_session: ".planning/debug/recipe-detail-safe-area.md"
 
 - truth: "All screens respect iOS safe area — content not hidden behind status bar / Dynamic Island"
   status: failed
   reason: "User reported: fail the recipe detail still hides behind the ios status bar and due to this I cannot know about the cooking mode at all"
   severity: blocker
   test: 14
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Same root cause as test 6 — recipe detail screen missing useSafeAreaInsets() padding on sticky header"
+  artifacts:
+    - path: "app/(tabs)/recipes/[id].tsx"
+      issue: "Missing safe area inset on sticky header"
+  missing:
+    - "Same fix as test 6"
+  debug_session: ".planning/debug/recipe-detail-safe-area.md"
