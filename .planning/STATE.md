@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-05T01:31:27.892Z"
-last_activity: 2026-03-05 — 10-06 added Stack navigator _layout.tsx files for recipes and collections tabs unblocking all sub-route push navigation
+last_updated: "2026-03-05T18:03:53.809Z"
+last_activity: 2026-03-05 — 11-01 added public data layer with author RPCs, searchPublicRecipes, and getPublicRecipeCount
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 19
+  completed_plans: 17
   percent: 100
 ---
 
@@ -22,16 +22,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Families can save and share treasured recipes (like Grandma's) without losing control over who gets to see them.
-**Current focus:** Phase 10 — Core Screens
+**Current focus:** Phase 11 — Public Browsing
 
 ## Current Position
 
-Phase: 10 of 13 (Core Screens)
-Plan: 6 of 6 — 10-06 complete (Stack navigator layouts for recipes and collections)
-Status: 10-06 complete — Stack navigator _layout.tsx files added for recipes/ and collections/ tabs unblocking all sub-route push navigation
-Last activity: 2026-03-05 — 10-06 added Stack navigator _layout.tsx files for recipes and collections tabs unblocking all sub-route push navigation
+Phase: 11 of 13 (Public Browsing)
+Plan: 2 of 4 — 11-02 complete (Shared public components)
+Status: 11-02 complete — Responsive public nav header, search bar, and platform-branched ad slot placeholder
+Last activity: 2026-03-05 — 11-02 built PublicBrowseHeader, PublicDetailNavBar, PublicSearchBar, and AdSlot (native + web)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 89%
 
 ## Pending TODOs
 
@@ -99,6 +99,12 @@ Progress: [██████████] 100%
 - **09-04 router.navigate() for cross-navigator routing on web:** router.push() silently fails for scan (root stack modal) and collections (non-tab route in tabs group) on web; router.navigate() resolves from root navigator on all platforms
 - **09-04 flex:1 on TabTrigger wrappers:** TabTrigger elements default to shrink-wrap width; must add flex:1 to achieve even 5-way horizontal split in MobileTabBar
 - **09-04 textDisabled for inactive Scan icon:** accentWarm on Camera icon caused Scan to appear permanently active; textDisabled matches other inactive tab icons
+
+### Phase 11 Decisions
+
+- **11-01 SECURITY DEFINER RPCs for author attribution:** profiles table is protected by RLS; anon callers access display_name via RPCs that join recipes (visibility='public' guard) with profiles, running as definer
+- **11-01 pageSize+1 hasMore detection:** Fetch one extra row to detect if more pages exist without a separate count query — avoids extra round-trip for pagination
+- **11-01 Initials derivation in SQL:** split_part on space, upper first chars, fallback 'U' — keeps logic server-side, consistent for both single and batch RPCs
 
 ### For v1.1
 

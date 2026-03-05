@@ -101,7 +101,7 @@ Plans:
   2. Tapping a public recipe shows a read-only detail view with the recipe author's display name (not raw email)
   3. The public browsing surface has its own navigation header (logo, Sign In, and Get Started CTA) — no authenticated chrome appears
   4. The recipe list loads the next page of results when the user scrolls to the bottom (cursor-based pagination)
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] 11-01-PLAN.md — Data layer: author RPCs, searchPublicRecipes with cursor pagination
@@ -145,6 +145,6 @@ Plans:
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
-| 11. Public Browsing | v1.1 | 0/4 | Planned | - |
+| 11. Public Browsing | 2/4 | In Progress|  | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
