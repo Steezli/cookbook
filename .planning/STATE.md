@@ -105,6 +105,8 @@ Progress: [█████████░] 89%
 - **11-01 SECURITY DEFINER RPCs for author attribution:** profiles table is protected by RLS; anon callers access display_name via RPCs that join recipes (visibility='public' guard) with profiles, running as definer
 - **11-01 pageSize+1 hasMore detection:** Fetch one extra row to detect if more pages exist without a separate count query — avoids extra round-trip for pagination
 - **11-01 Initials derivation in SQL:** split_part on space, upper first chars, fallback 'U' — keeps logic server-side, consistent for both single and batch RPCs
+- **11-02 Pure helper extraction for header logic:** getChipsForBreakpoint and getHeaderLayout tested in node environment without React renderer, following Phase 10 *Utils.ts pattern
+- **11-02 Platform-branched AdSlot with identical placeholders:** structural split done now so Phase 13 can replace native file with AdMob SDK without touching web file or import paths
 
 ### For v1.1
 
