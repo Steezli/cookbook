@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-04T21:54:07.623Z"
-last_activity: 2026-03-04 — 10-03 rebuilt recipe list screen with responsive FlatList grid, design tokens, RecipeCard, batch thumbnails
+last_updated: "2026-03-05T01:25:56Z"
+last_activity: 2026-03-05 — 10-06 added Stack navigator _layout.tsx files for recipes and collections tabs unblocking all sub-route push navigation
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 10 of 13 (Core Screens)
-Plan: 3 of 5 — 10-03 complete (Recipe List screen)
-Status: 10-03 complete — recipe list rebuilt with responsive grid, search, filters, batch thumbnails
-Last activity: 2026-03-04 — 10-03 rebuilt recipe list screen with responsive FlatList grid, design tokens, RecipeCard, batch thumbnails
+Plan: 6 of 6 — 10-06 complete (Stack navigator layouts for recipes and collections)
+Status: 10-06 complete — Stack navigator _layout.tsx files added for recipes/ and collections/ tabs unblocking all sub-route push navigation
+Last activity: 2026-03-05 — 10-06 added Stack navigator _layout.tsx files for recipes and collections tabs unblocking all sub-route push navigation
 
 Progress: [██████████] 100%
 
@@ -84,6 +84,7 @@ Progress: [██████████] 100%
 - **10-03 Filter toggle as pill chip:** Small pill-shaped toggle button opens collapsible filter panel; keeps header clean and avoids always-visible clutter
 - **10-03 isFiltered flag for empty state:** "No recipes found" when any search/filter is active; "No recipes yet" + Create CTA only when user has no recipes and no filters applied
 - **10-03 Stale-while-loading for filter queries:** Initial load shows ActivityIndicator; filter re-queries show stale data while fetching — prevents empty state flash on every keystroke
+- **10-06 Stack layouts use headerShown:false:** recipe and collections screens manage their own custom header UI; showing expo-router's default header would produce a duplicate header — minimal Stack with no screen-specific options is all that is needed
 
 ### Phase 9 Decisions
 
