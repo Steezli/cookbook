@@ -3,7 +3,7 @@ status: diagnosed
 phase: 10-core-screens
 source: [10-00-SUMMARY.md, 10-01-SUMMARY.md, 10-02-SUMMARY.md, 10-03-SUMMARY.md, 10-04-SUMMARY.md, 10-05-SUMMARY.md]
 started: 2026-03-04T22:30:00Z
-updated: 2026-03-04T22:45:00Z
+updated: 2026-03-05T04:30:00Z
 ---
 
 ## Current Test
@@ -99,47 +99,80 @@ skipped: 6
   reason: "User reported: I cannot even click into the search bar"
   severity: major
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Hidden TabList in _layout.tsx used position:absolute with height:0 and overflow:hidden but no pointerEvents:none — child TabTrigger Pressables intercepted touches over the search bar area"
+  artifacts:
+    - path: "app/(tabs)/_layout.tsx"
+      issue: "TabList missing pointerEvents:none, child Pressables intercepting touches"
+  missing:
+    - "Add pointerEvents:none to hidden TabList style"
+  debug_session: ".planning/debug/search-bar-not-tappable.md"
+  note: "Already fixed in commit 7f3647f — needs re-verification"
 
 - truth: "Recipe list screen shows search bar, + Create button, filter toggle, and recipe cards in responsive grid"
   status: failed
   reason: "User reported: all i see is 'my recipes' in the middle and the bottom nav, nothing else"
   severity: blocker
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "TabTrigger href pointed to /my-recipes (a 6-line stub from Phase 9) instead of /recipes where the real 505-line RecipeListScreen lives"
+  artifacts:
+    - path: "app/(tabs)/_layout.tsx"
+      issue: "TabTrigger href='/my-recipes' instead of '/recipes'"
+    - path: "app/(tabs)/my-recipes.tsx"
+      issue: "Leftover stub rendering only centered 'My Recipes' text"
+    - path: "app/(tabs)/recipes/index.tsx"
+      issue: "Real screen was unreachable via tab navigation"
+  missing:
+    - "Change TabTrigger href from /my-recipes to /recipes"
+    - "Delete stub my-recipes.tsx"
+  debug_session: ".planning/debug/recipe-list-empty.md"
+  note: "Already fixed in commit 7f3647f — needs re-verification"
 
 - truth: "Recipe list filters are accessible via collapsible toggle"
   status: failed
   reason: "User reported: all i see is 'my recipes' in the middle and the bottom nav, nothing else"
   severity: blocker
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Same root cause as test 4 — tab routed to stub instead of real RecipeListScreen which contains the filter UI"
+  artifacts:
+    - path: "app/(tabs)/_layout.tsx"
+      issue: "TabTrigger href pointed to stub"
+  missing:
+    - "Same fix as test 4"
+  debug_session: ".planning/debug/recipe-list-empty.md"
+  note: "Already fixed in commit 7f3647f — needs re-verification"
 
 - truth: "RecipeCard onPress navigates to recipe detail screen"
   status: failed
   reason: "User reported: there are only recipe cards on the home screen and clicking on them does absolutely nothing"
   severity: blocker
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "app/(tabs)/recipes/ directory is missing a _layout.tsx with Stack navigator — router.push('/recipes/${id}') has no Stack to push onto within the Tabs navigator, so navigation silently fails"
+  artifacts:
+    - path: "app/(tabs)/recipes/"
+      issue: "Missing _layout.tsx with Stack navigator for sub-route navigation"
+    - path: "app/(tabs)/family/_layout.tsx"
+      issue: "Working reference — has Stack navigator that recipes/ should mirror"
+  missing:
+    - "Create app/(tabs)/recipes/_layout.tsx with Stack navigator"
+    - "Also create app/(tabs)/collections/_layout.tsx (same issue)"
+  debug_session: ".planning/debug/recipe-card-onpress-broken.md"
+  note: "NOT yet fixed — commit 7f3647f only fixed touch interception, not the missing Stack navigator"
 
 - truth: "Create recipe is accessible from recipe list screen via + Create button"
   status: failed
   reason: "User reported: there is no create recipe button anywhere within ios to get to a form"
   severity: blocker
   test: 11
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Same root cause as test 4 — tab routed to stub my-recipes.tsx instead of real recipes/index.tsx which contains the + Create button. The button exists at recipes/index.tsx lines 168-188 but was unreachable."
+  artifacts:
+    - path: "app/(tabs)/my-recipes.tsx"
+      issue: "Stub was rendering instead of real screen"
+    - path: "app/(tabs)/recipes/index.tsx"
+      issue: "Real screen with + Create button was unreachable"
+    - path: "app/(tabs)/recipes/create.tsx"
+      issue: "CreateRecipeScreen exists but couldn't be navigated to"
+  missing:
+    - "Same tab routing fix as test 4"
+    - "Also needs Stack navigator fix from test 6 for create.tsx navigation to work"
+  debug_session: ".planning/debug/no-create-recipe-button.md"
+  note: "Tab routing fixed in 7f3647f, but Stack navigator still missing for create route"
