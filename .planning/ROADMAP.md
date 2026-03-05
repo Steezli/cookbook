@@ -29,7 +29,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 - [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
 - [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar); UAT gap closure in progress (completed 2026-03-04)
-- [x] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec (completed 2026-03-04)
+- [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec; UAT gap closure in progress
 - [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
 - [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
@@ -80,7 +80,7 @@ Plans:
   3. The recipe detail screen renders correctly at all three breakpoints with ratings, comments, and cookbook.pen layout
   4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
   5. Cooking mode displays one step at a time with per-step ingredients, progress bar, and previous/next navigation
-**Plans:** 7/7 plans complete
+**Plans:** 8 plans
 
 Plans:
 - [ ] 10-00-PLAN.md — Wave 0: TDD test stubs + utility modules for RecipeCard and Cooking Mode
@@ -90,6 +90,7 @@ Plans:
 - [ ] 10-04-PLAN.md — Create/Edit forms with shared RecipeForm component
 - [ ] 10-05-PLAN.md — Cooking Mode walkthrough screen
 - [ ] 10-06-PLAN.md — UAT gap closure: Stack navigators for recipes and collections tabs
+- [ ] 10-07-PLAN.md — UAT gap closure: safe area insets on recipe detail and cooking mode
 
 ### Phase 11: Public Browsing
 **Goal**: Unauthenticated users can browse and read public recipes without logging in, and every public recipe shows who added it.
@@ -136,8 +137,8 @@ Plans:
 | 6. Fix Scan Integration | v1.0 | 7/7 | Complete | 2026-03-02 |
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
-| 9. Navigation Restructure | 4/4 | Complete   | 2026-03-04 | - |
-| 10. Core Screens | 7/7 | Complete    | 2026-03-05 | - |
+| 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
+| 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
