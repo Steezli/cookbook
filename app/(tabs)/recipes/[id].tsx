@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { ChevronLeft, UtensilsCrossed } from "lucide-react-native";
 import { getRecipeById, deleteRecipe } from "@/features/recipes/api";
@@ -73,6 +74,7 @@ export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session, isLoading: sessionLoading } = useSession();
   const { breakpoint } = useBreakpoint();
+  const insets = useSafeAreaInsets();
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [unitPreference, setUnitPreference] = useState<UnitSystem>("imperial");
@@ -1031,7 +1033,8 @@ export default function RecipeDetailScreen() {
           alignItems: "center",
           justifyContent: "space-between",
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingTop: insets.top + 12,
+          paddingBottom: 12,
           borderBottomWidth: 1,
           borderBottomColor: borderDefault,
           backgroundColor: bgPage,

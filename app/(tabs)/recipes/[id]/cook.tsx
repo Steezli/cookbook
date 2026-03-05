@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { getRecipeById } from '@/features/recipes/api';
 import type { Recipe } from '@/features/recipes/types';
@@ -36,6 +37,7 @@ import {
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { breakpoint } = useBreakpoint();
+  const insets = useSafeAreaInsets();
   const isWeb = breakpoint === 'web';
   const isTablet = breakpoint === 'tablet';
 
@@ -236,7 +238,9 @@ export default function CookScreen() {
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          padding: 16,
+          paddingHorizontal: 16,
+          paddingTop: insets.top + 16,
+          paddingBottom: 16,
         }}
       >
         {/* X button */}
