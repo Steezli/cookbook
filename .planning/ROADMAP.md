@@ -80,7 +80,7 @@ Plans:
   3. The recipe detail screen renders correctly at all three breakpoints with ratings, comments, and cookbook.pen layout
   4. Create and edit recipe forms render correctly at all three breakpoints with consistent field layout and max-width on web
   5. Cooking mode displays one step at a time with per-step ingredients, progress bar, and previous/next navigation
-**Plans:** 6/6 plans complete
+**Plans:** 7 plans (6 complete + 1 gap closure)
 
 Plans:
 - [ ] 10-00-PLAN.md — Wave 0: TDD test stubs + utility modules for RecipeCard and Cooking Mode
@@ -89,6 +89,7 @@ Plans:
 - [ ] 10-03-PLAN.md — Recipe list with responsive grid
 - [ ] 10-04-PLAN.md — Create/Edit forms with shared RecipeForm component
 - [ ] 10-05-PLAN.md — Cooking Mode walkthrough screen
+- [ ] 10-06-PLAN.md — UAT gap closure: Stack navigators for recipes and collections tabs
 
 ### Phase 11: Public Browsing
 **Goal**: Unauthenticated users can browse and read public recipes without logging in, and every public recipe shows who added it.
@@ -136,7 +137,7 @@ Plans:
 | 7. Native Compatibility | v1.0 | 3/3 | Complete | 2026-03-04 |
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | 4/4 | Complete   | 2026-03-04 | - |
-| 10. Core Screens | 6/6 | Complete    | 2026-03-04 | - |
+| 10. Core Screens | 7/7 | UAT gap closure | 2026-03-04 | - |
 | 11. Public Browsing | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
