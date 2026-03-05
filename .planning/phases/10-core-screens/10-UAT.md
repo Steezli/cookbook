@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: complete
 phase: 10-core-screens
 source: [10-00-SUMMARY.md, 10-01-SUMMARY.md, 10-02-SUMMARY.md, 10-03-SUMMARY.md, 10-04-SUMMARY.md, 10-05-SUMMARY.md, 10-06-SUMMARY.md]
 started: 2026-03-05T05:00:00Z
-updated: 2026-03-05T05:15:00Z
+updated: 2026-03-05T06:30:00Z
 ---
 
 ## Current Test
@@ -34,9 +34,8 @@ result: pass
 
 ### 6. Recipe Detail Screen
 expected: Tap any recipe card to open its detail. You should see: a sticky header bar at the top (back arrow, and "Start Cooking" button in blue), a hero image (or warm placeholder), then scrollable content: title with visibility badge, description, ingredients list, numbered steps with blue circle badges, and story section (if present).
-result: issue
-reported: "generally passes but does not respect the safe boundaries"
-severity: major
+result: pass
+note: previously failed (safe area) — user fixed manually, re-verified pass
 
 ### 7. Recipe Detail — Ratings & Comments
 expected: Scroll down on a recipe detail screen. You should see a Ratings section showing the average star rating and count, plus an interactive star rating row where you can tap to rate. Below that, a Comments section where you can view and add comments.
@@ -44,18 +43,18 @@ result: pass
 
 ### 8. Recipe Detail — Start Cooking
 expected: On a recipe detail screen, tap the "Start Cooking" button in the sticky header. It should navigate to the cooking mode screen for that recipe.
-result: skipped
-reason: Start Cooking button hidden behind iOS status bar — blocked by safe area issue (test 6)
+result: pass
+note: previously skipped — unblocked after safe area fix, re-verified pass
 
 ### 9. Cooking Mode — Step Display
 expected: In cooking mode, you should see: a top bar with an X button and the recipe title, a progress bar showing your position, the current step number in a blue circle badge, the step instruction text, and a "Full Ingredient List" card showing all ingredients. Previous/Next buttons at the bottom.
-result: skipped
-reason: Cannot reach cooking mode — blocked by test 8
+result: pass
+note: previously skipped — unblocked after safe area fix, re-verified pass
 
 ### 10. Cooking Mode — Navigation
 expected: In cooking mode, tap "Next" to advance through steps. The progress bar should fill incrementally. "Previous" is disabled on the first step. On the last step, the button changes to "Done" and tapping it exits back to the recipe detail.
-result: skipped
-reason: Cannot reach cooking mode — blocked by test 8
+result: pass
+note: previously skipped — unblocked after safe area fix, re-verified pass
 
 ### 11. Create Recipe Form
 expected: Navigate to create a new recipe (via "+ Create" on recipe list or home empty state). The form should show: photo upload area at the very top (dashed border with camera icon), then title, description, ingredients (with an "Add" button and a "Bulk add" toggle), steps (with "Add" button), time/servings fields, visibility chips (Private/Family/Public), story, and tags.
@@ -71,42 +70,17 @@ result: pass
 
 ### 14. Safe Area — Content Not Hidden
 expected: On all screens (home, recipe list, recipe detail, create/edit, cooking mode, profile), content should NOT be hidden behind the iOS status bar / Dynamic Island. There should be proper spacing at the top so the first element is fully visible below the system UI.
-result: issue
-reported: "fail the recipe detail still hides behind the ios status bar and due to this I cannot know about the cooking mode at all"
-severity: blocker
+result: pass
+note: previously failed (blocker, safe area) — user fixed manually, re-verified pass
 
 ## Summary
 
 total: 14
-passed: 9
-issues: 2
+passed: 14
+issues: 0
 pending: 0
-skipped: 3
+skipped: 0
 
 ## Gaps
 
-- truth: "Recipe detail screen sticky header respects iOS safe area boundaries"
-  status: failed
-  reason: "User reported: generally passes but does not respect the safe boundaries"
-  severity: major
-  test: 6
-  root_cause: "Recipe detail screen outer View has no safe area padding. Stack _layout.tsx has headerShown:false so no native header provides offset. Unlike recipe list (uses PageContainer with paddingTop:insets.top), recipe detail applies zero top padding."
-  artifacts:
-    - path: "app/(tabs)/recipes/[id].tsx"
-      issue: "Outer wrapper View at line 1026 has no safe area padding; sticky header at line 1028 uses paddingVertical:12 but no insets.top offset"
-  missing:
-    - "Import useSafeAreaInsets and apply paddingTop:insets.top to the sticky header View"
-  debug_session: ".planning/debug/recipe-detail-safe-area.md"
-
-- truth: "All screens respect iOS safe area — content not hidden behind status bar / Dynamic Island"
-  status: failed
-  reason: "User reported: fail the recipe detail still hides behind the ios status bar and due to this I cannot know about the cooking mode at all"
-  severity: blocker
-  test: 14
-  root_cause: "Same root cause as test 6 — recipe detail screen missing useSafeAreaInsets() padding on sticky header"
-  artifacts:
-    - path: "app/(tabs)/recipes/[id].tsx"
-      issue: "Missing safe area inset on sticky header"
-  missing:
-    - "Same fix as test 6"
-  debug_session: ".planning/debug/recipe-detail-safe-area.md"
+[none — all gaps resolved by user manual fix]
