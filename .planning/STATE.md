@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-05T18:03:53.809Z"
-last_activity: 2026-03-05 — 11-01 added public data layer with author RPCs, searchPublicRecipes, and getPublicRecipeCount
+last_updated: "2026-03-05T18:09:05Z"
+last_activity: 2026-03-05 — 11-03 built public browse screen with 3-breakpoint responsive layout and infinite scroll
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 19
-  completed_plans: 17
-  percent: 100
+  completed_plans: 18
+  percent: 95
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 11 of 13 (Public Browsing)
-Plan: 2 of 4 — 11-02 complete (Shared public components)
-Status: 11-02 complete — Responsive public nav header, search bar, and platform-branched ad slot placeholder
-Last activity: 2026-03-05 — 11-02 built PublicBrowseHeader, PublicDetailNavBar, PublicSearchBar, and AdSlot (native + web)
+Plan: 3 of 4 — 11-03 complete (Public browse screen)
+Status: 11-03 complete — Responsive public browse screen with search, filter chips, infinite scroll
+Last activity: 2026-03-05 — 11-03 built public browse screen with 3-breakpoint layout, debounced search, and infinite scroll pagination
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 95%
 
 ## Pending TODOs
 
@@ -107,6 +107,8 @@ Progress: [█████████░] 89%
 - **11-01 Initials derivation in SQL:** split_part on space, upper first chars, fallback 'U' — keeps logic server-side, consistent for both single and batch RPCs
 - **11-02 Pure helper extraction for header logic:** getChipsForBreakpoint and getHeaderLayout tested in node environment without React renderer, following Phase 10 *Utils.ts pattern
 - **11-02 Platform-branched AdSlot with identical placeholders:** structural split done now so Phase 13 can replace native file with AdMob SDK without touching web file or import paths
+- **11-03 AdSlot.d.ts for platform-branched TypeScript resolution:** tsc cannot resolve modules with only .native.tsx/.web.tsx extensions; added .d.ts declaration file alongside platform files
+- **11-03 loadSeqRef stale-result guard:** Increment counter on every filter/search change, check before setting state after async operations to prevent race conditions
 
 ### For v1.1
 

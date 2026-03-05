@@ -38,7 +38,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 
 ### Public Browsing
 
-- [ ] **PUB-01**: Public recipe browse screen with search bar and filter chips (unauthenticated)
+- [x] **PUB-01**: Public recipe browse screen with search bar and filter chips (unauthenticated)
 - [x] **PUB-02**: Public recipe detail screen with read-only view and author attribution
 - [x] **PUB-03**: Public navigation header with logo, Sign In, and Get Started CTA
 - [x] **PUB-04**: Cursor-based pagination for public recipe listing
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCREEN-02 | Phase 10 | Complete |
 | SCREEN-03 | Phase 10 | Complete |
 | SCREEN-04 | Phase 10 | Complete |
-| PUB-01 | Phase 11 | Pending |
+| PUB-01 | Phase 11 | Complete |
 | PUB-02 | Phase 11 | Complete |
 | PUB-03 | Phase 11 | Complete |
 | PUB-04 | Phase 11 | Complete |
