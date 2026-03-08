@@ -1,17 +1,45 @@
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Link, Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
-  StyleSheet,
+  Share,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 
 import { useSession } from "@/features/auth/session";
+import { PageContainer } from "@/components/nav/PageContainer";
+import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { supabase } from "@/lib/supabase";
+import {
+  accentBlue,
+  accentCoral,
+  accentGreen,
+  bgCard,
+  bgPage,
+  borderDefault,
+  fontFamilyBody,
+  fontFamilyBodyBold,
+  fontFamilyBodyMedium,
+  fontFamilyDisplay,
+  fontSize2xl,
+  fontSizeBase,
+  fontSizeLg,
+  fontSizeSm,
+  fontSizeXs,
+  radiusMd,
+  radiusPill,
+  shadowSm,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  white,
+} from "@/lib/tokens";
 
 type Family = { id: string; name: string };
 
@@ -24,8 +52,6 @@ type MemberRow = {
 type MemberSelectRow = {
   user_id: string;
   role: "admin" | "member";
-  // Supabase relationship selects can come back as an object or an array depending on schema inference.
-  // Normalize to a single profile object for UI use.
   profiles?: MemberRow["profiles"] | Array<NonNullable<MemberRow["profiles"]>> | null;
 };
 
@@ -43,6 +69,7 @@ export default function FamilyDetailScreen() {
 
   const { session, isLoading } = useSession();
   const userId = session?.user.id ?? null;
+  const { breakpoint } = useBreakpoint();
 
   const [family, setFamily] = useState<Family | null>(null);
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -50,6 +77,8 @@ export default function FamilyDetailScreen() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
+
+  const isMobile = breakpoint === "mobile";
 
   const myRole = useMemo(() => {
     if (!userId) return null;
@@ -60,50 +89,52 @@ export default function FamilyDetailScreen() {
   const isAdmin = myRole === "admin";
 
   async function refresh() {
-    if (!familyId) return;
-    if (!userId) return;
+    if (!familyId || !userId) return;
 
     setIsRefreshing(true);
     try {
-      const [{ data: famData, error: famError }, { data: memData, error: memError }, { data: invData, error: invError }] =
-        await Promise.all([
-          supabase.from("families").select("id,name").eq("id", familyId).maybeSingle(),
-          supabase
-            .from("family_memberships")
-            .select("user_id,role,profiles(email,display_name)")
-            .eq("family_id", familyId)
-            .order("created_at", { ascending: true }),
-          supabase
-            .from("family_invites")
-            .select("id,email,expires_at,revoked_at,accepted_at")
-            .eq("family_id", familyId)
-            .order("created_at", { ascending: false })
-        ]);
+      const [
+        { data: famData, error: famError },
+        { data: memData, error: memError },
+        { data: invData, error: invError },
+      ] = await Promise.all([
+        supabase.from("families").select("id,name").eq("id", familyId).maybeSingle(),
+        supabase
+          .from("family_memberships")
+          .select("user_id,role,profiles(email,display_name)")
+          .eq("family_id", familyId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("family_invites")
+          .select("id,email,expires_at,revoked_at,accepted_at")
+          .eq("family_id", familyId)
+          .order("created_at", { ascending: false }),
+      ]);
 
       if (famError) throw famError;
       if (memError) throw memError;
       if (invError) throw invError;
 
-      // Phase 1 semantic: protected family resources should behave like "not found".
-      // RLS returns zero rows for non-members; treat that as 404 at the UI layer.
-      const isMember = Array.isArray(memData) && memData.some((m) => m.user_id === userId);
+      const isMember =
+        Array.isArray(memData) && memData.some((m) => m.user_id === userId);
       if (!famData || !isMember) {
         throw new Error("Not found");
       }
 
-      const normalizedMembers: MemberRow[] = (Array.isArray(memData) ? (memData as MemberSelectRow[]) : []).map(
-        (m) => {
-          const p = Array.isArray(m.profiles) ? m.profiles[0] ?? null : m.profiles ?? null;
-          return { user_id: m.user_id, role: m.role, profiles: p };
-        }
-      );
+      const normalizedMembers: MemberRow[] = (
+        Array.isArray(memData) ? (memData as MemberSelectRow[]) : []
+      ).map((m) => {
+        const p = Array.isArray(m.profiles)
+          ? m.profiles[0] ?? null
+          : m.profiles ?? null;
+        return { user_id: m.user_id, role: m.role, profiles: p };
+      });
 
       setFamily((famData ?? null) as Family | null);
       setMembers(normalizedMembers);
       setInvites((invData ?? []) as InviteRow[]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load family";
-      // Phase 1 semantic: treat protected family resources as 404 (not found).
       Alert.alert("Not found", msg);
     } finally {
       setIsRefreshing(false);
@@ -123,7 +154,7 @@ export default function FamilyDetailScreen() {
     try {
       const { data, error } = await supabase.rpc("create_family_invite", {
         p_family_id: familyId,
-        p_email: email
+        p_email: email,
       });
       if (error) {
         const status = (error as unknown as { code?: string })?.code;
@@ -134,13 +165,16 @@ export default function FamilyDetailScreen() {
         throw error;
       }
 
-      const row = Array.isArray(data) ? (data[0] as { token: string } | undefined) : undefined;
+      const row = Array.isArray(data)
+        ? (data[0] as { token: string } | undefined)
+        : undefined;
       const token = row?.token;
       setInviteEmail("");
       void refresh();
 
       if (token) {
-        Alert.alert("Invite created", `Share this link: /invite/${token}`);
+        const inviteUrl = `/invite/${token}`;
+        await shareInviteLink(inviteUrl);
       } else {
         Alert.alert("Invite created", "Invite was created.");
       }
@@ -152,9 +186,28 @@ export default function FamilyDetailScreen() {
     }
   }
 
+  async function shareInviteLink(inviteUrl: string) {
+    try {
+      await Share.share({
+        message: `Join my family on Cookbook! ${inviteUrl}`,
+        url: inviteUrl,
+      });
+    } catch {
+      // Share dismissed or failed — fall back to clipboard
+      try {
+        await Clipboard.setStringAsync(inviteUrl);
+        Alert.alert("Link copied", "Invite link copied to clipboard.");
+      } catch {
+        Alert.alert("Invite created", `Share this link: ${inviteUrl}`);
+      }
+    }
+  }
+
   async function onRevokeInvite(inviteId: string) {
     try {
-      const { error } = await supabase.rpc("revoke_family_invite", { p_invite_id: inviteId });
+      const { error } = await supabase.rpc("revoke_family_invite", {
+        p_invite_id: inviteId,
+      });
       if (error) throw error;
       void refresh();
     } catch (e) {
@@ -181,220 +234,676 @@ export default function FamilyDetailScreen() {
 
   async function onRemoveMember(memberUserId: string) {
     if (!familyId) return;
-    try {
-      const { error } = await supabase
-        .from("family_memberships")
-        .delete()
-        .eq("family_id", familyId)
-        .eq("user_id", memberUserId);
-      if (error) throw error;
-      void refresh();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to remove member";
-      Alert.alert("Remove failed", msg);
-    }
+    Alert.alert("Remove member", "Are you sure you want to remove this member?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const { error } = await supabase
+              .from("family_memberships")
+              .delete()
+              .eq("family_id", familyId)
+              .eq("user_id", memberUserId);
+            if (error) throw error;
+            void refresh();
+          } catch (e) {
+            const msg =
+              e instanceof Error ? e.message : "Failed to remove member";
+            Alert.alert("Remove failed", msg);
+          }
+        },
+      },
+    ]);
   }
 
   async function onLeave() {
     if (!familyId || !userId) return;
-    try {
-      const { error } = await supabase
-        .from("family_memberships")
-        .delete()
-        .eq("family_id", familyId)
-        .eq("user_id", userId);
-      if (error) throw error;
-      Alert.alert("Left family", "You have left the family.");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to leave family";
-      Alert.alert("Leave failed", msg);
+    Alert.alert("Leave family", "Are you sure you want to leave this family?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const { error } = await supabase
+              .from("family_memberships")
+              .delete()
+              .eq("family_id", familyId)
+              .eq("user_id", userId);
+            if (error) throw error;
+            Alert.alert("Left family", "You have left the family.");
+            router.back();
+          } catch (e) {
+            const msg =
+              e instanceof Error ? e.message : "Failed to leave family";
+            Alert.alert("Leave failed", msg);
+          }
+        },
+      },
+    ]);
+  }
+
+  async function onDeleteFamily() {
+    if (!familyId) return;
+    Alert.alert(
+      "Delete family",
+      "This action cannot be undone. All members will be removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from("families")
+                .delete()
+                .eq("id", familyId);
+              if (error) throw error;
+              Alert.alert("Family deleted", "The family has been deleted.");
+              router.back();
+            } catch (e) {
+              const msg =
+                e instanceof Error ? e.message : "Failed to delete family";
+              Alert.alert("Delete failed", msg);
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  async function onTransferOwnership(memberUserId: string) {
+    Alert.alert(
+      "Transfer ownership",
+      "Are you sure? You will become a regular member.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Transfer",
+          onPress: async () => {
+            if (!familyId || !userId) return;
+            try {
+              // Promote target to admin, demote self to member
+              const { error: promoteErr } = await supabase
+                .from("family_memberships")
+                .update({ role: "admin" })
+                .eq("family_id", familyId)
+                .eq("user_id", memberUserId);
+              if (promoteErr) throw promoteErr;
+
+              const { error: demoteErr } = await supabase
+                .from("family_memberships")
+                .update({ role: "member" })
+                .eq("family_id", familyId)
+                .eq("user_id", userId);
+              if (demoteErr) throw demoteErr;
+
+              void refresh();
+            } catch (e) {
+              const msg =
+                e instanceof Error ? e.message : "Failed to transfer ownership";
+              Alert.alert("Transfer failed", msg);
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  function getInitials(name: string | null | undefined): string {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
+    return name[0].toUpperCase();
+  }
+
+  function getRoleBadgeStyle(role: string) {
+    if (role === "admin") {
+      return {
+        bg: "#F0FDF4",
+        text: accentGreen,
+      };
+    }
+    return {
+      bg: bgCard,
+      text: textSecondary,
+    };
   }
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.meta}>Loading…</Text>
-      </View>
+      <PageContainer>
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator size="large" color={accentBlue} />
+        </View>
+      </PageContainer>
     );
   }
 
   if (!userId) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Family</Text>
-        <Text style={styles.meta}>Please log in to view family details.</Text>
-        <Link href="/(auth)/login" style={styles.link}>
-          Log in
-        </Link>
-      </View>
+      <PageContainer>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSize2xl,
+              color: textPrimary,
+            }}
+          >
+            Family
+          </Text>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textSecondary,
+              textAlign: "center",
+            }}
+          >
+            Please log in to view family details.
+          </Text>
+          <Link
+            href="/(auth)/login"
+            style={{
+              fontFamily: fontFamilyBodyMedium,
+              fontSize: fontSizeBase,
+              color: accentBlue,
+            }}
+          >
+            Log in
+          </Link>
+        </View>
+      </PageContainer>
     );
   }
 
   return (
-    <>
+    <PageContainer>
       <Stack.Screen options={{ title: family?.name ?? "Family" }} />
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.row}>
-          <Text style={styles.title}>{family?.name ?? "Family"}</Text>
-          <Pressable onPress={refresh} disabled={isRefreshing}>
-            <Text style={styles.link}>{isRefreshing ? "Refreshing…" : "Refresh"}</Text>
-          </Pressable>
-        </View>
+      <ScrollView
+        contentContainerStyle={{
+          gap: 20,
+          paddingTop: 16,
+          paddingBottom: 40,
+        }}
+      >
+        {/* Header */}
+        <Text
+          style={{
+            fontFamily: fontFamilyDisplay,
+            fontSize: fontSize2xl,
+            color: textPrimary,
+          }}
+        >
+          {family?.name ?? "Family"}
+        </Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Members</Text>
+        {/* Members Section */}
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyBold,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+            }}
+          >
+            Members
+          </Text>
           {members.length === 0 ? (
-            <Text style={styles.meta}>No members found.</Text>
-          ) : (
-            members.map((m) => {
-              const isMe = m.user_id === userId;
-              const label = m.profiles?.display_name || m.profiles?.email || m.user_id;
-              return (
-                <View key={m.user_id} style={styles.memberRow}>
-                  <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>{label}</Text>
-                    <Text style={styles.memberMeta}>
-                      {m.role}
-                      {isMe ? " (you)" : ""}
-                    </Text>
-                  </View>
-
-                  {isAdmin && !isMe ? (
-                    <View style={styles.memberActions}>
-                      {m.role === "member" ? (
-                        <Pressable onPress={() => onSetRole(m.user_id, "admin")}>
-                          <Text style={styles.action}>Promote</Text>
-                        </Pressable>
-                      ) : (
-                        <Pressable onPress={() => onSetRole(m.user_id, "member")}>
-                          <Text style={styles.action}>Demote</Text>
-                        </Pressable>
-                      )}
-                      <Pressable onPress={() => onRemoveMember(m.user_id)}>
-                        <Text style={[styles.action, styles.danger]}>Remove</Text>
-                      </Pressable>
-                    </View>
-                  ) : null}
-                </View>
-              );
-            })
-          )}
-
-          <Pressable onPress={onLeave} style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
-            <Text style={styles.secondaryButtonText}>Leave family</Text>
-          </Pressable>
-          {isAdmin ? (
-            <Text style={styles.hint}>
-              Last admin can’t leave until another admin exists.
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeSm,
+                color: textSecondary,
+              }}
+            >
+              No members found.
             </Text>
-          ) : null}
+          ) : (
+            <View style={{ gap: 8 }}>
+              {members.map((m) => {
+                const isMe = m.user_id === userId;
+                const displayName =
+                  m.profiles?.display_name || m.profiles?.email || m.user_id;
+                const initials = getInitials(m.profiles?.display_name);
+                const badge = getRoleBadgeStyle(m.role);
+
+                return (
+                  <View
+                    key={m.user_id}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      paddingVertical: 8,
+                      ...(isMobile ? {} : { maxWidth: 600 }),
+                    }}
+                  >
+                    {/* Avatar */}
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: accentBlue,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: fontFamilyBodyBold,
+                          fontSize: fontSizeSm,
+                          color: white,
+                        }}
+                      >
+                        {initials}
+                      </Text>
+                    </View>
+
+                    {/* Info */}
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontFamily: fontFamilyBodyMedium,
+                          fontSize: fontSizeBase,
+                          color: textPrimary,
+                        }}
+                      >
+                        {displayName}
+                        {isMe ? " (you)" : ""}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginTop: 2,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: badge.bg,
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: radiusPill,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBodyMedium,
+                              fontSize: fontSizeXs,
+                              color: badge.text,
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {m.role}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Admin actions */}
+                    {isAdmin && !isMe && (
+                      <View
+                        style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+                      >
+                        {m.role === "member" ? (
+                          <Pressable
+                            onPress={() => onSetRole(m.user_id, "admin")}
+                            style={({ pressed }) => ({
+                              paddingHorizontal: 10,
+                              paddingVertical: 6,
+                              borderRadius: radiusMd,
+                              borderWidth: 1,
+                              borderColor: borderDefault,
+                              opacity: pressed ? 0.7 : 1,
+                            })}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: fontFamilyBody,
+                                fontSize: fontSizeXs,
+                                color: textPrimary,
+                              }}
+                            >
+                              Promote
+                            </Text>
+                          </Pressable>
+                        ) : (
+                          <Pressable
+                            onPress={() => onSetRole(m.user_id, "member")}
+                            style={({ pressed }) => ({
+                              paddingHorizontal: 10,
+                              paddingVertical: 6,
+                              borderRadius: radiusMd,
+                              borderWidth: 1,
+                              borderColor: borderDefault,
+                              opacity: pressed ? 0.7 : 1,
+                            })}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: fontFamilyBody,
+                                fontSize: fontSizeXs,
+                                color: textPrimary,
+                              }}
+                            >
+                              Demote
+                            </Text>
+                          </Pressable>
+                        )}
+                        <Pressable
+                          onPress={() => onRemoveMember(m.user_id)}
+                          style={({ pressed }) => ({
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: radiusMd,
+                            borderWidth: 1,
+                            borderColor: accentCoral,
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBody,
+                              fontSize: fontSizeXs,
+                              color: accentCoral,
+                            }}
+                          >
+                            Remove
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => onTransferOwnership(m.user_id)}
+                          style={({ pressed }) => ({
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: radiusMd,
+                            borderWidth: 1,
+                            borderColor: borderDefault,
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBody,
+                              fontSize: fontSizeXs,
+                              color: textSecondary,
+                            }}
+                          >
+                            Transfer
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Invite someone</Text>
+        {/* Invite Section */}
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyBold,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+            }}
+          >
+            Invite Member
+          </Text>
           <TextInput
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
-            placeholder="Email"
+            placeholder="Email address (optional)"
             value={inviteEmail}
             onChangeText={setInviteEmail}
-            style={styles.input}
+            style={{
+              borderWidth: 1,
+              borderColor: borderDefault,
+              borderRadius: radiusMd,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              fontSize: fontSizeBase,
+              fontFamily: fontFamilyBody,
+              color: textPrimary,
+              backgroundColor: bgPage,
+            }}
           />
           <Pressable
             onPress={onInvite}
             disabled={isInviting}
-            style={({ pressed }) => [styles.button, (pressed || isInviting) && styles.buttonPressed]}
+            style={({ pressed }) => ({
+              backgroundColor: accentBlue,
+              borderRadius: radiusMd,
+              paddingVertical: 12,
+              alignItems: "center" as const,
+              opacity: pressed || isInviting ? 0.7 : 1,
+            })}
           >
-            <Text style={styles.buttonText}>{isInviting ? "Creating…" : "Create invite link"}</Text>
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeBase,
+                color: white,
+              }}
+            >
+              {isInviting ? "Creating invite..." : "Create Invite Link"}
+            </Text>
           </Pressable>
-          <Text style={styles.hint}>
-            Phase 1: invite “sending” is link-sharing; email delivery is added once an email provider is configured.
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeXs,
+              color: textTertiary,
+            }}
+          >
+            An invite link will be generated. Share it via the native share
+            sheet or copy to clipboard.
           </Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pending invites</Text>
-          {invites.length === 0 ? (
-            <Text style={styles.meta}>No invites yet.</Text>
-          ) : (
-            invites.map((inv) => {
+        {/* Pending Invites */}
+        {invites.length > 0 && (
+          <View
+            style={{
+              backgroundColor: bgCard,
+              borderRadius: radiusMd,
+              padding: 16,
+              gap: 8,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyBold,
+                fontSize: fontSizeLg,
+                color: textPrimary,
+              }}
+            >
+              Pending Invites
+            </Text>
+            {invites.map((inv) => {
               const status = inv.revoked_at
                 ? "revoked"
                 : inv.accepted_at
                   ? "accepted"
                   : "pending";
+              const statusColor =
+                status === "pending"
+                  ? accentBlue
+                  : status === "accepted"
+                    ? accentGreen
+                    : textTertiary;
+
               return (
-                <View key={inv.id} style={styles.inviteRow}>
-                  <View style={styles.inviteInfo}>
-                    <Text style={styles.memberName}>{inv.email}</Text>
-                    <Text style={styles.memberMeta}>status: {status}</Text>
+                <View
+                  key={inv.id}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyMedium,
+                        fontSize: fontSizeSm,
+                        color: textPrimary,
+                      }}
+                    >
+                      {inv.email}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBody,
+                        fontSize: fontSizeXs,
+                        color: statusColor,
+                        marginTop: 2,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {status}
+                    </Text>
                   </View>
-                  {isAdmin && status === "pending" ? (
-                    <Pressable onPress={() => onRevokeInvite(inv.id)}>
-                      <Text style={[styles.action, styles.danger]}>Revoke</Text>
+                  {isAdmin && status === "pending" && (
+                    <Pressable
+                      onPress={() => onRevokeInvite(inv.id)}
+                      style={({ pressed }) => ({
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: radiusMd,
+                        borderWidth: 1,
+                        borderColor: accentCoral,
+                        opacity: pressed ? 0.7 : 1,
+                      })}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: fontFamilyBody,
+                          fontSize: fontSizeXs,
+                          color: accentCoral,
+                        }}
+                      >
+                        Revoke
+                      </Text>
                     </Pressable>
-                  ) : null}
+                  )}
                 </View>
               );
-            })
+            })}
+          </View>
+        )}
+
+        {/* Admin Controls / Leave */}
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            gap: 12,
+          }}
+        >
+          {!isAdmin ? (
+            <Pressable
+              onPress={onLeave}
+              style={({ pressed }) => ({
+                borderWidth: 1,
+                borderColor: accentCoral,
+                borderRadius: radiusMd,
+                paddingVertical: 12,
+                alignItems: "center" as const,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeBase,
+                  color: accentCoral,
+                }}
+              >
+                Leave Family
+              </Text>
+            </Pressable>
+          ) : (
+            <>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBodyBold,
+                  fontSize: fontSizeLg,
+                  color: textPrimary,
+                }}
+              >
+                Admin Controls
+              </Text>
+              <Pressable
+                onPress={onDeleteFamily}
+                style={({ pressed }) => ({
+                  backgroundColor: accentCoral,
+                  borderRadius: radiusMd,
+                  paddingVertical: 12,
+                  alignItems: "center" as const,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: white,
+                  }}
+                >
+                  Delete Family
+                </Text>
+              </Pressable>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeXs,
+                  color: textTertiary,
+                }}
+              >
+                Last admin cannot leave until another admin exists. Use
+                "Transfer" on a member to hand over ownership.
+              </Text>
+            </>
           )}
         </View>
       </ScrollView>
-    </>
+    </PageContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, padding: 24, alignItems: "center", justifyContent: "center", gap: 10 },
-  container: { padding: 24, gap: 14 },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "700" },
-  meta: { fontSize: 14, opacity: 0.75 },
-  link: { fontSize: 15 },
-  hint: { fontSize: 12, opacity: 0.7, marginTop: 6 },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.12)",
-    borderRadius: 12,
-    padding: 14,
-    gap: 10
-  },
-  cardTitle: { fontSize: 16, fontWeight: "700" },
-  input: {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16
-  },
-  button: {
-    backgroundColor: "black",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  secondaryButton: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.2)",
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  secondaryButtonText: { fontSize: 15, fontWeight: "600" },
-  buttonPressed: { opacity: 0.8 },
-  buttonText: { color: "white", fontSize: 16, fontWeight: "600" },
-  memberRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 8 },
-  inviteRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 8 },
-  memberInfo: { flex: 1 },
-  inviteInfo: { flex: 1 },
-  memberName: { fontSize: 15, fontWeight: "600" },
-  memberMeta: { fontSize: 12, opacity: 0.75, marginTop: 2 },
-  memberActions: { flexDirection: "row", gap: 12, alignItems: "center" },
-  action: { fontSize: 14 },
-  danger: { color: "#b00020" }
-});
-

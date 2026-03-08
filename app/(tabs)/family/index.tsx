@@ -1,31 +1,66 @@
 import { Link, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { useSession } from "@/features/auth/session";
+import { PageContainer } from "@/components/nav/PageContainer";
+import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { supabase } from "@/lib/supabase";
+import {
+  accentBlue,
+  bgCard,
+  bgPage,
+  borderDefault,
+  fontFamilyBody,
+  fontFamilyBodyBold,
+  fontFamilyBodyMedium,
+  fontFamilyDisplay,
+  fontSize2xl,
+  fontSizeBase,
+  fontSizeSm,
+  radiusMd,
+  shadowSm,
+  textPrimary,
+  textSecondary,
+  white,
+} from "@/lib/tokens";
 
 type Family = {
   id: string;
   name: string;
+  member_count?: number;
 };
 
 export default function FamiliesHomeScreen() {
   const { session, isLoading } = useSession();
   const userId = session?.user.id ?? null;
+  const { breakpoint } = useBreakpoint();
 
   const [families, setFamilies] = useState<Family[]>([]);
   const [familyName, setFamilyName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
 
   const isAuthed = useMemo(() => Boolean(userId), [userId]);
+  const isMobile = breakpoint === "mobile";
 
   async function refresh() {
     if (!isAuthed) return;
     setIsRefreshing(true);
     try {
-      const { data, error } = await supabase.from("families").select("id,name").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("families")
+        .select("id,name")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       setFamilies((data ?? []) as Family[]);
     } catch (e) {
@@ -48,9 +83,12 @@ export default function FamiliesHomeScreen() {
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.rpc("create_family", { p_name: name });
+      const { data, error } = await supabase.rpc("create_family", {
+        p_name: name,
+      });
       if (error) throw error;
       setFamilyName("");
+      setShowCreate(false);
       const familyId = data as string;
       router.push(`/family/${familyId}`);
     } catch (e) {
@@ -63,106 +101,272 @@ export default function FamiliesHomeScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.meta}>Loading…</Text>
-      </View>
+      <PageContainer>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color={accentBlue} />
+        </View>
+      </PageContainer>
     );
   }
 
   if (!isAuthed) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Families</Text>
-        <Text style={styles.meta}>Please log in to create or join a family.</Text>
-        <Link href="/(auth)/login" style={styles.link}>
-          Log in
-        </Link>
-      </View>
+      <PageContainer>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSize2xl,
+              color: textPrimary,
+            }}
+          >
+            Family
+          </Text>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textSecondary,
+              textAlign: "center",
+            }}
+          >
+            Please log in to create or join a family.
+          </Text>
+          <Link
+            href="/(auth)/login"
+            style={{
+              fontFamily: fontFamilyBodyMedium,
+              fontSize: fontSizeBase,
+              color: accentBlue,
+            }}
+          >
+            Log in
+          </Link>
+        </View>
+      </PageContainer>
+    );
+  }
+
+  function renderFamilyCard({ item }: { item: Family }) {
+    return (
+      <Pressable
+        onPress={() => router.push(`/family/${item.id}`)}
+        style={({ pressed }) => ({
+          backgroundColor: bgCard,
+          borderRadius: radiusMd,
+          padding: 16,
+          ...shadowSm,
+          opacity: pressed ? 0.85 : 1,
+          ...(isMobile
+            ? { width: "100%" as const }
+            : { maxWidth: 400, minWidth: 280, flexGrow: 1, flexBasis: 0 }),
+        })}
+      >
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyBold,
+            fontSize: fontSizeBase,
+            color: textPrimary,
+          }}
+        >
+          {item.name}
+        </Text>
+        {item.member_count != null && (
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeSm,
+              color: textSecondary,
+              marginTop: 4,
+            }}
+          >
+            {item.member_count}{" "}
+            {item.member_count === 1 ? "member" : "members"}
+          </Text>
+        )}
+      </Pressable>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Your families</Text>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Create a family</Text>
-        <TextInput
-          placeholder="Family name"
-          value={familyName}
-          onChangeText={setFamilyName}
-          style={styles.input}
-        />
-        <Pressable
-          onPress={onCreateFamily}
-          disabled={isSubmitting}
-          style={({ pressed }) => [styles.button, (pressed || isSubmitting) && styles.buttonPressed]}
+    <PageContainer>
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingTop: 16,
+          paddingBottom: 12,
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: fontFamilyDisplay,
+            fontSize: fontSize2xl,
+            color: textPrimary,
+          }}
         >
-          <Text style={styles.buttonText}>{isSubmitting ? "Creating…" : "Create"}</Text>
+          Family
+        </Text>
+        <Pressable
+          onPress={() => setShowCreate(!showCreate)}
+          style={({ pressed }) => ({
+            backgroundColor: accentBlue,
+            borderRadius: radiusMd,
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyMedium,
+              fontSize: fontSizeSm,
+              color: white,
+            }}
+          >
+            Create Family
+          </Text>
         </Pressable>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.cardTitle}>Families</Text>
-          <Pressable onPress={refresh} disabled={isRefreshing}>
-            <Text style={styles.link}>{isRefreshing ? "Refreshing…" : "Refresh"}</Text>
+      {/* Create Family Form (collapsible) */}
+      {showCreate && (
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            marginBottom: 16,
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyBold,
+              fontSize: fontSizeBase,
+              color: textPrimary,
+            }}
+          >
+            Create a new family
+          </Text>
+          <TextInput
+            placeholder="Family name"
+            value={familyName}
+            onChangeText={setFamilyName}
+            style={{
+              borderWidth: 1,
+              borderColor: borderDefault,
+              borderRadius: radiusMd,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              fontSize: fontSizeBase,
+              fontFamily: fontFamilyBody,
+              color: textPrimary,
+              backgroundColor: bgPage,
+            }}
+          />
+          <Pressable
+            onPress={onCreateFamily}
+            disabled={isSubmitting || !familyName.trim()}
+            style={({ pressed }) => ({
+              backgroundColor: accentBlue,
+              borderRadius: radiusMd,
+              paddingVertical: 12,
+              alignItems: "center" as const,
+              opacity: pressed || isSubmitting ? 0.7 : 1,
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeBase,
+                color: white,
+              }}
+            >
+              {isSubmitting ? "Creating..." : "Create"}
+            </Text>
           </Pressable>
         </View>
+      )}
 
-        {families.length === 0 ? (
-          <Text style={styles.meta}>No families yet.</Text>
-        ) : (
-          families.map((f) => (
-            <Link key={f.id} href={`/family/${f.id}`} style={styles.familyLink}>
-              {f.name}
-            </Link>
-          ))
-        )}
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Join via invite link</Text>
-        <Text style={styles.meta}>
-          Open an invite URL like <Text style={styles.code}>/invite/&lt;token&gt;</Text>.
-        </Text>
-      </View>
-    </ScrollView>
+      {/* Family List */}
+      {families.length === 0 && !isRefreshing ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            paddingTop: 60,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textSecondary,
+              textAlign: "center",
+            }}
+          >
+            No families yet
+          </Text>
+          <Pressable
+            onPress={() => setShowCreate(true)}
+            style={({ pressed }) => ({
+              backgroundColor: accentBlue,
+              borderRadius: radiusMd,
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeSm,
+                color: white,
+              }}
+            >
+              Create Family
+            </Text>
+          </Pressable>
+        </View>
+      ) : (
+        <FlatList
+          data={families}
+          keyExtractor={(item) => item.id}
+          renderItem={renderFamilyCard}
+          numColumns={isMobile ? 1 : 2}
+          key={isMobile ? "single" : "double"}
+          columnWrapperStyle={
+            !isMobile ? { gap: 16 } : undefined
+          }
+          contentContainerStyle={{
+            gap: 16,
+            paddingBottom: 24,
+            ...(isMobile
+              ? {}
+              : { flexGrow: 1, flexBasis: 0 }),
+          }}
+          refreshing={isRefreshing}
+          onRefresh={refresh}
+        />
+      )}
+    </PageContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, padding: 24, alignItems: "center", justifyContent: "center", gap: 10 },
-  container: { padding: 24, gap: 14 },
-  title: { fontSize: 24, fontWeight: "700" },
-  meta: { fontSize: 14, opacity: 0.75, textAlign: "center" },
-  code: { fontFamily: "Courier", opacity: 0.9 },
-  link: { fontSize: 15 },
-  card: {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.12)",
-    borderRadius: 12,
-    padding: 14,
-    gap: 10
-  },
-  cardTitle: { fontSize: 16, fontWeight: "700" },
-  input: {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16
-  },
-  button: {
-    backgroundColor: "black",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  buttonPressed: { opacity: 0.8 },
-  buttonText: { color: "white", fontSize: 16, fontWeight: "600" },
-  familyLink: { fontSize: 16, paddingVertical: 6 },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }
-});
-
