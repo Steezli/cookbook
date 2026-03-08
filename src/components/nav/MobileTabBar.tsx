@@ -38,7 +38,7 @@ export function MobileTabBar() {
 
       {/* Scan: plain Pressable opens modal overlay (not a tab route) */}
       <Pressable
-        onPress={() => router.push("/scan")}
+        onPress={() => router.navigate("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
       >
         <Camera color={textDisabled} size={28} />
