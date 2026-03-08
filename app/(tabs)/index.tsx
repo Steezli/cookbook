@@ -30,6 +30,7 @@ import {
   radiusMd,
   textPrimary,
   textSecondary,
+  white,
 } from '@/lib/tokens';
 
 const FEATURED_COUNT = 3;
@@ -183,7 +184,7 @@ export default function HomeScreen() {
                 style={{
                   fontFamily: fontFamilyBody,
                   fontSize: fontSizeBase,
-                  color: '#FFFFFF',
+                  color: white,
                 }}
               >
                 Create your first recipe

@@ -52,6 +52,7 @@ import {
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyDisplay,
+  noPhotoBg,
   fontSizeBase,
   fontSizeLg,
   fontSizeSm,
@@ -66,9 +67,6 @@ import {
   textSecondary,
   white,
 } from "@/lib/tokens";
-
-// No-photo placeholder color (from cookbook.pen spec — no token exists)
-const noPhotoBg = '#E8E0D8';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -7,6 +7,8 @@ import { formatMetadataLine, getVisibilityColor } from '@/components/recipes/rec
 import {
   bgCard,
   fontFamilyBody,
+  noPhotoBg,
+  noPhotoIcon,
   fontFamilyBodyMedium,
   fontFamilyDisplay,
   fontSizeBase,
@@ -64,12 +66,12 @@ export function RecipeCard({ recipe, thumbnailUrl, onPress, style }: RecipeCardP
           style={{
             width: '100%',
             height: 180,
-            backgroundColor: '#E8E0D8',
+            backgroundColor: noPhotoBg,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <UtensilsCrossed size={32} color="#8B7355" />
+          <UtensilsCrossed size={32} color={noPhotoIcon} />
         </View>
       )}
 

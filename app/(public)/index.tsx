@@ -36,6 +36,8 @@ import {
   bgPage,
   fontFamilyBody,
   fontFamilyBodyMedium,
+  noPhotoBg,
+  noPhotoIcon,
   radiusMd,
   radiusPill,
   radiusSm,
@@ -49,8 +51,6 @@ import {
 // Constants
 // ---------------------------------------------------------------------------
 
-const noPhotoBg = '#E8E0D8';
-const noPhotoIcon = '#8B7355';
 const PAGE_SIZE = 20;
 const DEBOUNCE_MS = 300;
 

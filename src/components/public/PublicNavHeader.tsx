@@ -13,6 +13,7 @@ import {
   borderDefault,
   borderSubtle,
   fontFamilyBodyMedium,
+  fontFamilyDisplayBold,
   radiusPill,
   textPrimary,
   textSecondary,
@@ -99,7 +100,7 @@ function LogoRow({
       <Text
         style={{
           fontSize,
-          fontFamily: 'BricolageGrotesque_700Bold',
+          fontFamily: fontFamilyDisplayBold,
           color: textPrimary,
         }}
       >
@@ -341,7 +342,7 @@ export function PublicDetailNavBar({ onBack }: PublicDetailNavBarProps) {
           <Text
             style={{
               fontSize: 20,
-              fontFamily: 'BricolageGrotesque_700Bold',
+              fontFamily: fontFamilyDisplayBold,
               color: textPrimary,
             }}
           >
@@ -383,7 +384,7 @@ export function PublicDetailNavBar({ onBack }: PublicDetailNavBarProps) {
         <Text
           style={{
             fontSize: 18,
-            fontFamily: 'BricolageGrotesque_700Bold',
+            fontFamily: fontFamilyDisplayBold,
             color: textPrimary,
           }}
         >

@@ -27,6 +27,9 @@ import {
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyBodyMedium,
+  fontFamilyDisplayBold,
+  noPhotoBg,
+  noPhotoIcon,
   radiusMd,
   radiusPill,
   radiusSm,
@@ -35,8 +38,6 @@ import {
   textTertiary,
   white,
 } from '@/lib/tokens';
-
-const noPhotoBg = '#E8E0D8';
 
 export default function PublicRecipeDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -165,7 +166,7 @@ export default function PublicRecipeDetail() {
           justifyContent: 'center',
         }}
       >
-        <UtensilsCrossed size={48} color="#8B7355" />
+        <UtensilsCrossed size={48} color={noPhotoIcon} />
       </View>
     );
   }
@@ -325,7 +326,7 @@ export default function PublicRecipeDetail() {
         <Text
           style={{
             fontSize: headingSize,
-            fontFamily: 'BricolageGrotesque_700Bold',
+            fontFamily: fontFamilyDisplayBold,
             color: textPrimary,
           }}
         >
@@ -356,7 +357,7 @@ export default function PublicRecipeDetail() {
         <Text
           style={{
             fontSize: breakpoint === 'web' ? 22 : 20,
-            fontFamily: 'BricolageGrotesque_700Bold',
+            fontFamily: fontFamilyDisplayBold,
             color: textPrimary,
           }}
         >
@@ -412,7 +413,7 @@ export default function PublicRecipeDetail() {
         <Text
           style={{
             fontSize: ctaHeadingSize,
-            fontFamily: 'BricolageGrotesque_700Bold',
+            fontFamily: fontFamilyDisplayBold,
             color: textPrimary,
             textAlign: 'center',
           }}
@@ -487,7 +488,7 @@ export default function PublicRecipeDetail() {
               <Text
                 style={{
                   fontSize: 32,
-                  fontFamily: 'BricolageGrotesque_700Bold',
+                  fontFamily: fontFamilyDisplayBold,
                   color: textPrimary,
                 }}
               >
@@ -543,7 +544,7 @@ export default function PublicRecipeDetail() {
           <Text
             style={{
               fontSize: titleFontSize,
-              fontFamily: 'BricolageGrotesque_700Bold',
+              fontFamily: fontFamilyDisplayBold,
               color: textPrimary,
             }}
           >
