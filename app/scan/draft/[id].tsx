@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useLocalSearchParams } from "expo-router";
-import { DraftReview } from "@/features/scans/DraftReview";
-import { DraftEditor } from "@/features/scans/DraftEditor";
+import React, { useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { PageContainer } from '@/components/nav/PageContainer';
+import { DraftReview } from '@/features/scans/DraftReview';
+import { DraftEditor } from '@/features/scans/DraftEditor';
 
 export default function DraftReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -9,17 +10,21 @@ export default function DraftReviewScreen() {
 
   if (isEditing) {
     return (
-      <DraftEditor
-        draftId={id!}
-        onCancel={() => setIsEditing(false)}
-      />
+      <PageContainer>
+        <DraftEditor
+          draftId={id!}
+          onCancel={() => setIsEditing(false)}
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <DraftReview
-      draftId={id!}
-      onEdit={() => setIsEditing(true)}
-    />
+    <PageContainer>
+      <DraftReview
+        draftId={id!}
+        onEdit={() => setIsEditing(true)}
+      />
+    </PageContainer>
   );
 }
