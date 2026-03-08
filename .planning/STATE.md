@@ -122,6 +122,9 @@ Progress: [█████████░] 85%
 - **12-03 Share.share with clipboard fallback:** Native share sheet for invite links; on dismiss/failure falls back to expo-clipboard setStringAsync; on clipboard failure shows Alert with link text
 - **12-03 Invite state machine:** Explicit InviteState union type (loading|valid|expired|accepted|invalid|success|error) for clear state transitions instead of multiple boolean flags
 - **12-03 Confirmation alerts for destructive family actions:** Remove member, leave family, delete family all use Alert.alert with Cancel + destructive button
+- **12-01 Social auth helper pattern:** Single module with per-provider functions (signInWithGoogle/Apple/Facebook), Apple uses native signInWithIdToken on iOS with OAuth fallback on other platforms
+- **12-01 Auth layout headerShown:false:** Screens manage own branding (logo, title) per cookbook.pen full-screen designs
+- **12-01 Signup adds Full Name + Confirm Password:** Fields added per cookbook.pen spec; display_name passed in signUp options.data
 
 ### For v1.1
 
