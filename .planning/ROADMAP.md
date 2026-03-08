@@ -122,7 +122,7 @@ Plans:
   4. The `as any` type assertion in `(public)/index.tsx` is removed (typed route exists)
   5. `MobileTabBar` and `WebSidebar` use the same router method for scan navigation
   6. REQUIREMENTS.md DESIGN-04 checkbox shows `[x]`, SCREEN-04a row exists in traceability table
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 11.1-01-PLAN.md — Token extraction: add fontFamilyDisplayBold, noPhotoBg, noPhotoIcon and update all consumer files
@@ -165,6 +165,6 @@ Plans:
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
-| 11.1 Audit Cleanup | v1.1 | 0/2 | Not started | - |
+| 11.1 Audit Cleanup | 1/2 | In Progress|  | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |

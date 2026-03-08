@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
-status: completed
-last_updated: "2026-03-08T21:06:35.467Z"
-last_activity: 2026-03-08 — 11-04 built public recipe detail with author attribution, ingredient truncation, sign-up CTA, three-breakpoint layout
+status: in-progress
+last_updated: "2026-03-08T21:43:01Z"
+last_activity: 2026-03-08 — 11.1-01 extracted design tokens (fontFamilyDisplayBold, noPhotoBg, noPhotoIcon) and replaced hardcoded values across 7 files
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_plans: 21
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -22,16 +22,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Families can save and share treasured recipes (like Grandma's) without losing control over who gets to see them.
-**Current focus:** Phase 11 — Public Browsing
+**Current focus:** Phase 11.1 — Audit Cleanup
 
 ## Current Position
 
-Phase: 11 of 13 (Public Browsing) -- COMPLETE
-Plan: 4 of 4 — 11-04 complete (Public recipe detail)
-Status: Phase 11 complete — All 4 plans finished: data layer, shared components, browse screen, recipe detail
-Last activity: 2026-03-08 — 11-04 built public recipe detail with author attribution, ingredient truncation, sign-up CTA, three-breakpoint layout
+Phase: 11.1 (Audit Cleanup)
+Plan: 1 of 1 — 11.1-01 complete (Design token extraction)
+Status: 11.1-01 complete — extracted fontFamilyDisplayBold, noPhotoBg, noPhotoIcon tokens and replaced all hardcoded values
+Last activity: 2026-03-08 — 11.1-01 extracted design tokens and replaced hardcoded values across 7 files
 
-Progress: [██████████] 100%
+Progress: [██████████] 95%
 
 ## Pending TODOs
 
@@ -71,7 +71,7 @@ Progress: [██████████] 100%
 - **10-00 formatMetadataLine separator:** Uses ' . ' (space-dot-space) between time and servings parts, matching cookbook.pen spec.
 - **10-00 getCookingProgress step-complete semantics:** (currentStepIndex + 1) / totalSteps — current step is treated as already completed, so step 0 of 5 = 20% (not 0%).
 - **10-02 Sticky header above ScrollView:** React Native has no position:fixed; placing header View above ScrollView at same flex level achieves identical sticky-while-scrolling behavior correctly
-- **10-02 noPhotoBg '#E8E0D8' local constant:** Spec-prescribed placeholder color not in tokens.ts; defined as local constant rather than adding to shared tokens
+- **10-02 noPhotoBg '#E8E0D8' local constant:** ~~Spec-prescribed placeholder color not in tokens.ts; defined as local constant rather than adding to shared tokens~~ **Superseded by 11.1-01:** noPhotoBg and noPhotoIcon now proper tokens in tokens.ts
 - **10-01 RecipeCard no-photo state:** #E8E0D8 warm placeholder + UtensilsCrossed icon (size 32, #8B7355) per cookbook.pen spec
 - **10-01 Home screen batch thumbnails:** All recipe IDs passed to getRecipeThumbnailUrlMap before render — not fetched per-card in renderItem
 - **10-01 Home screen FlatList pattern:** Featured horizontal (220px fixed cards); recent vertical grid with numColumns + key={numColumns}; columnWrapperStyle only when numColumns > 1
