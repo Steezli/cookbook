@@ -8,8 +8,14 @@ import {
 } from '@/lib/tokens';
 
 type AdSlotProps = {
-  variant: 'mobile' | 'leaderboard';
+  variant: 'mobile' | 'leaderboard' | 'sidebar';
   style?: object;
+};
+
+const SIZES = {
+  mobile: { width: 320, height: 50 },
+  leaderboard: { width: 728, height: 90 },
+  sidebar: { width: '100%' as const, height: 250 },
 };
 
 /**
@@ -20,30 +26,33 @@ type AdSlotProps = {
  * React Native platform resolution picks .native.tsx automatically.
  */
 export default function AdSlot({ variant, style }: AdSlotProps) {
-  const isMobile = variant === 'mobile';
+  const size = SIZES[variant];
+  const iconSize = variant === 'mobile' ? 14 : 16;
+  const fontSize = variant === 'mobile' ? 10 : 11;
+  const radius = variant === 'mobile' ? 8 : 10;
 
   return (
     <View
       style={[
         {
-          width: isMobile ? 320 : 728,
-          height: isMobile ? 50 : 90,
+          width: size.width,
+          height: size.height,
           backgroundColor: '#F9FAFB',
-          borderRadius: isMobile ? 8 : 10,
+          borderRadius: radius,
           borderWidth: 1,
           borderColor: borderDefault,
           alignItems: 'center',
           justifyContent: 'center',
-          flexDirection: 'row',
-          gap: 6,
+          flexDirection: variant === 'sidebar' ? 'column' : 'row',
+          gap: variant === 'sidebar' ? 8 : 6,
         },
         style,
       ]}
     >
-      <Megaphone size={isMobile ? 14 : 16} color={textTertiary} />
+      <Megaphone size={iconSize} color={textTertiary} />
       <Text
         style={{
-          fontSize: isMobile ? 10 : 11,
+          fontSize,
           fontFamily: fontFamilyBodyMedium,
           color: textTertiary,
         }}

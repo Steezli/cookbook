@@ -465,21 +465,24 @@ export default function PublicRecipeDetail() {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage }}>
         <PublicDetailNavBar onBack={() => router.back()} />
-        <ScrollView>
+        <ScrollView
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingHorizontal: 48,
+            paddingVertical: 32,
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
-              maxWidth: 960,
-              alignSelf: 'center',
-              gap: 40,
-              paddingHorizontal: 48,
-              paddingVertical: 24,
-              alignItems: 'flex-start',
               width: '100%',
+              maxWidth: 960,
+              gap: 40,
+              alignItems: 'flex-start',
             }}
           >
             {/* Left column */}
-            <View style={{ flex: 1, gap: 20 }}>
+            <View style={{ flex: 1, gap: 24 }}>
               {renderHero()}
               <Text
                 style={{
@@ -509,7 +512,7 @@ export default function PublicRecipeDetail() {
                 {renderIngredients(18, 12)}
               </View>
               {renderCTA()}
-              <AdSlot variant="leaderboard" style={{ marginTop: 8 }} />
+              <AdSlot variant="sidebar" />
             </View>
           </View>
         </ScrollView>

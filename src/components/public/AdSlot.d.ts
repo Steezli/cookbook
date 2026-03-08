@@ -1,7 +1,7 @@
 import React from 'react';
 
 type AdSlotProps = {
-  variant: 'mobile' | 'leaderboard';
+  variant: 'mobile' | 'leaderboard' | 'sidebar';
   style?: object;
 };
 
