@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-08T22:49:45Z"
-last_activity: 2026-03-08 — 12-04 rebuilt scan upload and draft review with actual photo display, collapsible mobile layout
+last_updated: "2026-03-08T22:51:31.322Z"
+last_activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 26
-  completed_plans: 23
+  completed_plans: 26
   percent: 85
 ---
 
@@ -119,6 +119,9 @@ Progress: [█████████░] 85%
 - **12-04 Camera hidden on web:** Platform.OS check hides camera option on web since launchCameraAsync not supported
 - **12-04 Animated scroll collapse for mobile photo:** scrollY.interpolate [0,200] -> [300,60] with useNativeDriver:false for height animation
 - **12-04 Side-by-side 40/60 flex split:** Tablet/web draft review uses flex width split with borderRight separator instead of position:fixed
+- **12-03 Share.share with clipboard fallback:** Native share sheet for invite links; on dismiss/failure falls back to expo-clipboard setStringAsync; on clipboard failure shows Alert with link text
+- **12-03 Invite state machine:** Explicit InviteState union type (loading|valid|expired|accepted|invalid|success|error) for clear state transitions instead of multiple boolean flags
+- **12-03 Confirmation alerts for destructive family actions:** Remove member, leave family, delete family all use Alert.alert with Cancel + destructive button
 
 ### For v1.1
 
