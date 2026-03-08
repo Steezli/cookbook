@@ -1,38 +1,65 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { 
-  ActivityIndicator, 
-  Alert, 
-  FlatList, 
-  Pressable, 
-  StyleSheet, 
-  Text, 
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  Text,
   TextInput,
-  View 
-} from "react-native";
-import { 
-  getCollectionById, 
+  View,
+} from 'react-native';
+import {
+  getCollectionById,
   getCollectionRecipes,
   addRecipeToCollection,
   removeRecipeFromCollection,
-  deleteCollection
-} from "@/features/collections/api";
-import type { Collection } from "@/features/collections/types";
-import type { Recipe } from "@/features/recipes/types";
-import { useSession } from "@/features/auth/session";
-import { searchRecipes } from "@/features/recipes/search";
+  deleteCollection,
+} from '@/features/collections/api';
+import type { Collection } from '@/features/collections/types';
+import type { Recipe } from '@/features/recipes/types';
+import { useSession } from '@/features/auth/session';
+import { searchRecipes } from '@/features/recipes/search';
+import { getRecipeThumbnailUrlMap } from '@/features/recipes/photos';
+import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import { PageContainer } from '@/components/nav/PageContainer';
+import { RecipeCard } from '@/components/recipes/RecipeCard';
+import { getNumColumns } from '@/components/recipes/recipeCardUtils';
+import {
+  accentBlue,
+  bgCard,
+  borderDefault,
+  fontFamilyBody,
+  fontFamilyBodyMedium,
+  fontFamilyDisplay,
+  fontSize2xl,
+  fontSizeBase,
+  fontSizeSm,
+  fontSizeXs,
+  radiusMd,
+  shadowSm,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  white,
+} from '@/lib/tokens';
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useSession();
+  const { breakpoint } = useBreakpoint();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [thumbnailMap, setThumbnailMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [addQuery, setAddQuery] = useState("");
+  const [addQuery, setAddQuery] = useState('');
   const [candidateRecipes, setCandidateRecipes] = useState<Recipe[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isAddingRecipeId, setIsAddingRecipeId] = useState<string | null>(null);
+
+  const numColumns = getNumColumns(breakpoint);
+  const isOwner = collection && session?.user.id === collection.owner_user_id;
 
   async function loadCollection() {
     if (!id) return;
@@ -42,13 +69,20 @@ export default function CollectionDetailScreen() {
     try {
       const [collectionData, recipesData] = await Promise.all([
         getCollectionById(id as string),
-        getCollectionRecipes(id as string)
+        getCollectionRecipes(id as string),
       ]);
-      
+
       setCollection(collectionData);
       setRecipes(recipesData);
+
+      // Batch thumbnail fetch
+      const recipeIds = recipesData.map((r) => r.id);
+      if (recipeIds.length > 0) {
+        const urls = await getRecipeThumbnailUrlMap(recipeIds, 300);
+        setThumbnailMap(urls);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load collection");
+      setError(e instanceof Error ? e.message : 'Failed to load collection');
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +92,7 @@ export default function CollectionDetailScreen() {
     void loadCollection();
   }, [id]);
 
-  const isOwner = collection && session?.user.id === collection.owner_user_id;
-
+  // Search for recipes to add
   useEffect(() => {
     if (!isOwner) return;
     const q = addQuery.trim();
@@ -95,12 +128,25 @@ export default function CollectionDetailScreen() {
   async function handleRemoveRecipe(recipeId: string) {
     if (!collection) return;
 
-    try {
-      await removeRecipeFromCollection(collection.id, recipeId);
-      setRecipes(recipes.filter(r => r.id !== recipeId));
-    } catch (e) {
-      Alert.alert("Error", "Failed to remove recipe from collection");
-    }
+    Alert.alert(
+      'Remove Recipe',
+      'Remove this recipe from the collection?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeRecipeFromCollection(collection.id, recipeId);
+              setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+            } catch {
+              Alert.alert('Error', 'Failed to remove recipe from collection');
+            }
+          },
+        },
+      ],
+    );
   }
 
   async function handleAddRecipe(recipe: Recipe) {
@@ -110,8 +156,14 @@ export default function CollectionDetailScreen() {
       await addRecipeToCollection(collection.id, recipe.id);
       setRecipes((prev) => [recipe, ...prev]);
       setCandidateRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
+      // Fetch thumbnail for the newly added recipe
+      const urls = await getRecipeThumbnailUrlMap([recipe.id], 300);
+      setThumbnailMap((prev) => ({ ...prev, ...urls }));
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to add recipe to collection");
+      Alert.alert(
+        'Error',
+        e instanceof Error ? e.message : 'Failed to add recipe to collection',
+      );
     } finally {
       setIsAddingRecipeId(null);
     }
@@ -121,275 +173,327 @@ export default function CollectionDetailScreen() {
     if (!collection) return;
 
     Alert.alert(
-      "Delete Collection",
-      "Are you sure you want to delete this collection? Recipes will not be deleted.",
+      'Delete Collection',
+      'Are you sure you want to delete this collection? Recipes will not be deleted.',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Delete",
-          style: "destructive",
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             try {
               await deleteCollection(collection.id);
-              router.replace("/collections" as any);
-            } catch (e) {
-              Alert.alert("Error", "Failed to delete collection");
+              router.replace('/collections' as any);
+            } catch {
+              Alert.alert('Error', 'Failed to delete collection');
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={accentBlue} />
+        </View>
+      </PageContainer>
+    );
+  }
+
+  if (error || !collection) {
+    return (
+      <PageContainer>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeSm,
+              color: '#d32f2f',
+              textAlign: 'center',
+            }}
+          >
+            {error || "Collection not found or you don't have access"}
+          </Text>
+        </View>
+      </PageContainer>
     );
   }
 
   return (
-    <>
-      <Stack.Screen options={{ title: collection?.name || "Collection" }} />
-      <View style={styles.container}>
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : error || !collection ? (
-          <Text style={styles.error}>
-            {error || "Collection not found or you don't have access"}
-          </Text>
-        ) : (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.title}>{collection.name}</Text>
-              {collection.description && (
-                <Text style={styles.description}>{collection.description}</Text>
-              )}
-              <Text style={styles.meta}>
-                {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}
-                {" • "}
-                {collection.family_id ? "Family" : "Personal"}
-              </Text>
-            </View>
+    <PageContainer>
+      {/* Header */}
+      <View style={{ paddingVertical: 16 }}>
+        {/* Back + Actions row */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <Pressable onPress={() => router.back()}>
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeBase,
+                color: accentBlue,
+              }}
+            >
+              Back
+            </Text>
+          </Pressable>
 
-            {isOwner && (
-              <View style={styles.addSection}>
-                <Text style={styles.addSectionTitle}>Add recipes</Text>
-                <TextInput
-                  style={styles.addSearchInput}
-                  value={addQuery}
-                  onChangeText={setAddQuery}
-                  placeholder="Search recipes to add..."
-                  clearButtonMode="while-editing"
-                  autoCapitalize="none"
-                />
-                {isSearching ? (
-                  <ActivityIndicator />
-                ) : candidateRecipes.length > 0 ? (
-                  <View style={styles.candidateList}>
-                    {candidateRecipes.slice(0, 10).map((r) => (
-                      <View key={r.id} style={styles.candidateRow}>
-                        <Text style={styles.candidateTitle} numberOfLines={1}>
-                          {r.title}
-                        </Text>
-                        <Pressable
-                          style={styles.candidateAddButton}
-                          onPress={() => handleAddRecipe(r)}
-                          disabled={isAddingRecipeId === r.id}
-                        >
-                          <Text style={styles.candidateAddButtonText}>
-                            {isAddingRecipeId === r.id ? "Adding…" : "Add"}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    ))}
-                    {candidateRecipes.length > 10 && (
-                      <Text style={styles.candidateMoreHint}>
-                        Refine your search to see more results
-                      </Text>
-                    )}
-                  </View>
-                ) : addQuery.trim() ? (
-                  <Text style={styles.candidateEmpty}>No matching recipes</Text>
-                ) : null}
-              </View>
-            )}
-
-            {recipes.length === 0 ? (
-              <Text style={styles.empty}>
-                No recipes in this collection yet. Add some above.
-              </Text>
-            ) : (
-              <FlatList
-                data={recipes}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.recipeCard}>
-                    <Pressable
-                      style={styles.recipeCardContent}
-                      onPress={() => router.push(`/recipes/${item.id}` as any)}
-                    >
-                      <Text style={styles.recipeTitle}>{item.title}</Text>
-                      <Text style={styles.recipeMeta}>
-                        {item.ingredients.length} ingredients • {item.steps.length} steps
-                      </Text>
-                    </Pressable>
-                    {isOwner && (
-                      <Pressable
-                        style={styles.removeButton}
-                        onPress={() => handleRemoveRecipe(item.id)}
-                      >
-                        <Text style={styles.removeButtonText}>Remove</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                )}
-              />
-            )}
-
-            {isOwner && (
-              <Pressable style={styles.deleteButton} onPress={handleDelete}>
-                <Text style={styles.deleteButtonText}>Delete Collection</Text>
+          {isOwner && (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <Pressable
+                onPress={handleDelete}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: radiusMd,
+                  borderWidth: 1,
+                  borderColor: '#d32f2f',
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeSm,
+                    color: '#d32f2f',
+                  }}
+                >
+                  Delete
+                </Text>
               </Pressable>
-            )}
-          </>
-        )}
+            </View>
+          )}
+        </View>
+
+        {/* Title + metadata */}
+        <Text
+          style={{
+            fontFamily: fontFamilyDisplay,
+            fontSize: fontSize2xl,
+            color: textPrimary,
+            marginBottom: 4,
+          }}
+        >
+          {collection.name}
+        </Text>
+        {collection.description ? (
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textSecondary,
+              marginBottom: 8,
+            }}
+          >
+            {collection.description}
+          </Text>
+        ) : null}
+        <Text
+          style={{
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeXs,
+            color: textTertiary,
+          }}
+        >
+          {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
+          {' \u00B7 '}
+          {collection.family_id ? 'Family' : 'Personal'}
+        </Text>
       </View>
-    </>
+
+      {/* Add recipes section (owner only) */}
+      {isOwner && (
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 12,
+            marginBottom: 16,
+            ...shadowSm,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyMedium,
+              fontSize: fontSizeSm,
+              color: textPrimary,
+              marginBottom: 8,
+            }}
+          >
+            Add recipes
+          </Text>
+          <TextInput
+            value={addQuery}
+            onChangeText={setAddQuery}
+            placeholder="Search recipes to add..."
+            clearButtonMode="while-editing"
+            autoCapitalize="none"
+            style={{
+              padding: 12,
+              borderWidth: 1,
+              borderColor: borderDefault,
+              borderRadius: radiusMd,
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textPrimary,
+              marginBottom: 8,
+            }}
+          />
+          {isSearching ? (
+            <ActivityIndicator size="small" color={accentBlue} />
+          ) : candidateRecipes.length > 0 ? (
+            <View style={{ maxHeight: 240 }}>
+              {candidateRecipes.slice(0, 10).map((r) => (
+                <View
+                  key={r.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: borderDefault,
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      flex: 1,
+                      marginRight: 12,
+                      fontFamily: fontFamilyBody,
+                      fontSize: fontSizeSm,
+                      color: textPrimary,
+                    }}
+                  >
+                    {r.title}
+                  </Text>
+                  <Pressable
+                    onPress={() => handleAddRecipe(r)}
+                    disabled={isAddingRecipeId === r.id}
+                    style={{
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      backgroundColor: accentBlue,
+                      borderRadius: radiusMd,
+                      opacity: isAddingRecipeId === r.id ? 0.5 : 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyMedium,
+                        fontSize: fontSizeXs,
+                        color: white,
+                      }}
+                    >
+                      {isAddingRecipeId === r.id ? 'Adding...' : 'Add'}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
+              {candidateRecipes.length > 10 && (
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeXs,
+                    color: textTertiary,
+                    paddingTop: 8,
+                  }}
+                >
+                  Refine your search to see more results
+                </Text>
+              )}
+            </View>
+          ) : addQuery.trim() ? (
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeXs,
+                color: textTertiary,
+                paddingVertical: 8,
+              }}
+            >
+              No matching recipes
+            </Text>
+          ) : null}
+        </View>
+      )}
+
+      {/* Recipe grid or empty state */}
+      {recipes.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: textSecondary,
+              textAlign: 'center',
+              marginBottom: 16,
+            }}
+          >
+            No recipes in this collection
+          </Text>
+          {isOwner && (
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeSm,
+                color: textTertiary,
+                textAlign: 'center',
+              }}
+            >
+              Use the search above to add recipes
+            </Text>
+          )}
+        </View>
+      ) : (
+        <FlatList
+          data={recipes}
+          keyExtractor={(item) => item.id}
+          key={numColumns}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? { gap: 16 } : undefined}
+          contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
+          style={breakpoint === 'web' ? { flexGrow: 1, flexBasis: 0 } : undefined}
+          renderItem={({ item }) => (
+            <View style={{ flex: numColumns > 1 ? 1 : undefined }}>
+              <RecipeCard
+                recipe={item}
+                thumbnailUrl={thumbnailMap[item.id]}
+                onPress={() => router.push(`/recipes/${item.id}` as any)}
+              />
+              {isOwner && (
+                <Pressable
+                  onPress={() => handleRemoveRecipe(item.id)}
+                  style={{
+                    alignSelf: 'flex-end',
+                    marginTop: 6,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBody,
+                      fontSize: fontSizeXs,
+                      color: '#d32f2f',
+                    }}
+                  >
+                    Remove
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        />
+      )}
+    </PageContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16
-  },
-  header: {
-    marginBottom: 16
-  },
-  addSection: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2
-  },
-  addSectionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 8
-  },
-  addSearchInput: {
-    padding: 12,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    fontSize: 16,
-    marginBottom: 8
-  },
-  candidateList: {
-    maxHeight: 240
-  },
-  candidateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
-  },
-  candidateTitle: {
-    flex: 1,
-    marginRight: 12,
-    fontSize: 14
-  },
-  candidateAddButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#007AFF",
-    borderRadius: 8
-  },
-  candidateAddButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  candidateEmpty: {
-    fontSize: 12,
-    color: "#666",
-    paddingVertical: 8
-  },
-  candidateMoreHint: {
-    fontSize: 12,
-    color: "#666",
-    paddingTop: 8
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 8
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8
-  },
-  meta: {
-    fontSize: 12,
-    color: "#999"
-  },
-  empty: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginTop: 32
-  },
-  error: {
-    fontSize: 14,
-    color: "#d32f2f",
-    textAlign: "center",
-    marginTop: 32
-  },
-  recipeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3
-  },
-  recipeCardContent: {
-    flex: 1
-  },
-  recipeTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4
-  },
-  recipeMeta: {
-    fontSize: 12,
-    color: "#999"
-  },
-  removeButton: {
-    padding: 8,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 6
-  },
-  removeButtonText: {
-    fontSize: 12,
-    color: "#d32f2f"
-  },
-  deleteButton: {
-    padding: 16,
-    backgroundColor: "#d32f2f",
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 16
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600"
-  }
-});
