@@ -122,7 +122,11 @@ Plans:
   4. The `as any` type assertion in `(public)/index.tsx` is removed (typed route exists)
   5. `MobileTabBar` and `WebSidebar` use the same router method for scan navigation
   6. REQUIREMENTS.md DESIGN-04 checkbox shows `[x]`, SCREEN-04a row exists in traceability table
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11.1-01-PLAN.md — Token extraction: add fontFamilyDisplayBold, noPhotoBg, noPhotoIcon and update all consumer files
+- [ ] 11.1-02-PLAN.md — Small fixes: stale comment, type assertion removal, scan nav unification
 
 ### Phase 12: Remaining Screens
 **Goal**: All screens not covered in Phase 10 (collections, family, scan/draft, auth, profile/settings, invite) match cookbook.pen at all three breakpoints, including scan photo display in draft review.
@@ -161,6 +165,6 @@ Plans:
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
-| 11.1 Audit Cleanup | v1.1 | 0/TBD | Not started | - |
+| 11.1 Audit Cleanup | v1.1 | 0/2 | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
