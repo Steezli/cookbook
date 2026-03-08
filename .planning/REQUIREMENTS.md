@@ -29,7 +29,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 - [x] **SCREEN-03**: Recipe detail screen rebuilt to cookbook.pen spec at all 3 breakpoints
 - [x] **SCREEN-04**: Create/Edit recipe screens rebuilt to cookbook.pen spec at all 3 breakpoints
 - [x] **SCREEN-04a**: Cooking Mode walkthrough screen at all 3 breakpoints — step-by-step guided cooking with per-step ingredients
-- [ ] **SCREEN-05**: Collections screens rebuilt to cookbook.pen spec at all 3 breakpoints
+- [x] **SCREEN-05**: Collections screens rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-06**: Family management screens rebuilt to cookbook.pen spec at all 3 breakpoints
 - [ ] **SCREEN-07**: Scan/Draft screens rebuilt to cookbook.pen spec at all 3 breakpoints with scan photo display in draft review
 - [ ] **SCREEN-08**: Auth screens (Login, Sign Up, Forgot Password) rebuilt to cookbook.pen spec at all 3 breakpoints
@@ -103,7 +103,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PUB-02 | Phase 11 | Complete |
 | PUB-03 | Phase 11 | Complete |
 | PUB-04 | Phase 11 | Complete |
-| SCREEN-05 | Phase 12 | Pending |
+| SCREEN-05 | Phase 12 | Complete |
 | SCREEN-06 | Phase 12 | Pending |
 | SCREEN-07 | Phase 12 | Pending |
 | SCREEN-08 | Phase 12 | Pending |

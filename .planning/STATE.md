@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-08T22:48:32.815Z"
-last_activity: 2026-03-08 — 11.1-02 fixed stale comment, removed type assertion, unified scan navigation
+last_updated: "2026-03-08T22:49:31.385Z"
+last_activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 26
-  completed_plans: 22
-  percent: 100
+  completed_plans: 23
+  percent: 85
 ---
 
 # Project State
@@ -111,6 +111,11 @@ Progress: [█████████░] 85%
 - **11-03 loadSeqRef stale-result guard:** Increment counter on every filter/search change, check before setting state after async operations to prevent race conditions
 - **11-04 AdSlot sidebar variant (300x250):** Web right column too narrow for 728x90 leaderboard; added 300x250 sidebar variant matching standard IAB medium rectangle
 - **11-04 Root auth-aware router:** app/index.tsx checks Supabase session and redirects to (tabs) or (public), fixing post-login redirect ambiguity
+
+### Phase 12 Decisions
+
+- **12-02 Collection detail batch thumbnails:** getRecipeThumbnailUrlMap called before render with all recipe IDs, matching Home screen pattern from Phase 10
+- **12-02 Remove-from-collection confirm dialog:** Alert.alert confirmation before removing a recipe from a collection for safety
 
 ### For v1.1
 
