@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-05T18:09:05Z"
-last_activity: 2026-03-05 — 11-03 built public browse screen with 3-breakpoint responsive layout and infinite scroll
+last_updated: "2026-03-08T20:59:40.639Z"
+last_activity: 2026-03-08 — 11-04 public recipe detail with author attribution, sign-up CTA, three-breakpoint layout
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 18
-  percent: 95
+  completed_plans: 19
+  percent: 100
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 11 of 13 (Public Browsing)
-Plan: 3 of 4 — 11-03 complete (Public browse screen)
-Status: 11-03 complete — Responsive public browse screen with search, filter chips, infinite scroll
-Last activity: 2026-03-05 — 11-03 built public browse screen with 3-breakpoint layout, debounced search, and infinite scroll pagination
+Phase: 11 of 13 (Public Browsing) -- COMPLETE
+Plan: 4 of 4 — 11-04 complete (Public recipe detail)
+Status: Phase 11 complete — All 4 plans finished: data layer, shared components, browse screen, recipe detail
+Last activity: 2026-03-08 — 11-04 built public recipe detail with author attribution, ingredient truncation, sign-up CTA, three-breakpoint layout
 
-Progress: [█████████░] 95%
+Progress: [██████████] 100%
 
 ## Pending TODOs
 
@@ -109,6 +109,8 @@ Progress: [█████████░] 95%
 - **11-02 Platform-branched AdSlot with identical placeholders:** structural split done now so Phase 13 can replace native file with AdMob SDK without touching web file or import paths
 - **11-03 AdSlot.d.ts for platform-branched TypeScript resolution:** tsc cannot resolve modules with only .native.tsx/.web.tsx extensions; added .d.ts declaration file alongside platform files
 - **11-03 loadSeqRef stale-result guard:** Increment counter on every filter/search change, check before setting state after async operations to prevent race conditions
+- **11-04 AdSlot sidebar variant (300x250):** Web right column too narrow for 728x90 leaderboard; added 300x250 sidebar variant matching standard IAB medium rectangle
+- **11-04 Root auth-aware router:** app/index.tsx checks Supabase session and redirects to (tabs) or (public), fixing post-login redirect ambiguity
 
 ### For v1.1
 

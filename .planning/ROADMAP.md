@@ -30,7 +30,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - [ ] **Phase 8: Design Foundation** — Design tokens, breakpoint hook, font loading, and missing .pen screen designs
 - [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar); UAT gap closure in progress (completed 2026-03-04)
 - [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec; UAT gap closure in progress
-- [ ] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group
+- [x] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group (completed 2026-03-08)
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
 - [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
 
@@ -101,7 +101,7 @@ Plans:
   2. Tapping a public recipe shows a read-only detail view with the recipe author's display name (not raw email)
   3. The public browsing surface has its own navigation header (logo, Sign In, and Get Started CTA) — no authenticated chrome appears
   4. The recipe list loads the next page of results when the user scrolls to the bottom (cursor-based pagination)
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 11-01-PLAN.md — Data layer: author RPCs, searchPublicRecipes with cursor pagination
@@ -145,6 +145,6 @@ Plans:
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
-| 11. Public Browsing | 3/4 | In Progress|  | - |
+| 11. Public Browsing | 4/4 | Complete   | 2026-03-08 | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
