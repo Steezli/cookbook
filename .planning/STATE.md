@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-08T22:49:31.385Z"
-last_activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
+last_updated: "2026-03-08T22:49:45Z"
+last_activity: 2026-03-08 — 12-04 rebuilt scan upload and draft review with actual photo display, collapsible mobile layout
 progress:
   total_phases: 7
   completed_phases: 5
@@ -116,6 +116,9 @@ Progress: [█████████░] 85%
 
 - **12-02 Collection detail batch thumbnails:** getRecipeThumbnailUrlMap called before render with all recipe IDs, matching Home screen pattern from Phase 10
 - **12-02 Remove-from-collection confirm dialog:** Alert.alert confirmation before removing a recipe from a collection for safety
+- **12-04 Camera hidden on web:** Platform.OS check hides camera option on web since launchCameraAsync not supported
+- **12-04 Animated scroll collapse for mobile photo:** scrollY.interpolate [0,200] -> [300,60] with useNativeDriver:false for height animation
+- **12-04 Side-by-side 40/60 flex split:** Tablet/web draft review uses flex width split with borderRight separator instead of position:fixed
 
 ### For v1.1
 
