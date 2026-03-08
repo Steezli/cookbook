@@ -173,5 +173,5 @@ Plans:
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
 | 11.1 Audit Cleanup | 2/2 | Complete    | 2026-03-08 | - |
-| 12. Remaining Screens | 5/5 | Complete   | 2026-03-08 | - |
+| 12. Remaining Screens | 5/5 | Complete    | 2026-03-08 | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
