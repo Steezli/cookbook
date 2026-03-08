@@ -19,7 +19,7 @@ export default function LoginScreen() {
         password
       });
       if (error) throw error;
-      const target = typeof next === "string" && next.startsWith("/") ? next : "/";
+      const target = typeof next === "string" && next.startsWith("/") ? next : "/(tabs)";
       router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Login failed";
