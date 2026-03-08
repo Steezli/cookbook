@@ -23,7 +23,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs style={{ flex: 1, flexDirection: isWeb ? "row" : "column" }}>
-      {/* Hidden TabList registers all 5 tab routes with expo-router/ui.
+      {/* Hidden TabList registers all 4 tab routes with expo-router/ui.
           height:0/overflow:hidden ensures invisible on both native and web
           without layout side effects (per research pitfall 1 / pitfall 3). */}
       <TabList

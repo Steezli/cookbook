@@ -455,7 +455,7 @@ export default function PublicBrowseScreen() {
   // Navigation
   const navigateToRecipe = useCallback(
     (recipeId: string) => {
-      router.push({ pathname: '/(public)/recipe/[id]' as any, params: { id: recipeId } });
+      router.push({ pathname: '/(public)/recipe/[id]', params: { id: recipeId } });
     },
     [router],
   );
