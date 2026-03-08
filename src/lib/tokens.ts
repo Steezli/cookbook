@@ -26,6 +26,12 @@ export const bgCardWarm = '#FFFBF5';
 export const bgPage = '#FFFFFF';
 
 // ---------------------------------------------------------------------------
+// Placeholder colors (no-photo states)
+// ---------------------------------------------------------------------------
+export const noPhotoBg = '#E8E0D8';
+export const noPhotoIcon = '#8B7355';
+
+// ---------------------------------------------------------------------------
 // Border colors
 // ---------------------------------------------------------------------------
 export const borderDefault = '#E5E7EB';
@@ -62,6 +68,7 @@ export const fontFamilyDisplay = 'BricolageGrotesque_600SemiBold';
 export const fontFamilyBody = 'DMSans_400Regular';
 export const fontFamilyBodyMedium = 'DMSans_500Medium';
 export const fontFamilyBodyBold = 'DMSans_700Bold';
+export const fontFamilyDisplayBold = 'BricolageGrotesque_700Bold';
 
 // ---------------------------------------------------------------------------
 // Font size scale (derived from cookbook.pen screen analysis)
