@@ -31,6 +31,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - [x] **Phase 9: Navigation Restructure** — Convert flat Stack to Tabs route group with adaptive nav (mobile tabs, tablet header, web sidebar); UAT gap closure in progress (completed 2026-03-04)
 - [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec; UAT gap closure in progress
 - [x] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group (completed 2026-03-08)
+- [ ] **Phase 11.1: Audit Cleanup** — Token hygiene, font token gaps, stale comments, doc fixes from v1.1 milestone audit
 - [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec
 - [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
 
@@ -109,6 +110,20 @@ Plans:
 - [ ] 11-03-PLAN.md — Public browse screen with search, filters, infinite scroll
 - [ ] 11-04-PLAN.md — Public recipe detail screen with author attribution and sign-up CTA
 
+### Phase 11.1: Audit Cleanup
+**Goal**: All tech debt and documentation gaps from the v1.1 milestone audit are resolved — no hardcoded colors bypass tokens, no raw font strings bypass the token system, stale comments and type assertions are cleaned up, and REQUIREMENTS.md reflects verified reality.
+**Depends on**: Phase 11
+**Requirements**: None (tech debt closure, no new requirements)
+**Gap Closure**: Closes tech debt from v1.1-MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. Zero hardcoded hex color values in Phase 10/11 screen files — all use token imports
+  2. A `fontFamilyDisplayBold` token exists in `tokens.ts` and all raw `'BricolageGrotesque_700Bold'` strings are replaced with it
+  3. Stale comment in `(tabs)/_layout.tsx` is corrected
+  4. The `as any` type assertion in `(public)/index.tsx` is removed (typed route exists)
+  5. `MobileTabBar` and `WebSidebar` use the same router method for scan navigation
+  6. REQUIREMENTS.md DESIGN-04 checkbox shows `[x]`, SCREEN-04a row exists in traceability table
+**Plans**: TBD
+
 ### Phase 12: Remaining Screens
 **Goal**: All screens not covered in Phase 10 (collections, family, scan/draft, auth, profile/settings, invite) match cookbook.pen at all three breakpoints, including scan photo display in draft review.
 **Depends on**: Phase 10
@@ -145,6 +160,7 @@ Plans:
 | 8. Design Foundation | v1.1 | 2/3 | In Progress | - |
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
-| 11. Public Browsing | 4/4 | Complete    | 2026-03-08 | - |
+| 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
+| 11.1 Audit Cleanup | v1.1 | 0/TBD | Not started | - |
 | 12. Remaining Screens | v1.1 | 0/TBD | Not started | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |

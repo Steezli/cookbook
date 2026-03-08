@@ -12,7 +12,7 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 - [x] **DESIGN-01**: Design token system (tokens.ts) extracting all cookbook.pen $ variables as TypeScript constants
 - [x] **DESIGN-02**: Breakpoint detection hook (useBreakpoint) returning mobile/tablet/web at 390/768/1440px thresholds
 - [x] **DESIGN-03**: Font loading for Bricolage Grotesque (display) and DM Sans (body) via @expo-google-fonts
-- [ ] **DESIGN-04**: Missing screen designs created in cookbook.pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review (all 3 breakpoints each)
+- [x] **DESIGN-04**: Missing screen designs created in cookbook.pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review (all 3 breakpoints each)
 
 ### Navigation
 
@@ -88,7 +88,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DESIGN-01 | Phase 8 | Complete |
 | DESIGN-02 | Phase 8 | Complete |
 | DESIGN-03 | Phase 8 | Complete |
-| DESIGN-04 | Phase 8 | Pending |
+| DESIGN-04 | Phase 8 | Complete |
 | NAV-01 | Phase 9 | Complete |
 | NAV-02 | Phase 9 | Complete |
 | NAV-03 | Phase 9 | Complete |
@@ -98,6 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCREEN-02 | Phase 10 | Complete |
 | SCREEN-03 | Phase 10 | Complete |
 | SCREEN-04 | Phase 10 | Complete |
+| SCREEN-04a | Phase 10 | Complete |
 | PUB-01 | Phase 11 | Complete |
 | PUB-02 | Phase 11 | Complete |
 | PUB-03 | Phase 11 | Complete |
@@ -113,10 +114,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADS-03 | Phase 13 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 26 total
-- Mapped to phases: 26
+- v1.1 requirements: 27 total
+- Mapped to phases: 27
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after roadmap creation*
+*Last updated: 2026-03-08 after v1.1 milestone audit*
