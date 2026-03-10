@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -158,7 +157,7 @@ export default function ProfileScreen() {
   async function handleSignOut() {
     try {
       await supabase.auth.signOut();
-      router.replace("/(auth)/login");
+      // Reactive redirect in _layout.tsx handles navigation when session becomes null
     } catch (e) {
       Alert.alert(
         "Error",
