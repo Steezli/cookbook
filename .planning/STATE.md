@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 12 (gap closure) — COMPLETE
-Status: Phase 12 complete — all gap closure plans done; scan draft race condition fixed; UAT Test 11 unblocked; Tests 12 and 13 also unblocked
-Last activity: 2026-03-10 — 12-12 complete: scan draft race condition fixed — DraftReview subscribes to job realtime channel and waits for edge function to complete before showing draft
+Plan: 12 (gap closure) — COMPLETE; Plan 11 (gap closure) — Task 1 complete, awaiting human deployment of migration
+Status: Phase 12 gap closure ongoing — 12-11 Task 1 done (search_path migration created, parseIngredient fallback added); 12-11 Task 2 awaits manual migration deployment to remote Supabase
+Last activity: 2026-03-10 — 12-11 Task 1 complete: migration for RPC search_path + parseIngredient fallback for legacy ingredients
 
 Progress: [█████████░] 97%
 
