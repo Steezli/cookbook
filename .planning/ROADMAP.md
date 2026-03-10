@@ -32,7 +32,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - [ ] **Phase 10: Core Screens** — Home dashboard, recipe list with photo thumbnails, recipe detail, and create/edit screens rebuilt to spec; UAT gap closure in progress
 - [x] **Phase 11: Public Browsing** — Unauthenticated recipe browse and detail in a separate (public)/ route group (completed 2026-03-08)
 - [x] **Phase 11.1: Audit Cleanup** — Token hygiene, font token gaps, stale comments, doc fixes from v1.1 milestone audit (completed 2026-03-08)
-- [x] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec (completed 2026-03-08)
+- [ ] **Phase 12: Remaining Screens** — Collections, family, scan/draft, auth, profile/settings, and invite screens rebuilt to spec; UAT gap closure in progress
 - [ ] **Phase 13: Advertising** — AdMob banner integration on public screens, ATT permission prompt, platform-branched ad components
 
 ## Phase Details
@@ -138,14 +138,18 @@ Plans:
   3. The scan upload and draft review screens render correctly at all three breakpoints, and the draft review screen displays the uploaded photo alongside the extracted draft
   4. Auth screens (Login, Sign Up, Forgot Password) render correctly at all three breakpoints matching cookbook.pen
   5. Profile/Settings and Invite screens are implemented (these are net-new screens) and match cookbook.pen at all three breakpoints
-**Plans:** 5/5 plans complete
+**Plans:** 9 plans (5 complete + 4 UAT gap closure)
 
 Plans:
-- [ ] 12-01-PLAN.md — Auth screens rebuild with social OAuth (Google, Apple, Facebook)
-- [ ] 12-02-PLAN.md — Collections screens rebuild (list, detail, create)
-- [ ] 12-03-PLAN.md — Family management and invite screens rebuild
-- [ ] 12-04-PLAN.md — Scan upload and draft review with photo display
-- [ ] 12-05-PLAN.md — Profile/Settings screen rebuild
+- [x] 12-01-PLAN.md — Auth screens rebuild with social OAuth (Google, Apple, Facebook)
+- [x] 12-02-PLAN.md — Collections screens rebuild (list, detail, create)
+- [x] 12-03-PLAN.md — Family management and invite screens rebuild
+- [x] 12-04-PLAN.md — Scan upload and draft review with photo display
+- [x] 12-05-PLAN.md — Profile/Settings screen rebuild
+- [ ] 12-06-PLAN.md — UAT gap closure: scan auth fix + sign-out flash
+- [ ] 12-07-PLAN.md — UAT gap closure: collections routing + signup button visibility
+- [ ] 12-08-PLAN.md — UAT gap closure: family detail FK, RLS, web confirm dialogs
+- [ ] 12-09-PLAN.md — UAT gap closure: forgot password deploy + unit preference reactivity
 
 ### Phase 13: Advertising
 **Goal**: Ad banners appear on public browsing screens only, the AdMob SDK is isolated from the web build, and iOS users are prompted for ad tracking permission.
@@ -172,6 +176,6 @@ Plans:
 | 9. Navigation Restructure | v1.1 | 4/4 | Complete | 2026-03-04 |
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
-| 11.1 Audit Cleanup | 2/2 | Complete    | 2026-03-08 | - |
-| 12. Remaining Screens | 5/5 | Complete    | 2026-03-08 | - |
+| 11.1 Audit Cleanup | v1.1 | 2/2 | Complete | 2026-03-08 |
+| 12. Remaining Screens | v1.1 | 5/9 | UAT gap closure | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |
