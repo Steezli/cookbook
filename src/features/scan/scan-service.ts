@@ -35,8 +35,9 @@ export async function createMultiPhotoScanJob(photoUrls: string[]): Promise<Scan
     throw new Error('At least one photo URL is required');
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+  const user = session.user;
 
   const { data, error } = await supabase
     .from('scan_jobs')
@@ -67,8 +68,9 @@ export async function createScanJob(photoUrl: string): Promise<ScanJob> {
  * Get all scan jobs for current user
  */
 export async function getUserScanJobs(): Promise<ScanJob[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+  const user = session.user;
 
   const { data, error } = await supabase
     .from('scan_jobs')
@@ -108,8 +110,9 @@ export async function cancelScanJob(jobId: string): Promise<void> {
  * Retry a failed job
  */
 export async function retryScanJob(jobId: string): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+  const user = session.user;
 
   const result = await RetryRecoveryService.retryJob(jobId, user.id);
   if (!result.success) {
@@ -208,8 +211,9 @@ export function subscribeToJob(
  * Check if user has reached concurrent job limit
  */
 export async function checkJobLimit(): Promise<{ canCreate: boolean; activeCount: number }> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+  const user = session.user;
 
   const { data, error } = await supabase
     .from('scan_jobs')
