@@ -129,6 +129,9 @@ Progress: [██████████] 100%
 - **12-08 confirmAction helper pattern:** Module-level function with Platform.OS branch — window.confirm on web, Alert.alert on native — for all destructive action dialogs in family detail
 - **12-08 NOTIFY pgrst reload schema in migration:** Ensures create_family_invite RPC is visible to PostgREST without server restart after migration runs
 - **12-09 useFocusEffect for unit preference sync:** getUnitPreference() placed inside useFocusEffect callback alongside recipe data load — unit changes on profile take effect immediately on next recipe navigation without duplicate fetches
+- **12-07 Collections as TabTrigger in hidden TabList:** Adding name="collections" to hidden TabList registers the route with expo-router/ui, enabling TabTrigger asChild in WebSidebar to get isFocused active state — same pattern as other tab routes
+- **12-07 Mobile collections via My Recipes screen link:** Collections Pressable added to recipes/index.tsx so mobile users can reach collections without adding a 6th tab — 5-tab MobileTabBar matches cookbook.pen spec exactly
+- **12-07 Signup text link replaces ghost button:** "Don't have an account? Sign Up" text link in accentWarm placed immediately after Sign In button — replaces buried ghost button at bottom of form for better discoverability
 
 ### For v1.1
 
