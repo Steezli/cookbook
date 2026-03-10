@@ -65,9 +65,17 @@ type InviteRow = {
 };
 
 /**
- * Cross-platform confirmation dialog.
- * On web, Alert.alert button callbacks are unreliable — use window.confirm instead.
+ * Cross-platform alert/confirm helpers.
+ * On web, Alert.alert is unreliable — use window.alert/confirm instead.
  */
+function showAlert(title: string, message?: string) {
+  if (Platform.OS === "web") {
+    window.alert(message ? `${title}\n\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
 function confirmAction(title: string, message: string, onConfirm: () => void) {
   if (Platform.OS === "web") {
     if (window.confirm(`${title}\n\n${message}`)) {
@@ -160,7 +168,7 @@ export default function FamilyDetailScreen() {
       setInvites((invData ?? []) as InviteRow[]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load family";
-      Alert.alert("Not found", msg);
+      showAlert("Not found", msg);
     } finally {
       setIsRefreshing(false);
     }
@@ -184,7 +192,7 @@ export default function FamilyDetailScreen() {
       if (error) {
         const status = (error as unknown as { code?: string })?.code;
         if (status === "P0002") {
-          Alert.alert("Not found", "You don't have access to this family.");
+          showAlert("Not found", "You don't have access to this family.");
           return;
         }
         throw error;
@@ -201,11 +209,11 @@ export default function FamilyDetailScreen() {
         const inviteUrl = `/invite/${token}`;
         await shareInviteLink(inviteUrl);
       } else {
-        Alert.alert("Invite created", "Invite was created.");
+        showAlert("Invite created", "Invite was created.");
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to create invite";
-      Alert.alert("Invite failed", msg);
+      showAlert("Invite failed", msg);
     } finally {
       setIsInviting(false);
     }
@@ -221,9 +229,9 @@ export default function FamilyDetailScreen() {
       // Share dismissed or failed — fall back to clipboard
       try {
         await Clipboard.setStringAsync(inviteUrl);
-        Alert.alert("Link copied", "Invite link copied to clipboard.");
+        showAlert("Link copied", "Invite link copied to clipboard.");
       } catch {
-        Alert.alert("Invite created", `Share this link: ${inviteUrl}`);
+        showAlert("Invite created", `Share this link: ${inviteUrl}`);
       }
     }
   }
@@ -237,7 +245,7 @@ export default function FamilyDetailScreen() {
       void refresh();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to revoke invite";
-      Alert.alert("Revoke failed", msg);
+      showAlert("Revoke failed", msg);
     }
   }
 
@@ -253,7 +261,7 @@ export default function FamilyDetailScreen() {
       void refresh();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to update role";
-      Alert.alert("Role update failed", msg);
+      showAlert("Role update failed", msg);
     }
   }
 
@@ -274,7 +282,7 @@ export default function FamilyDetailScreen() {
         } catch (e) {
           const msg =
             e instanceof Error ? e.message : "Failed to remove member";
-          Alert.alert("Remove failed", msg);
+          showAlert("Remove failed", msg);
         }
       }
     );
@@ -293,12 +301,12 @@ export default function FamilyDetailScreen() {
             .eq("family_id", familyId)
             .eq("user_id", userId);
           if (error) throw error;
-          Alert.alert("Left family", "You have left the family.");
+          showAlert("Left family", "You have left the family.");
           router.back();
         } catch (e) {
           const msg =
             e instanceof Error ? e.message : "Failed to leave family";
-          Alert.alert("Leave failed", msg);
+          showAlert("Leave failed", msg);
         }
       }
     );
@@ -316,12 +324,12 @@ export default function FamilyDetailScreen() {
             .delete()
             .eq("id", familyId);
           if (error) throw error;
-          Alert.alert("Family deleted", "The family has been deleted.");
+          showAlert("Family deleted", "The family has been deleted.");
           router.back();
         } catch (e) {
           const msg =
             e instanceof Error ? e.message : "Failed to delete family";
-          Alert.alert("Delete failed", msg);
+          showAlert("Delete failed", msg);
         }
       }
     );
@@ -353,7 +361,7 @@ export default function FamilyDetailScreen() {
         } catch (e) {
           const msg =
             e instanceof Error ? e.message : "Failed to transfer ownership";
-          Alert.alert("Transfer failed", msg);
+          showAlert("Transfer failed", msg);
         }
       }
     );

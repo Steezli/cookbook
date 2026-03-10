@@ -83,6 +83,17 @@ export default function ForgotPasswordScreen() {
           >
             We sent a reset link to {email.trim().toLowerCase()}
           </Text>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: 13,
+              color: textTertiary,
+              textAlign: 'center',
+              marginTop: 4,
+            }}
+          >
+            It may take a few minutes to arrive. Check your spam folder if you don't see it.
+          </Text>
         </View>
       )}
 
@@ -93,6 +104,9 @@ export default function ForgotPasswordScreen() {
           </Text>
           <Text style={{ fontFamily: fontFamilyBody, fontSize: 15, color: textSecondary }}>
             We sent a reset link to {email.trim().toLowerCase()}
+          </Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: 13, color: textTertiary, marginTop: 4 }}>
+            It may take a few minutes to arrive. Check your spam folder if you don't see it.
           </Text>
         </View>
       )}
