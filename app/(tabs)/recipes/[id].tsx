@@ -31,6 +31,7 @@ import {
 } from "@/features/recipes/photos";
 import { CommentThread } from "@/features/comments/CommentThread";
 import { displayAmount } from "@/features/units/conversions";
+import { parseIngredient } from "@/features/units/parser";
 import { getUnitPreference } from "@/features/units/api";
 import type { UnitSystem } from "@/features/units/types";
 import { StarRating } from "@/features/ratings/StarRating";
@@ -273,6 +274,13 @@ export default function RecipeDetailScreen() {
     }
     if (ing.is_ambiguous) {
       return `${ing.text} (approx.)`;
+    }
+    // Legacy ingredient: no structured amount/unit — try to parse from text
+    if (ing.amount === undefined && ing.unit === undefined) {
+      const parsed = parseIngredient(ing.text);
+      if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
+        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text);
+      }
     }
     return ing.text;
   }
