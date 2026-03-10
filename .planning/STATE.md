@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-10T19:54:34.757Z"
-last_activity: 2026-03-10 — 12-09 complete: unit preference reactivity, cook mode conversion, forgot password UX, reset password polish, reset-request edge function deployed
+last_updated: "2026-03-10T20:07:51.686Z"
+last_activity: "2026-03-10 — 12-09 complete: forgot password flow working, reset password polished, unit preference reactive, cook mode conversion added"
 progress:
   total_phases: 7
   completed_phases: 6
