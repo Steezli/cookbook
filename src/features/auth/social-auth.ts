@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 
 import { supabase } from '@/lib/supabase';
@@ -27,7 +28,6 @@ export async function signInWithGoogle() {
   if (Platform.OS !== 'web' && data.url) {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
     if (result.type === 'success' && result.url) {
-      // Extract tokens from the callback URL and set session
       const params = new URL(result.url).hash.substring(1);
       const urlParams = new URLSearchParams(params);
       const accessToken = urlParams.get('access_token');
@@ -48,17 +48,25 @@ export async function signInWithGoogle() {
 
 /**
  * Sign in with Apple.
- * On iOS: uses native Apple Authentication for best UX.
+ * On iOS: uses native Apple Authentication with nonce verification.
  * On other platforms: falls back to OAuth flow like Google.
  */
 export async function signInWithApple() {
   if (Platform.OS === 'ios') {
     try {
+      // Generate nonce for security — Apple gets the hash, Supabase gets the raw
+      const rawNonce = Crypto.randomUUID();
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce,
+      );
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: hashedNonce,
       });
 
       if (!credential.identityToken) {
@@ -68,7 +76,17 @@ export async function signInWithApple() {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
+        nonce: rawNonce,
       });
+
+      // Apple only provides full name on first sign-in — capture it immediately
+      if (!error && credential.fullName) {
+        const { givenName, familyName } = credential.fullName;
+        if (givenName || familyName) {
+          const displayName = [givenName, familyName].filter(Boolean).join(' ');
+          await supabase.auth.updateUser({ data: { full_name: displayName } });
+        }
+      }
 
       return { data, error };
     } catch (e) {
@@ -141,7 +159,6 @@ export async function signInWithFacebook() {
 
 /**
  * Check if native Apple authentication is available (iOS only).
- * Use this to conditionally render the native Apple sign-in button.
  */
 export function isAppleNativeAvailable(): boolean {
   return Platform.OS === 'ios';
