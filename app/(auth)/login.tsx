@@ -233,6 +233,18 @@ export default function LoginScreen() {
           )}
         </Pressable>
 
+        {/* Sign up prompt — immediately visible below Sign In button */}
+        <View style={{ alignItems: 'center', marginTop: 12 }}>
+          <Link href={{ pathname: '/(auth)/signup', params: { next } }} asChild>
+            <Pressable>
+              <Text style={{ fontFamily: fontFamilyBody, fontSize: 14, color: textSecondary }}>
+                Don't have an account?{' '}
+                <Text style={{ fontFamily: fontFamilyBodyBold, color: accentWarm }}>Sign Up</Text>
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+
         {/* Divider */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ flex: 1, height: 1, backgroundColor: borderDefault }} />
@@ -329,25 +341,6 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        {/* Create Account (Secondary) button */}
-        <Link href={{ pathname: '/(auth)/signup', params: { next } }} asChild>
-          <Pressable
-            style={({ pressed }) => ({
-              height: 48,
-              backgroundColor: bgCard,
-              borderRadius: radiusPill,
-              borderWidth: 1,
-              borderColor: borderDefault,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: 15, color: textPrimary }}>
-              Create Account
-            </Text>
-          </Pressable>
-        </Link>
       </View>
     </>
   );
