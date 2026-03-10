@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -62,6 +63,23 @@ type InviteRow = {
   revoked_at: string | null;
   accepted_at: string | null;
 };
+
+/**
+ * Cross-platform confirmation dialog.
+ * On web, Alert.alert button callbacks are unreliable — use window.confirm instead.
+ */
+function confirmAction(title: string, message: string, onConfirm: () => void) {
+  if (Platform.OS === "web") {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Confirm", style: "destructive", onPress: onConfirm },
+    ]);
+  }
+}
 
 export default function FamilyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -124,9 +142,16 @@ export default function FamilyDetailScreen() {
       const normalizedMembers: MemberRow[] = (
         Array.isArray(memData) ? (memData as MemberSelectRow[]) : []
       ).map((m) => {
-        const p = Array.isArray(m.profiles)
+        // profiles join may be null if FK is not yet resolved (before migration runs)
+        const raw = Array.isArray(m.profiles)
           ? m.profiles[0] ?? null
           : m.profiles ?? null;
+        const p: MemberRow["profiles"] = raw
+          ? {
+              email: raw.email || "",
+              display_name: raw.display_name || null,
+            }
+          : null;
         return { user_id: m.user_id, role: m.role, profiles: p };
       });
 
@@ -234,122 +259,103 @@ export default function FamilyDetailScreen() {
 
   async function onRemoveMember(memberUserId: string) {
     if (!familyId) return;
-    Alert.alert("Remove member", "Are you sure you want to remove this member?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from("family_memberships")
-              .delete()
-              .eq("family_id", familyId)
-              .eq("user_id", memberUserId);
-            if (error) throw error;
-            void refresh();
-          } catch (e) {
-            const msg =
-              e instanceof Error ? e.message : "Failed to remove member";
-            Alert.alert("Remove failed", msg);
-          }
-        },
-      },
-    ]);
+    confirmAction(
+      "Remove member",
+      "Are you sure you want to remove this member?",
+      async () => {
+        try {
+          const { error } = await supabase
+            .from("family_memberships")
+            .delete()
+            .eq("family_id", familyId)
+            .eq("user_id", memberUserId);
+          if (error) throw error;
+          void refresh();
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "Failed to remove member";
+          Alert.alert("Remove failed", msg);
+        }
+      }
+    );
   }
 
   async function onLeave() {
     if (!familyId || !userId) return;
-    Alert.alert("Leave family", "Are you sure you want to leave this family?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Leave",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from("family_memberships")
-              .delete()
-              .eq("family_id", familyId)
-              .eq("user_id", userId);
-            if (error) throw error;
-            Alert.alert("Left family", "You have left the family.");
-            router.back();
-          } catch (e) {
-            const msg =
-              e instanceof Error ? e.message : "Failed to leave family";
-            Alert.alert("Leave failed", msg);
-          }
-        },
-      },
-    ]);
+    confirmAction(
+      "Leave family",
+      "Are you sure you want to leave this family?",
+      async () => {
+        try {
+          const { error } = await supabase
+            .from("family_memberships")
+            .delete()
+            .eq("family_id", familyId)
+            .eq("user_id", userId);
+          if (error) throw error;
+          Alert.alert("Left family", "You have left the family.");
+          router.back();
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "Failed to leave family";
+          Alert.alert("Leave failed", msg);
+        }
+      }
+    );
   }
 
   async function onDeleteFamily() {
     if (!familyId) return;
-    Alert.alert(
+    confirmAction(
       "Delete family",
       "This action cannot be undone. All members will be removed.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from("families")
-                .delete()
-                .eq("id", familyId);
-              if (error) throw error;
-              Alert.alert("Family deleted", "The family has been deleted.");
-              router.back();
-            } catch (e) {
-              const msg =
-                e instanceof Error ? e.message : "Failed to delete family";
-              Alert.alert("Delete failed", msg);
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          const { error } = await supabase
+            .from("families")
+            .delete()
+            .eq("id", familyId);
+          if (error) throw error;
+          Alert.alert("Family deleted", "The family has been deleted.");
+          router.back();
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "Failed to delete family";
+          Alert.alert("Delete failed", msg);
+        }
+      }
     );
   }
 
   async function onTransferOwnership(memberUserId: string) {
-    Alert.alert(
+    confirmAction(
       "Transfer ownership",
       "Are you sure? You will become a regular member.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Transfer",
-          onPress: async () => {
-            if (!familyId || !userId) return;
-            try {
-              // Promote target to admin, demote self to member
-              const { error: promoteErr } = await supabase
-                .from("family_memberships")
-                .update({ role: "admin" })
-                .eq("family_id", familyId)
-                .eq("user_id", memberUserId);
-              if (promoteErr) throw promoteErr;
+      async () => {
+        if (!familyId || !userId) return;
+        try {
+          // Promote target to admin, demote self to member
+          const { error: promoteErr } = await supabase
+            .from("family_memberships")
+            .update({ role: "admin" })
+            .eq("family_id", familyId)
+            .eq("user_id", memberUserId);
+          if (promoteErr) throw promoteErr;
 
-              const { error: demoteErr } = await supabase
-                .from("family_memberships")
-                .update({ role: "member" })
-                .eq("family_id", familyId)
-                .eq("user_id", userId);
-              if (demoteErr) throw demoteErr;
+          const { error: demoteErr } = await supabase
+            .from("family_memberships")
+            .update({ role: "member" })
+            .eq("family_id", familyId)
+            .eq("user_id", userId);
+          if (demoteErr) throw demoteErr;
 
-              void refresh();
-            } catch (e) {
-              const msg =
-                e instanceof Error ? e.message : "Failed to transfer ownership";
-              Alert.alert("Transfer failed", msg);
-            }
-          },
-        },
-      ]
+          void refresh();
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "Failed to transfer ownership";
+          Alert.alert("Transfer failed", msg);
+        }
+      }
     );
   }
 
