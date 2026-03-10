@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-08T23:06:34.156Z"
+last_updated: "2026-03-10T19:10:11.661Z"
 last_activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 30
+  completed_plans: 30
   percent: 85
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 5 of 5 — 12-05 complete (Profile/Settings screen)
-Status: 12-05 complete — profile screen rebuilt with responsive layout
-Last activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
+Plan: 8 (gap closure) — 12-08 paused at Task 3 checkpoint (human-action: deploy migration)
+Status: 12-08 Tasks 1-2 complete — migration created, family detail web dialogs fixed; awaiting migration deployment
+Last activity: 2026-03-10 — 12-08 fixed PostgREST profiles join FK, DELETE RLS on families, web-compatible confirmAction dialogs
 
 Progress: [█████████░] 85%
 
@@ -125,6 +125,9 @@ Progress: [█████████░] 85%
 - **12-01 Social auth helper pattern:** Single module with per-provider functions (signInWithGoogle/Apple/Facebook), Apple uses native signInWithIdToken on iOS with OAuth fallback on other platforms
 - **12-01 Auth layout headerShown:false:** Screens manage own branding (logo, title) per cookbook.pen full-screen designs
 - **12-01 Signup adds Full Name + Confirm Password:** Fields added per cookbook.pen spec; display_name passed in signUp options.data
+- **12-08 Double FK on family_memberships.user_id:** existing FK to auth.users kept for integrity; new FK to public.profiles(user_id) enables PostgREST profiles() embedded join (standard Supabase pattern)
+- **12-08 confirmAction helper pattern:** Module-level function with Platform.OS branch — window.confirm on web, Alert.alert on native — for all destructive action dialogs in family detail
+- **12-08 NOTIFY pgrst reload schema in migration:** Ensures create_family_invite RPC is visible to PostgREST without server restart after migration runs
 
 ### For v1.1
 
