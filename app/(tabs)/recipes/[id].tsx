@@ -91,10 +91,10 @@ export default function RecipeDetailScreen() {
 
   const isWideLayout = breakpoint === "tablet" || breakpoint === "web";
 
-  async function loadRecipe() {
+  async function loadRecipe(showLoading = true) {
     if (!id) return;
 
-    setIsLoading(true);
+    if (showLoading) setIsLoading(true);
     setError(null);
     try {
       const data = await getRecipeById(id);
@@ -127,7 +127,9 @@ export default function RecipeDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void loadRecipe();
+      // Only show loading spinner on first load — refetch silently to avoid
+      // unmounting the entire view (which kills comment state, scroll position, etc.)
+      void loadRecipe(!recipe);
     }, [id])
   );
 
