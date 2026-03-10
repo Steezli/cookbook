@@ -12,7 +12,7 @@ import {
 import { router } from 'expo-router';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
 import { ParsedRecipe, FieldConfidence } from '@/lib/ai/recipe-parsing-service';
-import { getJobPhotos } from '@/features/scan/scan-service';
+import { getJobPhotos, subscribeToJob } from '@/features/scan/scan-service';
 import { getScanPhotoUrl, getScanThumbnailUrl } from '@/features/scan/scan-photos';
 import { useSession } from '@/features/auth/session';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
@@ -118,52 +118,111 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [jobStatus, setJobStatus] = useState<string>('checking');
   const [error, setError] = useState<string | null>(null);
 
   // Animated value for mobile collapsible photo
   const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (!draftId || !session?.user?.id) return;
+
+    let channel: ReturnType<typeof subscribeToJob> | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const loadPhotos = async (jobId: string) => {
+      try {
+        const photos = await getJobPhotos(jobId);
+        const urls = photos.map((photoUrl: string) => {
+          if (photoUrl.startsWith('http')) {
+            return photoUrl;
+          }
+          return getScanPhotoUrl(photoUrl);
+        });
+        setPhotoUrls(urls);
+      } catch (photoErr) {
+        console.warn('Failed to load scan photos:', photoErr);
+        // Don't fail the whole screen if photos fail to load
+      }
+    };
+
+    const finalizeDraft = async (draftData: ScanDraft) => {
+      setDraft(draftData);
+      onDraftUpdated?.(draftData);
+      await loadPhotos(draftData.jobId);
+      setLoading(false);
+    };
+
+    const unsubscribe = () => {
+      if (channel) {
+        channel.unsubscribe();
+        channel = null;
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
+
     const loadDraft = async () => {
       try {
         setLoading(true);
+        setJobStatus('checking');
         const userId = session!.user.id;
         const draftData = await scanDraftService.getDraftByJobId(draftId, userId);
 
-        if (!draftData) {
-          setError('Draft not found');
+        if (draftData) {
+          // Draft already exists — edge function has completed
+          setJobStatus('completed');
+          await finalizeDraft(draftData);
           return;
         }
 
-        setDraft(draftData);
-        onDraftUpdated?.(draftData);
+        // Draft not found yet — subscribe to job status changes and wait
+        setJobStatus('processing');
 
-        // Load photos from scan job
-        try {
-          const photos = await getJobPhotos(draftData.jobId);
-          const urls = photos.map((photoUrl: string) => {
-            // If the URL is a storage path, convert it; if it's already a URL, use as-is
-            if (photoUrl.startsWith('http')) {
-              return photoUrl;
+        // Safety timeout: 60 seconds
+        timeoutId = setTimeout(() => {
+          unsubscribe();
+          setError('Processing is taking longer than expected. Please try again.');
+          setLoading(false);
+        }, 60000);
+
+        channel = subscribeToJob(draftId, async (job) => {
+          if (job.status === 'completed') {
+            unsubscribe();
+            try {
+              const retryDraft = await scanDraftService.getDraftByJobId(draftId, userId);
+              if (retryDraft) {
+                setJobStatus('completed');
+                await finalizeDraft(retryDraft);
+              } else {
+                setError('Draft not found after processing completed. Please try again.');
+                setLoading(false);
+              }
+            } catch (err) {
+              console.error('Failed to load draft after job completion:', err);
+              setError(err instanceof Error ? err.message : 'Failed to load draft');
+              setLoading(false);
             }
-            return getScanPhotoUrl(photoUrl);
-          });
-          setPhotoUrls(urls);
-        } catch (photoErr) {
-          console.warn('Failed to load scan photos:', photoErr);
-          // Don't fail the whole screen if photos fail to load
-        }
+          } else if (job.status === 'failed') {
+            unsubscribe();
+            setError('Scan processing failed. Please try again.');
+            setLoading(false);
+          }
+        });
       } catch (err) {
         console.error('Failed to load draft:', err);
         setError(err instanceof Error ? err.message : 'Failed to load draft');
-      } finally {
         setLoading(false);
       }
     };
 
-    if (draftId && session?.user?.id) {
-      loadDraft();
-    }
+    loadDraft();
+
+    return () => {
+      unsubscribe();
+    };
   }, [draftId, session, onDraftUpdated]);
 
   // --- Loading / Auth / Error states ---
@@ -200,12 +259,18 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
   }
 
   if (loading) {
+    const isProcessing = jobStatus === 'processing';
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
         <ActivityIndicator size="large" color={accentBlue} />
         <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 12 }}>
-          Loading draft...
+          {isProcessing ? 'Processing your scan...' : 'Loading draft...'}
         </Text>
+        {isProcessing && (
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginTop: 6 }}>
+            This usually takes 10-30 seconds
+          </Text>
+        )}
       </View>
     );
   }
