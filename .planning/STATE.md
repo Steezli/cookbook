@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-10T00:20:00.000Z"
-last_activity: 2026-03-10 — 12-09 Task 1 complete (unit preference reactivity + cook mode conversion); Task 2 awaiting human action (deploy reset-request edge function)
+last_updated: "2026-03-10T19:54:34.757Z"
+last_activity: 2026-03-10 — 12-09 complete: unit preference reactivity, cook mode conversion, forgot password UX, reset password polish, reset-request edge function deployed
 progress:
   total_phases: 7
   completed_phases: 6
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 9 (gap closure) — 12-09 Task 1 complete; Task 2 is human-action checkpoint
-Status: 12-09 Task 1 complete — unit preference reactivity fixed in recipe detail and cook mode; awaiting edge function deployment (Task 2)
-Last activity: 2026-03-10 — 12-09 moved getUnitPreference into useFocusEffect; added displayIngredient to cook mode
+Plan: 9 (gap closure) — COMPLETE
+Status: Phase 12 complete — all 9 plans done; all UAT gaps resolved; reset-request edge function deployed; unit preference reactive across recipe detail and cook mode
+Last activity: 2026-03-10 — 12-09 complete: forgot password flow working, reset password polished, unit preference reactive, cook mode conversion added
 
 Progress: [██████████] 100%
 

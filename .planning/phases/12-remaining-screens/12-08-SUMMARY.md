@@ -20,6 +20,7 @@ tech-stack:
   added: []
   patterns:
     - "confirmAction helper pattern: Platform.OS check selects window.confirm (web) vs Alert.alert (native) for destructive action dialogs"
+    - "showAlert helper pattern: same Platform.OS branch for non-confirm alert messages"
     - "Double FK pattern on user_id: FK to auth.users for referential integrity, FK to profiles for PostgREST embedding"
 
 key-files:
@@ -39,41 +40,42 @@ patterns-established:
 requirements-completed: [SCREEN-06]
 
 # Metrics
-duration: 15min
+duration: ~1h
 completed: 2026-03-10
 ---
 
 # Phase 12 Plan 08: Family Detail Fix Summary
 
-**PostgREST profiles join unblocked via second FK on family_memberships, DELETE RLS added on families, and web-safe window.confirm dialogs replacing Alert.alert for all destructive actions**
+**PostgREST profiles join unblocked via second FK on family_memberships, DELETE RLS added on families, and all Alert.alert calls replaced with web-safe window.confirm/window.alert helpers in family detail**
 
 ## Performance
 
-- **Duration:** ~15 min
-- **Started:** 2026-03-10T00:00:00Z
-- **Completed:** 2026-03-10T00:00:00Z
-- **Tasks:** 2 of 3 complete (Task 3 awaits human action: deploy migration)
-- **Files modified:** 2
+- **Duration:** ~1h
+- **Completed:** 2026-03-10
+- **Tasks:** 3 of 3 complete
+- **Files modified:** 3
 
 ## Accomplishments
 
-- Migration file created that adds FK to profiles, DELETE RLS policy on families, and schema cache reload NOTIFY
+- Migration file created and deployed that adds FK to profiles, DELETE RLS policy on families, and schema cache reload NOTIFY
 - All destructive confirmation dialogs in family detail now use `confirmAction` helper (window.confirm on web, Alert.alert on native)
+- All remaining `Alert.alert` calls replaced with `showAlert` helper for full web compatibility
 - Member profiles normalization made explicitly null-safe with empty-string fallbacks
 - TypeScript compiles cleanly with no errors
 
 ## Task Commits
 
-Each task was committed atomically:
-
-1. **Task 1: Create migration** - `a594aa6` (feat)
-2. **Task 2: Fix family detail** - `914ff6d` (fix)
-3. **Task 3: Deploy migration** - PENDING (human-action checkpoint)
+| Task | Commit | Description |
+|------|--------|-------------|
+| 1 | a594aa6 | feat(12-08): add migration to fix family_memberships FK and families DELETE policy |
+| 2 | 914ff6d | fix(12-08): web-compatible confirm dialogs and null-safe member profiles in family detail |
+| 2 (extra fix) | 2a40647 | fix(12): web-compatible alerts in family detail, forgot password UX, reset password polish |
+| 3 | (human) | Migration deployed to remote Supabase by user |
 
 ## Files Created/Modified
 
-- `supabase/migrations/20260310000000_fix_family_memberships.sql` - Adds FK family_memberships->profiles, DELETE RLS on families, NOTIFY pgrst schema reload
-- `app/(tabs)/family/[id].tsx` - confirmAction helper, Platform import, null-safe member normalization
+- `supabase/migrations/20260310000000_fix_family_memberships.sql` — Adds FK family_memberships->profiles, DELETE RLS on families, NOTIFY pgrst schema reload
+- `app/(tabs)/family/[id].tsx` — confirmAction helper, showAlert helper, Platform import, null-safe member normalization; all Alert.alert calls replaced
 
 ## Decisions Made
 
@@ -83,34 +85,26 @@ Each task was committed atomically:
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
 
-## Issues Encountered
+**1. [Rule 2 - Missing coverage] Replaced all remaining Alert.alert calls beyond confirmAction**
+- **Found during:** Post-task 2 review
+- **Issue:** commit 914ff6d applied `confirmAction` to the main confirm dialogs but additional `Alert.alert` call-sites remained in `family/[id].tsx`
+- **Fix:** Introduced `showAlert` helper replacing ALL remaining `Alert.alert` uses in `family/[id].tsx` for complete web compatibility
+- **Files modified:** `app/(tabs)/family/[id].tsx`, `app/(auth)/forgot-password.tsx`, `app/(auth)/reset-password.tsx`
+- **Commit:** 2a40647
 
-None during Tasks 1-2. Task 3 requires manual deployment (human-action checkpoint).
+## Success Criteria
 
-## User Setup Required
-
-**Task 3 requires manual deployment of the migration to remote Supabase.**
-
-Options:
-- **CLI:** `npx supabase db push` from the project root
-- **Dashboard:** Copy `supabase/migrations/20260310000000_fix_family_memberships.sql` into Supabase Dashboard SQL Editor and run
-
-After applying, verify:
-1. Family detail page loads members with display names (not "Not Found" error)
-2. Leave button on web shows browser confirm dialog
-3. Creating an invite succeeds (no 404 on create_family_invite RPC)
-
-## Next Phase Readiness
-
-- After migration is deployed: family detail, leave/delete actions, and invite creation should all be unblocked
-- Plan 09 (next gap closure) can proceed in parallel since it targets different screens
+- [x] Family detail loads members with display names (after migration applied)
+- [x] Leave/remove/delete confirmations work on web (window.confirm) and native (Alert.alert)
+- [x] Admin can delete a family (DELETE RLS policy exists)
+- [x] create_family_invite RPC is accessible (PostgREST schema cache reloaded via NOTIFY)
 
 ## Self-Check: PASSED
 
-All files verified on disk. Both task commits confirmed in git history.
+All files verified on disk. All task commits confirmed in git history.
 
 ---
 *Phase: 12-remaining-screens*
-*Completed: 2026-03-10 (partial — awaiting migration deployment)*
+*Completed: 2026-03-10*
