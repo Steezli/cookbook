@@ -356,25 +356,19 @@ export default function SignupScreen() {
           </Pressable>
         </View>
 
-        {/* Sign In Instead (Secondary) button */}
-        <Link href={{ pathname: '/(auth)/login', params: { next } }} asChild>
-          <Pressable
-            style={({ pressed }) => ({
-              height: 48,
-              backgroundColor: bgCard,
-              borderRadius: radiusPill,
-              borderWidth: 1,
-              borderColor: borderDefault,
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: 15, color: textPrimary }}>
-              Sign In Instead
-            </Text>
-          </Pressable>
-        </Link>
+        {/* Already have an account? Sign In — inline text link */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: 14, color: textSecondary }}>
+            Already have an account?{' '}
+          </Text>
+          <Link href={{ pathname: '/(auth)/login', params: { next } }} asChild>
+            <Pressable>
+              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: 14, color: accentWarm }}>
+                Sign In
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
       </View>
     </>
   );

@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -43,6 +44,27 @@ import {
   textTertiary,
   white,
 } from '@/lib/tokens';
+
+function showAlert(title: string, message?: string) {
+  if (Platform.OS === 'web') {
+    window.alert(message ? `${title}\n\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
+function confirmAction(title: string, message: string, onConfirm: () => void) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Confirm', style: 'destructive', onPress: onConfirm },
+    ]);
+  }
+}
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -128,25 +150,14 @@ export default function CollectionDetailScreen() {
   async function handleRemoveRecipe(recipeId: string) {
     if (!collection) return;
 
-    Alert.alert(
-      'Remove Recipe',
-      'Remove this recipe from the collection?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await removeRecipeFromCollection(collection.id, recipeId);
-              setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
-            } catch {
-              Alert.alert('Error', 'Failed to remove recipe from collection');
-            }
-          },
-        },
-      ],
-    );
+    confirmAction('Remove Recipe', 'Remove this recipe from the collection?', async () => {
+      try {
+        await removeRecipeFromCollection(collection.id, recipeId);
+        setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+      } catch {
+        showAlert('Error', 'Failed to remove recipe from collection');
+      }
+    });
   }
 
   async function handleAddRecipe(recipe: Recipe) {
@@ -160,10 +171,7 @@ export default function CollectionDetailScreen() {
       const urls = await getRecipeThumbnailUrlMap([recipe.id], 300);
       setThumbnailMap((prev) => ({ ...prev, ...urls }));
     } catch (e) {
-      Alert.alert(
-        'Error',
-        e instanceof Error ? e.message : 'Failed to add recipe to collection',
-      );
+      showAlert('Error', e instanceof Error ? e.message : 'Failed to add recipe to collection');
     } finally {
       setIsAddingRecipeId(null);
     }
@@ -172,24 +180,17 @@ export default function CollectionDetailScreen() {
   async function handleDelete() {
     if (!collection) return;
 
-    Alert.alert(
+    confirmAction(
       'Delete Collection',
       'Are you sure you want to delete this collection? Recipes will not be deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCollection(collection.id);
-              router.replace('/collections' as any);
-            } catch {
-              Alert.alert('Error', 'Failed to delete collection');
-            }
-          },
-        },
-      ],
+      async () => {
+        try {
+          await deleteCollection(collection.id);
+          router.replace('/collections' as any);
+        } catch {
+          showAlert('Error', 'Failed to delete collection');
+        }
+      },
     );
   }
 
