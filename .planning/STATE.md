@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-10T19:10:11.661Z"
-last_activity: 2026-03-08 — 12-05 rebuilt profile/settings with avatar initials, inline name editing, unit toggle, sign out
+last_updated: "2026-03-10T00:20:00.000Z"
+last_activity: 2026-03-10 — 12-09 Task 1 complete (unit preference reactivity + cook mode conversion); Task 2 awaiting human action (deploy reset-request edge function)
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 30
   completed_plans: 30
-  percent: 85
+  percent: 100
 ---
 
 # Project State
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 8 (gap closure) — 12-08 paused at Task 3 checkpoint (human-action: deploy migration)
-Status: 12-08 Tasks 1-2 complete — migration created, family detail web dialogs fixed; awaiting migration deployment
-Last activity: 2026-03-10 — 12-08 fixed PostgREST profiles join FK, DELETE RLS on families, web-compatible confirmAction dialogs
+Plan: 9 (gap closure) — 12-09 Task 1 complete; Task 2 is human-action checkpoint
+Status: 12-09 Task 1 complete — unit preference reactivity fixed in recipe detail and cook mode; awaiting edge function deployment (Task 2)
+Last activity: 2026-03-10 — 12-09 moved getUnitPreference into useFocusEffect; added displayIngredient to cook mode
 
-Progress: [█████████░] 85%
+Progress: [██████████] 100%
 
 ## Pending TODOs
 
@@ -128,6 +128,7 @@ Progress: [█████████░] 85%
 - **12-08 Double FK on family_memberships.user_id:** existing FK to auth.users kept for integrity; new FK to public.profiles(user_id) enables PostgREST profiles() embedded join (standard Supabase pattern)
 - **12-08 confirmAction helper pattern:** Module-level function with Platform.OS branch — window.confirm on web, Alert.alert on native — for all destructive action dialogs in family detail
 - **12-08 NOTIFY pgrst reload schema in migration:** Ensures create_family_invite RPC is visible to PostgREST without server restart after migration runs
+- **12-09 useFocusEffect for unit preference sync:** getUnitPreference() placed inside useFocusEffect callback alongside recipe data load — unit changes on profile take effect immediately on next recipe navigation without duplicate fetches
 
 ### For v1.1
 
