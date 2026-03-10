@@ -53,24 +53,28 @@ export default function ScanUploadScreen() {
   const [uploadResult, setUploadResult] = useState<ScanUploadResult | null>(null);
 
   const handleCameraCapture = useCallback(async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
-    if (permissionResult.status !== 'granted') {
-      Alert.alert(
-        'Permission Required',
-        'Camera permission is needed to take photos of recipes.'
-      );
-      return;
-    }
+      if (permissionResult.status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Camera permission is needed to take photos of recipes.'
+        );
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: 'images' as ImagePicker.MediaType,
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: 'images' as ImagePicker.MediaType,
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setSelectedImages(prev => [...prev, ...result.assets]);
-      setUploadResult(null);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImages(prev => [...prev, ...result.assets]);
+        setUploadResult(null);
+      }
+    } catch (e) {
+      Alert.alert('Camera Unavailable', 'Camera is not available on this device.');
     }
   }, []);
 
@@ -112,15 +116,12 @@ export default function ScanUploadScreen() {
 
     setUploading(true);
     try {
-      const files = await Promise.all(
-        selectedImages.map(async (image, index) => {
-          const response = await fetch(image.uri);
-          const blob = await response.blob();
-          return new File([blob], image.fileName || `scan-${index + 1}.jpg`, {
-            type: image.mimeType || 'image/jpeg',
-          });
-        })
-      );
+      const files = selectedImages.map((image, index) => ({
+        uri: image.uri,
+        name: image.fileName || `scan-${index + 1}.jpg`,
+        type: image.mimeType || 'image/jpeg',
+        size: image.fileSize,
+      }));
 
       const result = await uploadScanPhotosWithValidation(files);
       setUploadResult(result);

@@ -192,7 +192,12 @@ async function compressImageWeb(
 
       // Calculate new dimensions
       let { width, height } = img;
-      
+
+      if (!width || !height) {
+        reject(new Error('Invalid image dimensions'));
+        return;
+      }
+
       if (width > maxWidth || height > maxHeight) {
         const aspectRatio = width / height;
         
