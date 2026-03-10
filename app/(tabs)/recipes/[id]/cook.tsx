@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { getRecipeById } from '@/features/recipes/api';
 import type { Recipe } from '@/features/recipes/types';
+import { displayAmount } from '@/features/units/conversions';
+import { getUnitPreference } from '@/features/units/api';
 import {
   getCookingProgress,
   getStepNavState,
@@ -44,6 +46,7 @@ export default function CookScreen() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [unitPreference, setUnitPreference] = useState<'imperial' | 'metric'>('imperial');
 
   useEffect(() => {
     async function loadRecipe() {
@@ -60,6 +63,10 @@ export default function CookScreen() {
     }
     void loadRecipe();
   }, [id]);
+
+  useEffect(() => {
+    getUnitPreference().then(setUnitPreference).catch(() => {});
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -103,6 +110,14 @@ export default function CookScreen() {
   const progressPercent = getCookingProgress(currentStep, totalSteps) * 100;
   const step = recipe.steps[currentStep];
   const contentPadding = isWeb ? 40 : isTablet ? 32 : 24;
+
+  function displayIngredient(ing: Recipe['ingredients'][0]): string {
+    if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
+      return displayAmount(ing.amount ?? null, ing.unit ?? null, unitPreference, ing.original_text || ing.text);
+    }
+    if (ing.is_ambiguous) return `${ing.text} (approx.)`;
+    return ing.text;
+  }
 
   // Web sidebar step list
   const Sidebar = () => (
@@ -223,7 +238,7 @@ export default function CookScreen() {
                 flex: 1,
               }}
             >
-              {ing.text}
+              {displayIngredient(ing)}
             </Text>
           </View>
         ))}

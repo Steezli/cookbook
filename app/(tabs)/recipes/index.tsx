@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { Search } from 'lucide-react-native';
+import { ChevronRight, Folder, Search } from 'lucide-react-native';
 
 import { useSession } from '@/features/auth/session';
 import { searchRecipes, getAvailableTags, getAccessibleFamilies } from '@/features/recipes/search';
@@ -33,6 +33,7 @@ import {
   fontSize2xl,
   radiusMd,
   radiusPill,
+  textDisabled,
   textPrimary,
   textSecondary,
   white,
@@ -187,6 +188,24 @@ export default function RecipesListScreen() {
           </Pressable>
         )}
       </View>
+
+      {/* My Collections link — mobile entry point to collections (not in tab bar per cookbook.pen spec) */}
+      <Pressable
+        onPress={() => router.navigate('/collections' as any)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          gap: 8,
+        }}
+      >
+        <Folder size={20} color={textSecondary} />
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: 15, color: textSecondary }}>
+          My Collections
+        </Text>
+        <ChevronRight size={16} color={textDisabled} style={{ marginLeft: 'auto' }} />
+      </Pressable>
 
       {/* Search bar */}
       <View

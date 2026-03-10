@@ -130,7 +130,14 @@ export default function RecipeDetailScreen() {
       // Only show loading spinner on first load — refetch silently to avoid
       // unmounting the entire view (which kills comment state, scroll position, etc.)
       void loadRecipe(!recipe);
-    }, [id])
+
+      // Also refresh unit preference on focus so changes from profile take effect immediately
+      getUnitPreference()
+        .then(setUnitPreference)
+        .catch(() => {
+          // Silent fail — use current/default
+        });
+    }, [id, session])
   );
 
   useEffect(() => {
@@ -146,20 +153,6 @@ export default function RecipeDetailScreen() {
     if (session) {
       void loadCollections();
     }
-  }, [session]);
-
-  useEffect(() => {
-    async function loadPreference() {
-      if (!session) return;
-      try {
-        const preference = await getUnitPreference();
-        setUnitPreference(preference);
-      } catch {
-        // Silent fail — use default imperial
-      }
-    }
-
-    void loadPreference();
   }, [session]);
 
   const isOwner =
