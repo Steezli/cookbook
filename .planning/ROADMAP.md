@@ -138,7 +138,7 @@ Plans:
   3. The scan upload and draft review screens render correctly at all three breakpoints, and the draft review screen displays the uploaded photo alongside the extracted draft
   4. Auth screens (Login, Sign Up, Forgot Password) render correctly at all three breakpoints matching cookbook.pen
   5. Profile/Settings and Invite screens are implemented (these are net-new screens) and match cookbook.pen at all three breakpoints
-**Plans:** 12 plans
+**Plans:** 11/12 plans executed
 
 Plans:
 - [x] 12-01-PLAN.md — Auth screens rebuild with social OAuth (Google, Apple, Facebook)
@@ -180,5 +180,5 @@ Plans:
 | 10. Core Screens | v1.1 | 7/8 | UAT gap closure | - |
 | 11. Public Browsing | v1.1 | 4/4 | Complete | 2026-03-08 |
 | 11.1 Audit Cleanup | v1.1 | 2/2 | Complete | 2026-03-08 |
-| 12. Remaining Screens | v1.1 | 9/12 | UAT gap closure round 2 | - |
+| 12. Remaining Screens | 11/12 | In Progress|  | - |
 | 13. Advertising | v1.1 | 0/TBD | Not started | - |

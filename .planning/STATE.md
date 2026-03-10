@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-10T20:07:51.686Z"
+last_updated: "2026-03-10T23:07:07.921Z"
 last_activity: "2026-03-10 — 12-09 complete: forgot password flow working, reset password polished, unit preference reactive, cook mode conversion added"
 progress:
   total_phases: 7
-  completed_phases: 6
-  total_plans: 30
-  completed_plans: 30
+  completed_phases: 5
+  total_plans: 33
+  completed_plans: 32
   percent: 100
 ---
 
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 9 (gap closure) — COMPLETE
-Status: Phase 12 complete — all 9 plans done; all UAT gaps resolved; reset-request edge function deployed; unit preference reactive across recipe detail and cook mode
-Last activity: 2026-03-10 — 12-09 complete: forgot password flow working, reset password polished, unit preference reactive, cook mode conversion added
+Plan: 12 (gap closure) — COMPLETE
+Status: Phase 12 complete — all gap closure plans done; scan draft race condition fixed; UAT Test 11 unblocked; Tests 12 and 13 also unblocked
+Last activity: 2026-03-10 — 12-12 complete: scan draft race condition fixed — DraftReview subscribes to job realtime channel and waits for edge function to complete before showing draft
 
-Progress: [██████████] 100%
+Progress: [█████████░] 97%
 
 ## Pending TODOs
 
@@ -132,6 +132,9 @@ Progress: [██████████] 100%
 - **12-07 Collections as TabTrigger in hidden TabList:** Adding name="collections" to hidden TabList registers the route with expo-router/ui, enabling TabTrigger asChild in WebSidebar to get isFocused active state — same pattern as other tab routes
 - **12-07 Mobile collections via My Recipes screen link:** Collections Pressable added to recipes/index.tsx so mobile users can reach collections without adding a 6th tab — 5-tab MobileTabBar matches cookbook.pen spec exactly
 - **12-07 Signup text link replaces ghost button:** "Don't have an account? Sign Up" text link in accentWarm placed immediately after Sign In button — replaces buried ghost button at bottom of form for better discoverability
+- **12-12 Subscribe-then-retry for scan draft race condition:** attempt getDraftByJobId on mount; if null subscribe to scan_jobs realtime channel; re-query draft on job.status === 'completed'; 60-second safety timeout prevents infinite wait if edge function is unresponsive
+- **12-11 Display-time parseIngredient fallback:** legacy ingredients lacking amount/unit fields parsed at display time in displayIngredient to enable unit conversion without data re-ingestion; only converts if parsed result has non-null amount + unit and is not ambiguous
+- **12-11 search_path = public, extensions:** both family invite RPCs (create_family_invite, accept_family_invite) now set search_path to include extensions schema so pgcrypto (gen_random_bytes, digest) is found; NOTIFY pgrst included to reload schema cache
 
 ### For v1.1
 
