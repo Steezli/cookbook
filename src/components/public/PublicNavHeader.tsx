@@ -29,6 +29,8 @@ function SignInButton() {
   return (
     <Pressable
       onPress={() => router.push('/(auth)/login')}
+      accessibilityRole="button"
+      accessibilityLabel="Sign in"
       style={{
         height: 48,
         backgroundColor: bgCard,
@@ -59,6 +61,8 @@ function GetStartedButton() {
   return (
     <Pressable
       onPress={() => router.push('/(auth)/signup')}
+      accessibilityRole="button"
+      accessibilityLabel="Get started"
       style={{
         backgroundColor: accentWarm,
         borderRadius: radiusPill,
@@ -136,6 +140,9 @@ function FilterChips({
           <Pressable
             key={tag}
             onPress={() => onTagChange(tag)}
+            accessibilityRole="button"
+            accessibilityLabel={`Filter by ${tag}`}
+            accessibilityState={{ selected: isActive }}
             style={{
               backgroundColor: isActive ? accentWarm : bgCard,
               borderRadius: radiusPill,
@@ -336,6 +343,8 @@ export function PublicDetailNavBar({ onBack }: PublicDetailNavBarProps) {
       >
         <Pressable
           onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
           style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
         >
           <ArrowLeft size={20} color={textSecondary} />
@@ -378,6 +387,8 @@ export function PublicDetailNavBar({ onBack }: PublicDetailNavBarProps) {
     >
       <Pressable
         onPress={onBack}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
       >
         <ArrowLeft size={20} color={textSecondary} />

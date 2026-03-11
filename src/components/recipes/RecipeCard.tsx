@@ -44,6 +44,8 @@ export function RecipeCard({ recipe, thumbnailUrl, onPress, style }: RecipeCardP
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="link"
+      accessibilityLabel={`View recipe: ${recipe.title}`}
       style={[
         {
           backgroundColor: bgCard,

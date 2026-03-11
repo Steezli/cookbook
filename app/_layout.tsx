@@ -11,10 +11,15 @@ import {
 } from "@expo-google-fonts/dm-sans";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { Stack } from "expo-router";
+
+import { getConsentStatus } from "@/features/ads/consent";
+import { requestTrackingPermission } from "@/features/ads/att";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider } from "@/features/auth/session";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Hold the splash screen until fonts finish loading.
 // Must be called at module level — before any component renders.
@@ -36,6 +41,27 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  // GDPR→ATT consent sequencing: resolve GDPR consent first, then prompt ATT on iOS.
+  // Runs once on app mount. Failures are warned but never crash the app.
+  useEffect(() => {
+    async function runConsentSequence() {
+      try {
+        const consentStatus = await getConsentStatus();
+
+        if (consentStatus === 'obtained' && Platform.OS === 'ios') {
+          await requestTrackingPermission();
+        }
+      } catch (error) {
+        console.warn(
+          '[ConsentSequence]',
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
+
+    runConsentSequence();
+  }, []);
+
   // Keep splash screen visible while fonts are loading.
   // If fonts fail (fontError), we still render — graceful degradation.
   if (!fontsLoaded && !fontError) {
@@ -45,16 +71,18 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(public)" />
-          <Stack.Screen
-            name="scan"
-            options={{ presentation: "modal", headerShown: false }}
-          />
-        </Stack>
+        <ErrorBoundary>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(public)" />
+            <Stack.Screen
+              name="scan"
+              options={{ presentation: "modal", headerShown: false }}
+            />
+          </Stack>
+        </ErrorBoundary>
       </SessionProvider>
     </SafeAreaProvider>
   );

@@ -10,10 +10,12 @@ import { accentWarm, textDisabled } from "@/lib/tokens";
 type TabButtonProps = TabTriggerSlotProps & {
   /** Lucide icon component instance, e.g. <Home /> */
   icon: ReactNode;
+  /** Accessible label for the tab (e.g. "Home", "My Recipes") */
+  label?: string;
   ref?: Ref<View>;
 };
 
-export function TabButton({ isFocused, icon, onPress, onLongPress, ref }: TabButtonProps) {
+export function TabButton({ isFocused, icon, label, onPress, onLongPress, ref }: TabButtonProps) {
   const iconColor = isFocused ? accentWarm : textDisabled;
 
   return (
@@ -22,6 +24,9 @@ export function TabButton({ isFocused, icon, onPress, onLongPress, ref }: TabBut
       onPress={onPress}
       onLongPress={onLongPress}
       style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isFocused }}
     >
       {cloneElement(icon as ReactElement<{ color: string; size: number }>, {
         color: iconColor,

@@ -29,27 +29,29 @@ export function MobileTabBar() {
       }}
     >
       <TabTrigger name="index" asChild>
-        <TabButton icon={<Home />} />
+        <TabButton icon={<Home />} label="Home" />
       </TabTrigger>
 
       <TabTrigger name="my-recipes" asChild>
-        <TabButton icon={<BookOpen />} />
+        <TabButton icon={<BookOpen />} label="My Recipes" />
       </TabTrigger>
 
       {/* Scan: plain Pressable opens modal overlay (not a tab route) */}
       <Pressable
         onPress={() => router.navigate("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        accessibilityRole="button"
+        accessibilityLabel="Scan recipe"
       >
         <Camera color={textDisabled} size={28} />
       </Pressable>
 
       <TabTrigger name="family" asChild>
-        <TabButton icon={<Heart />} />
+        <TabButton icon={<Heart />} label="Family" />
       </TabTrigger>
 
       <TabTrigger name="profile" asChild>
-        <TabButton icon={<User />} />
+        <TabButton icon={<User />} label="Profile" />
       </TabTrigger>
     </View>
   );

@@ -141,3 +141,34 @@
 - **Decision:** The recommended flow is GDPR consent first, then ATT prompt based on GDPR purpose-one consent. This matches the `react-native-google-mobile-ads` library docs.
 - **Why:** Avoids double-prompting. GDPR consent may indicate ATT is not needed. Library docs recommend this specific ordering.
 - **Trade-off:** Full ATT+GDPR sequencing is deferred to S05 integration; S04 builds the consent module independently.
+
+## S05: UX Polish
+
+### ErrorBoundary at root layout level
+- **Decision:** Add a single React class-based ErrorBoundary wrapping the root Stack navigator in `app/_layout.tsx`, inside SafeAreaProvider and SessionProvider.
+- **Why:** No error boundary exists anywhere — unhandled JS errors crash the entire app with no recovery. A root-level boundary catches all screen-level errors with a styled fallback and "Try Again" recovery. Class component required because functional components can't use componentDidCatch.
+- **Trade-off:** A single root boundary can't provide granular per-screen recovery; acceptable for MVP since per-screen boundaries can be added later for specific high-risk screens.
+
+### Skip loading skeletons in S05
+- **Decision:** Keep existing `ActivityIndicator` loading states. Do not add loading skeletons in this slice.
+- **Why:** Skeletons add significant component complexity (per-screen skeleton layouts matching content shape). Existing loading indicators are functional and consistent. Skeletons are a nice-to-have for a future polish pass.
+- **Trade-off:** Slightly less polished loading UX; but avoids scope creep in the final milestone slice.
+
+### Accessibility labels on highest-impact screens first
+- **Decision:** Add accessibilityRole/accessibilityLabel to navigation components, scan flow, and public screens — not exhaustive coverage of all 35+ files.
+- **Why:** Full a11y label coverage across 35+ files is mechanical but large. Focusing on navigation (every screen), scan flow (core UX), and public screens (SEO/accessibility overlap) covers the highest-impact surfaces within S05's scope.
+- **Trade-off:** Some lower-traffic screens remain without labels; can be addressed in a future accessibility pass.
+
+### Conditional Expo config plugin for native-only packages
+- **Decision:** Guard `react-native-google-mobile-ads` Expo plugin in `app.config.ts` with `fs.existsSync` check — only include it when the package is installed in `node_modules`
+- **Why:** The package is native-only and not installed during local web development (intended for EAS Build). Without the guard, `expo start --web` crashes at plugin resolution. Dynamic imports already handle runtime gracefully; this fixes config-time resolution.
+- **Trade-off:** The plugin silently drops when not installed; acceptable since the plugin is only needed for native builds where the package will be installed via EAS
+
+### Pull-to-refresh guarded against web
+- **Decision:** Wrap RefreshControl with `Platform.OS !== 'web'` guard on all FlatList screens.
+- **Why:** React Native's RefreshControl renders poorly on web (visible spinner, pull gesture doesn't work on desktop). Guarding prevents visual artifacts.
+- **Trade-off:** Web users don't get pull-to-refresh; acceptable since web has browser-native refresh and the pull gesture is a mobile pattern.
+
+### Pencil design reference for new visual components
+- **Decision:** All new visual components (ErrorBoundary fallback, restyled not-found page) must reference `cookbook.pen` in Pencil for design language, color palette, and component patterns before implementation.
+- **Why:** Maintains visual consistency with the established design system rather than inventing new patterns. The app's entire UI was built from Pencil designs.

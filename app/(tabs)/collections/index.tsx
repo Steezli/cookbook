@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, Text, View } from 'react-native';
 import { getCollections } from '@/features/collections/api';
 import type { CollectionWithRecipeCount } from '@/features/collections/types';
 import { useSession } from '@/features/auth/session';
@@ -29,6 +29,7 @@ export default function CollectionsListScreen() {
   const { breakpoint } = useBreakpoint();
   const [collections, setCollections] = useState<CollectionWithRecipeCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const numColumns = breakpoint === 'mobile' ? 1 : breakpoint === 'tablet' ? 2 : 3;
@@ -49,6 +50,19 @@ export default function CollectionsListScreen() {
   useEffect(() => {
     void loadCollections();
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const data = await getCollections();
+      setCollections(data);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load collections');
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function renderCollectionCard({ item }: { item: CollectionWithRecipeCount }) {
     return (
@@ -206,6 +220,11 @@ export default function CollectionsListScreen() {
           columnWrapperStyle={numColumns > 1 ? { gap: 16 } : undefined}
           contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
           renderItem={renderCollectionCard}
+          refreshControl={
+            Platform.OS !== 'web'
+              ? <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+              : undefined
+          }
           style={
             breakpoint === 'web'
               ? { flexGrow: 1, flexBasis: 0 }

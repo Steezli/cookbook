@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
+  RefreshControl,
   Text,
   TextInput,
   View,
@@ -46,6 +48,7 @@ export default function RecipesListScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [thumbnailByRecipeId, setThumbnailByRecipeId] = useState<Record<string, string>>({});
+  const [refreshing, setRefreshing] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -137,6 +140,12 @@ export default function RecipesListScreen() {
     setSelectedTags([]);
     setSelectedVisibility(undefined);
     setSelectedFamilyId(undefined);
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadRecipes();
+    setRefreshing(false);
   }
 
   function toggleTag(tag: string) {
@@ -509,6 +518,11 @@ export default function RecipesListScreen() {
             gap: 16,
             flexGrow: 1,
           }}
+          refreshControl={
+            Platform.OS !== 'web'
+              ? <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+              : undefined
+          }
           renderItem={({ item }) => (
             <RecipeCard
               recipe={item}

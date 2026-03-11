@@ -3,7 +3,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -308,21 +308,25 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
             </View>
 
             <View style={styles.headerActions}>
-              <TouchableOpacity
-                style={styles.buttonSecondary}
+              <Pressable
+                style={({ pressed }) => [styles.buttonSecondary, { opacity: pressed ? 0.7 : 1 }]}
                 onPress={onCancel}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel editing"
               >
                 <Text style={styles.buttonSecondaryText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.buttonPrimary, saving && styles.buttonDisabled]}
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.buttonPrimary, saving && styles.buttonDisabled, { opacity: pressed ? 0.7 : 1 }]}
                 disabled={saving}
                 onPress={() => saveChanges(recipe)}
+                accessibilityRole="button"
+                accessibilityLabel={saving ? 'Saving recipe' : 'Save recipe now'}
               >
                 <Text style={styles.buttonPrimaryText}>
                   {saving ? 'Saving...' : 'Save Now'}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -336,6 +340,7 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
             onChangeText={(text) => updateRecipe({ title: text })}
             placeholder="Enter recipe title"
             placeholderTextColor="#9ca3af"
+            accessibilityLabel="Recipe title"
           />
         </View>
 
@@ -441,19 +446,22 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
               <View key={index} style={styles.itemCard}>
                 <View style={styles.itemHeaderRow}>
                   <View style={styles.itemControls}>
-                    <TouchableOpacity
+                    <Pressable
                       onPress={() =>
                         moveIngredient(index, Math.max(0, index - 1))
                       }
                       disabled={index === 0}
-                      style={[
+                      style={({ pressed }) => [
                         styles.controlButton,
                         index === 0 && styles.controlButtonDisabled,
+                        { opacity: pressed ? 0.7 : 1 },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move ingredient ${index + 1} up`}
                     >
                       <Text style={styles.controlButtonText}>↑</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Pressable>
+                    <Pressable
                       onPress={() =>
                         moveIngredient(
                           index,
@@ -461,22 +469,27 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                         )
                       }
                       disabled={index === recipe.ingredients!.length - 1}
-                      style={[
+                      style={({ pressed }) => [
                         styles.controlButton,
                         index === recipe.ingredients!.length - 1 &&
                           styles.controlButtonDisabled,
+                        { opacity: pressed ? 0.7 : 1 },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move ingredient ${index + 1} down`}
                     >
                       <Text style={styles.controlButtonText}>↓</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <Text style={styles.itemNumber}>#{index + 1}</Text>
                   </View>
-                  <TouchableOpacity
+                  <Pressable
                     onPress={() => removeIngredient(index)}
-                    style={styles.deleteButton}
+                    style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.7 : 1 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ingredient ${index + 1}`}
                   >
                     <Text style={styles.deleteButtonText}>✕</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
 
                 <View style={styles.ingredientRow}>
@@ -530,12 +543,14 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
             )}
           </View>
 
-          <TouchableOpacity
-            style={styles.addButton}
+          <Pressable
+            style={({ pressed }) => [styles.addButton, { opacity: pressed ? 0.7 : 1 }]}
             onPress={addIngredient}
+            accessibilityRole="button"
+            accessibilityLabel="Add ingredient"
           >
             <Text style={styles.addButtonText}>+ Add Ingredient</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Instructions */}
@@ -551,19 +566,22 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
               <View key={index} style={styles.itemCard}>
                 <View style={styles.itemHeaderRow}>
                   <View style={styles.itemControls}>
-                    <TouchableOpacity
+                    <Pressable
                       onPress={() =>
                         moveInstruction(index, Math.max(0, index - 1))
                       }
                       disabled={index === 0}
-                      style={[
+                      style={({ pressed }) => [
                         styles.controlButton,
                         index === 0 && styles.controlButtonDisabled,
+                        { opacity: pressed ? 0.7 : 1 },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move step ${index + 1} up`}
                     >
                       <Text style={styles.controlButtonText}>↑</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
+                    </Pressable>
+                    <Pressable
                       onPress={() =>
                         moveInstruction(
                           index,
@@ -574,22 +592,27 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                         )
                       }
                       disabled={index === recipe.instructions!.length - 1}
-                      style={[
+                      style={({ pressed }) => [
                         styles.controlButton,
                         index === recipe.instructions!.length - 1 &&
                           styles.controlButtonDisabled,
+                        { opacity: pressed ? 0.7 : 1 },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move step ${index + 1} down`}
                     >
                       <Text style={styles.controlButtonText}>↓</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                     <Text style={styles.itemNumber}>Step {index + 1}</Text>
                   </View>
-                  <TouchableOpacity
+                  <Pressable
                     onPress={() => removeInstruction(index)}
-                    style={styles.deleteButton}
+                    style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.7 : 1 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove step ${index + 1}`}
                   >
                     <Text style={styles.deleteButtonText}>✕</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
 
                 <TextInput
@@ -610,12 +633,14 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
             )}
           </View>
 
-          <TouchableOpacity
-            style={styles.addButton}
+          <Pressable
+            style={({ pressed }) => [styles.addButton, { opacity: pressed ? 0.7 : 1 }]}
             onPress={addInstruction}
+            accessibilityRole="button"
+            accessibilityLabel="Add instruction step"
           >
             <Text style={styles.addButtonText}>+ Add Step</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {/* Draft Management */}

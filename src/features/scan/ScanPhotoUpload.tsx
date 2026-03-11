@@ -2,7 +2,6 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
@@ -113,7 +112,12 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
       <Text style={styles.title}>Upload Recipe Photo{selectedImages.length > 1 ? 's' : ''}</Text>
 
       {/* Image Selection Button - Always visible */}
-      <TouchableOpacity style={styles.uploadArea} onPress={handleImageSelect}>
+      <Pressable
+        style={({ pressed }) => [styles.uploadArea, { opacity: pressed ? 0.7 : 1 }]}
+        onPress={handleImageSelect}
+        accessibilityRole="button"
+        accessibilityLabel={selectedImages.length === 0 ? 'Select photos to upload' : 'Add more photos'}
+      >
         <Text style={styles.uploadIcon}>📷</Text>
         <Text style={styles.uploadText}>
           {selectedImages.length === 0 ? 'Tap to select photos' : 'Add more photos'}
@@ -121,7 +125,7 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
         <Text style={styles.uploadSubtext}>
           JPEG, PNG, or WebP up to 10MB each
         </Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {selectedImages.length > 0 && (
         <View>
@@ -139,39 +143,50 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gallery}>
             {selectedImages.map((image, index) => (
               <View key={`${image.uri}-${index}`} style={styles.galleryItem}>
-                <TouchableOpacity onPress={() => setPreviewImage(image.uri)}>
+                <Pressable
+                  onPress={() => setPreviewImage(image.uri)}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Preview photo ${index + 1}`}
+                >
                   <Image
                     source={{ uri: image.uri }}
                     style={styles.thumbnail}
                     resizeMode="cover"
                   />
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* Remove button */}
-                <TouchableOpacity
-                  style={styles.removeButton}
+                <Pressable
+                  style={({ pressed }) => [styles.removeButton, { opacity: pressed ? 0.7 : 1 }]}
                   onPress={() => removeImage(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove photo ${index + 1}`}
                 >
                   <Text style={styles.removeButtonText}>✕</Text>
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* Reorder buttons */}
                 <View style={styles.reorderButtons}>
                   {index > 0 && (
-                    <TouchableOpacity
-                      style={styles.reorderButton}
+                    <Pressable
+                      style={({ pressed }) => [styles.reorderButton, { opacity: pressed ? 0.7 : 1 }]}
                       onPress={() => moveImage(index, index - 1)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move photo ${index + 1} left`}
                     >
                       <Text style={styles.reorderButtonText}>←</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   )}
                   {index < selectedImages.length - 1 && (
-                    <TouchableOpacity
-                      style={styles.reorderButton}
+                    <Pressable
+                      style={({ pressed }) => [styles.reorderButton, { opacity: pressed ? 0.7 : 1 }]}
                       onPress={() => moveImage(index, index + 1)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Move photo ${index + 1} right`}
                     >
                       <Text style={styles.reorderButtonText}>→</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   )}
                 </View>
 
@@ -184,15 +199,22 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
           </ScrollView>
 
           {/* Clear All Button */}
-          <TouchableOpacity style={styles.clearAllButton} onPress={clearSelection}>
+          <Pressable
+            style={({ pressed }) => [styles.clearAllButton, { opacity: pressed ? 0.7 : 1 }]}
+            onPress={clearSelection}
+            accessibilityRole="button"
+            accessibilityLabel="Clear all selected photos"
+          >
             <Text style={styles.clearAllButtonText}>Clear All</Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Upload Button */}
-          <TouchableOpacity
-            style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
+          <Pressable
+            style={({ pressed }) => [styles.uploadButton, uploading && styles.uploadButtonDisabled, { opacity: pressed ? 0.7 : 1 }]}
             onPress={handleUpload}
             disabled={uploading}
+            accessibilityRole="button"
+            accessibilityLabel={uploading ? 'Uploading photos' : `Upload ${selectedImages.length} photos and start scan`}
           >
             {uploading ? (
               <>
@@ -208,7 +230,7 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
                 </Text>
               </>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
 
@@ -261,12 +283,14 @@ export function ScanPhotoUpload({ onUploadComplete }: ScanPhotoUploadProps) {
                 resizeMode="contain"
               />
             )}
-            <TouchableOpacity
-              style={styles.modalCloseButton}
+            <Pressable
+              style={({ pressed }) => [styles.modalCloseButton, { opacity: pressed ? 0.7 : 1 }]}
               onPress={() => setPreviewImage(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Close preview"
             >
               <Text style={styles.modalCloseButtonText}>✕ Close</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>

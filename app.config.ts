@@ -1,4 +1,13 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Only include the react-native-google-mobile-ads plugin when the package is
+// actually installed (EAS Build). During local web dev the native-only package
+// is absent, and Expo's plugin resolver crashes if it can't find it.
+const admobInstalled = fs.existsSync(
+  path.join(__dirname, 'node_modules', 'react-native-google-mobile-ads'),
+);
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'Berven',
@@ -23,17 +32,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-web-browser',
     'expo-apple-authentication',
-    [
-      'react-native-google-mobile-ads',
-      {
-        androidAppId:
-          process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID ||
-          'ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy',
-        iosAppId:
-          process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID ||
-          'ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy',
-      },
-    ],
+    ...(admobInstalled
+      ? [
+          [
+            'react-native-google-mobile-ads',
+            {
+              androidAppId:
+                process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID ||
+                'ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy',
+              iosAppId:
+                process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID ||
+                'ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy',
+            },
+          ] as const,
+        ]
+      : []),
   ],
   experiments: {
     typedRoutes: true,

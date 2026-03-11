@@ -29,6 +29,9 @@ export function SidebarItem({ isFocused, icon, label, onPress, onLongPress, ref 
       ref={ref}
       onPress={onPress}
       onLongPress={onLongPress}
+      accessibilityRole="link"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isFocused }}
       style={{
         flexDirection: "row",
         alignItems: "center",

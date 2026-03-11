@@ -4,30 +4,30 @@
 
 ### ADS-01 — Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: inferred
-- Primary Slice: none yet
+- Primary Slice: M001/S13
 
-Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
+Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web). Validated in M001 with unit tests and browser verification.
 
 ### ADS-02 — Ad placement on public browsing screens only (never authenticated screens)
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: inferred
-- Primary Slice: none yet
+- Primary Slice: M001/S13
 
-Ad placement on public browsing screens only (never authenticated screens)
+Ad placement on public browsing screens only (never authenticated screens). Route-pattern allowlist with unit tests. Validated in M001.
 
 ### ADS-03 — ATT permission prompt on iOS for ad tracking
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: inferred
-- Primary Slice: none yet
+- Primary Slice: M002/S04, M002/S05 (GDPR→ATT sequencing)
 
-ATT permission prompt on iOS for ad tracking
+ATT permission module with dynamic import (S04). GDPR→ATT consent sequencing wired in root layout (S05). Real-device ATT prompt requires iOS build (operational verification).
 
 ## Validated
 
@@ -249,39 +249,39 @@ Cursor-based pagination for public recipe listing
 
 ### SCAN-MULTI — Multi-recipe scan: a photo containing 2+ recipes produces separate drafts for each
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: M002 roadmap
-- Primary Slice: M002/S01 (data layer), M002/S02 (UI)
+- Primary Slice: M002/S01 (data layer), M002/S02 (UI), M002/S05 (integration polish)
 
-A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. S01 contract-verified the data layer; S02 completes the UI layer (draft list, per-draft review/edit/save, batch save, RecentScans badges). End-to-end proof with real photos requires S05 UAT.
+A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. Data layer (S01), UI layer (S02), and integration polish (S05) complete with 483 tests. Real-photo E2E requires deployed Supabase backend (operational verification).
 
 ### SEO-01 — Recipe structured data markup for search engine indexing
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: M002 roadmap
 - Primary Slice: M002/S03
 
-Public recipe detail pages include valid schema.org/Recipe JSON-LD structured data generated from real recipe data. Client-side rendered via expo-router/head. 62 unit tests prove generation logic; browser verification confirms runtime rendering. Google Rich Results Test validation deferred to S05 UAT (requires production URL).
+Public recipe detail pages include valid schema.org/Recipe JSON-LD structured data generated from real recipe data. Client-side rendered via expo-router/head. 62 unit tests prove generation logic; browser verification confirms runtime rendering in S05 UAT. Google Rich Results Test against production URL is an operational verification step.
 
 ### ADS-04 — Production ad unit ID configuration via environment variables
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: M002 roadmap
 - Primary Slice: M002/S04
 
-Ad config reads `EXPO_PUBLIC_ADMOB_IOS_BANNER_ID` and `EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID` from env vars, falling back to Google test IDs. `app.config.ts` reads app-level IDs for the Expo plugin. `.env.example` documents all four ADMOB vars. 13 unit tests prove env-var resolution, fallback, cross-platform isolation. Full validation requires setting production IDs and loading real ads (S05 UAT).
+Ad config reads `EXPO_PUBLIC_ADMOB_IOS_BANNER_ID` and `EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID` from env vars, falling back to Google test IDs. `app.config.ts` reads app-level IDs for the Expo plugin with conditional fs.existsSync guard. `.env.example` documents all four ADMOB vars. 13 unit tests prove env-var resolution, fallback, cross-platform isolation. Setting production IDs is an operational config step.
 
 ### ADS-05 — GDPR ad consent management for EU users
 
-- Status: active
+- Status: validated
 - Class: core-capability
 - Source: M002 roadmap
-- Primary Slice: M002/S04
+- Primary Slice: M002/S04, M002/S05 (integration wiring)
 
-Unified consent API (`getConsentStatus`, `requestConsent`, `canShowPersonalizedAds`, `setWebConsentStatus`) with platform-branched implementation: native via UMP SDK dynamic import, web via AsyncStorage + custom `GdprConsentBanner`. Consent status gates `requestNonPersonalizedAdsOnly` in AdBanner — only `'obtained'` enables personalized ads. 38 consent tests + 11 consent-gated AdBanner tests. Full validation requires real-device UMP form testing with configured AdMob account (S05 UAT).
+Unified consent API (`getConsentStatus`, `requestConsent`, `canShowPersonalizedAds`, `setWebConsentStatus`) with platform-branched implementation: native via UMP SDK dynamic import, web via AsyncStorage + custom `GdprConsentBanner`. GdprConsentBanner mounted in public layout (S05). GDPR→ATT consent sequencing wired in root layout (S05). Consent status gates `requestNonPersonalizedAdsOnly` in AdBanner. 38 consent tests + 11 consent-gated AdBanner tests. UMP form testing requires real device with configured AdMob account (operational verification).
 
 ## Deferred
 

@@ -384,6 +384,9 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
                 <Pressable
                   key={index}
                   onPress={() => setActivePhotoIndex(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View photo ${index + 1}`}
+                  accessibilityState={{ selected: index === activePhotoIndex }}
                   style={{
                     borderWidth: 2,
                     borderColor: index === activePhotoIndex ? accentBlue : borderDefault,
@@ -441,6 +444,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
           <Pressable
             onPress={onEdit}
+            accessibilityRole="button"
+            accessibilityLabel="Edit draft"
             style={({ pressed }) => ({
               backgroundColor: pressed ? '#0066DD' : accentBlue,
               paddingVertical: 10,
@@ -454,6 +459,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           </Pressable>
           <Pressable
             onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Back to scans"
             style={({ pressed }) => ({
               backgroundColor: pressed ? borderDefault : bgCard,
               paddingVertical: 10,
@@ -630,6 +637,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable
               onPress={onEdit}
+              accessibilityRole="button"
+              accessibilityLabel="Save as recipe"
               style={({ pressed }) => ({
                 backgroundColor: pressed ? '#0066DD' : accentBlue,
                 paddingVertical: 12,
@@ -645,6 +654,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
             </Pressable>
             <Pressable
               onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Discard draft"
               style={({ pressed }) => ({
                 backgroundColor: pressed ? '#FEE2E2' : 'transparent',
                 borderWidth: 1,

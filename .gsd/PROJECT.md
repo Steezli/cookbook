@@ -35,16 +35,17 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✓ Ad banner with platform branching (AdMob native, placeholder web) — v1.1
 - ✓ Ad placement restricted to public browsing screens only — v1.1
 - ✓ ATT permission prompt on iOS for ad tracking — v1.1
+- ✓ Multi-recipe scan: 1 photo → N drafts with data layer, UI, and integration polish — v1.2
+- ✓ Recipe structured data (JSON-LD + OG tags) on public recipe pages — v1.2
+- ✓ Production ad unit ID configuration via env vars with test-ID fallback — v1.2
+- ✓ GDPR consent banner on web, GDPR→ATT sequencing, consent-gated ads — v1.2
 
 ### Deferred (to next milestone)
 
 - [ ] Subscription gating on scan feature via RevenueCat entitlement (SUB-01)
 - [ ] Paywall UI displayed when non-subscriber accesses scan (SUB-02)
 - [ ] Web subscription checkout via RevenueCat Web Billing / Stripe (SUB-03)
-- [~] Recipe structured data markup for search engine indexing (SEO-01) — client-side JSON-LD implemented, Google Rich Results Test deferred to S05
 - [ ] Server-rendered public recipe pages for SEO crawlers (SEO-02)
-- [~] Production ad unit ID configuration (ADS-04) — env-var config with test-ID fallback built, real-device testing deferred to S05
-- [~] GDPR ad consent management for EU users (ADS-05) — consent module and web banner built, UMP form testing deferred to S05
 
 ### Out of Scope
 
@@ -63,7 +64,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✅ S02: Multi-Draft UX (draft list, per-draft review/edit/save, batch save, RecentScans badges) — complete
 - ✅ S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags) — complete
 - ✅ S04: Production Ads + GDPR (env-based unit IDs, GDPR consent module, consent-gated ads) — complete
-- S05: UX Polish (bug fixes, performance, visual refinements) — next
+- ✅ S05: UX Polish (consent wiring, ErrorBoundary, Pressable migration, a11y labels, pull-to-refresh, UAT) — complete
 
 ## Completed Milestones
 
@@ -104,4 +105,4 @@ Advertising module with platform-branched AdMob/placeholder, ATT permission, rou
 | SECURITY DEFINER for public RPCs | Bypasses RLS for anonymous author attribution | ✓ Good |
 
 ---
-*Last updated: 2026-03-11 after M002/S04 completion*
+*Last updated: 2026-03-11 after M002/S05 completion (M002 complete)*

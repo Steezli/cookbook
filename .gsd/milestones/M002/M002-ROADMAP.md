@@ -59,7 +59,7 @@ This milestone is complete only when all are true:
   > After this: public recipe detail pages include schema.org/Recipe JSON-LD; passes Google Rich Results Test; Open Graph and Twitter Card meta tags present
 - [x] **S04: Production Ads + GDPR** `risk:medium` `depends:[]`
   > After this: ad config reads production unit IDs from environment; GDPR consent banner appears for EU users; consent state persists and gates personalized ads
-- [ ] **S05: UX Polish** `risk:low` `depends:[S01,S02,S03,S04]`
+- [x] **S05: UX Polish** `risk:low` `depends:[S01,S02,S03,S04]`
   > After this: all visual bugs fixed, performance improvements applied, UI refinements complete; full UAT pass across iOS/web
 
 ## Boundary Map

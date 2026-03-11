@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -108,6 +110,8 @@ function PublicListRow({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="link"
+      accessibilityLabel={`View recipe: ${recipe.title}`}
       style={{
         flexDirection: 'row',
         backgroundColor: bgCard,
@@ -179,6 +183,8 @@ function PublicRecipeCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="link"
+      accessibilityLabel={`View recipe: ${recipe.title}`}
       style={{
         flex: 1,
         backgroundColor: bgCard,
@@ -295,6 +301,9 @@ function WebChipsRow({
               <Pressable
                 key={tag}
                 onPress={() => onTagChange(tag)}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter by ${tag}`}
+                accessibilityState={{ selected: isActive }}
                 style={{
                   backgroundColor: isActive ? accentWarm : bgCard,
                   borderRadius: radiusPill,
@@ -361,6 +370,7 @@ export default function PublicBrowseScreen() {
   const [authorMap, setAuthorMap] = useState<Record<string, PublicAuthor>>({});
   const [thumbnailMap, setThumbnailMap] = useState<Record<string, string>>({});
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadSeqRef = useRef(0);
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
@@ -451,6 +461,20 @@ export default function PublicBrowseScreen() {
     setIsLoadingMore(true);
     loadPage(cursor, loadSeqRef.current);
   }, [isLoadingMore, hasMore, cursor, loadPage]);
+
+  // Pull-to-refresh (reload from first page)
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    loadSeqRef.current += 1;
+    const seq = loadSeqRef.current;
+    setRecipes([]);
+    setAuthorMap({});
+    setThumbnailMap({});
+    setCursor(null);
+    setHasMore(true);
+    await loadPage(null, seq);
+    setRefreshing(false);
+  }, [loadPage]);
 
   // Navigation
   const navigateToRecipe = useCallback(
@@ -586,6 +610,11 @@ export default function PublicBrowseScreen() {
           }
           contentContainerStyle={layoutConfig.contentContainerStyle}
           style={layoutConfig.listStyle}
+          refreshControl={
+            Platform.OS !== 'web'
+              ? <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+              : undefined
+          }
           onEndReached={loadNextPage}
           onEndReachedThreshold={0.3}
           ListHeaderComponent={listHeader}

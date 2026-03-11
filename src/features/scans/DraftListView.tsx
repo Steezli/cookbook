@@ -435,6 +435,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           <Pressable
             onPress={handleSaveAll}
             disabled={batchSaving}
+            accessibilityRole="button"
+            accessibilityLabel={batchSaving ? 'Saving all drafts' : 'Save all drafts as recipes'}
             style={({ pressed }) => ({
               backgroundColor: batchSaving ? borderDefault : pressed ? '#16A34A' : accentGreen,
               paddingVertical: 10,
@@ -463,6 +465,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
         {progress.allSaved && (
           <Pressable
             onPress={() => router.replace('/scan')}
+            accessibilityRole="button"
+            accessibilityLabel="Back to scans"
             style={({ pressed }) => ({
               backgroundColor: pressed ? '#16A34A' : accentGreen,
               paddingVertical: 10,
@@ -494,6 +498,9 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           setSelectedDraftIndex(index);
           setIsEditing(false);
         }}
+        accessibilityRole="button"
+        accessibilityLabel={`Review draft: ${title}`}
+        accessibilityState={{ selected: isSelected }}
         style={({ pressed }) => ({
           backgroundColor: isSelected ? white : bgCard,
           borderWidth: isSelected ? 2 : 1,
@@ -636,6 +643,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
                   setSelectedDraftIndex(null);
                   setIsEditing(false);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Close draft review"
               >
                 <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentBlue }}>
                   Close

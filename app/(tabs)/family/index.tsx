@@ -4,7 +4,9 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   Pressable,
+  RefreshControl,
   Text,
   TextInput,
   View,
@@ -363,8 +365,11 @@ export default function FamiliesHomeScreen() {
               ? {}
               : { flexGrow: 1, flexBasis: 0 }),
           }}
-          refreshing={isRefreshing}
-          onRefresh={refresh}
+          refreshControl={
+            Platform.OS !== 'web'
+              ? <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+              : undefined
+          }
         />
       )}
     </PageContainer>
