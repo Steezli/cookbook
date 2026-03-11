@@ -1,5 +1,11 @@
 # Decisions
 
+## Tooling
+
+### Pencil design tool access
+- **Decision:** Use mac-tools (accessibility API + screenshots) to inspect Pencil designs during development. Pencil MCP server is available at `/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64 --app desktop` for future MCP-enabled sessions.
+- **Why:** Pencil contains all cookbook.pen designs (screens × breakpoints + components); designs should be referenced during UI work rather than guessing
+
 ## S07–S12: Design, Navigation, Screens, Public Browsing, Audit, Remaining Screens
 
 - Flat-with-category-prefix naming for tokens (no nesting) — ergonomic for StyleSheet.create usage
