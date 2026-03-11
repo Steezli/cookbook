@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Design & Responsive
 status: completed
-last_updated: "2026-03-10T23:07:07.921Z"
-last_activity: "2026-03-10 — 12-09 complete: forgot password flow working, reset password polished, unit preference reactive, cook mode conversion added"
+last_updated: "2026-03-10T23:59:00.000Z"
+last_activity: "2026-03-10 — 12-10 complete: signup text link, collections web-compatible alerts, Supabase Dashboard Site URL updated"
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 33
-  completed_plans: 32
+  completed_plans: 33
   percent: 100
 ---
 
@@ -27,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 12 (gap closure) — COMPLETE; Plan 11 (gap closure) — Task 1 complete, awaiting human deployment of migration
-Status: Phase 12 gap closure ongoing — 12-11 Task 1 done (search_path migration created, parseIngredient fallback added); 12-11 Task 2 awaits manual migration deployment to remote Supabase
-Last activity: 2026-03-10 — 12-11 Task 1 complete: migration for RPC search_path + parseIngredient fallback for legacy ingredients
+Plan: 12-10 — COMPLETE
+Status: Phase 12 gap closure complete — 12-10 done (signup text link, collections web alerts, Supabase Dashboard config); 12-11 pending (migration deployment to remote Supabase awaits user action)
+Last activity: 2026-03-10 — 12-10 complete: signup text link, collections web-compatible alerts, Supabase Dashboard Site URL updated
 
-Progress: [█████████░] 97%
+Progress: [██████████] 100%
 
 ## Pending TODOs
 
@@ -135,6 +135,8 @@ Progress: [█████████░] 97%
 - **12-12 Subscribe-then-retry for scan draft race condition:** attempt getDraftByJobId on mount; if null subscribe to scan_jobs realtime channel; re-query draft on job.status === 'completed'; 60-second safety timeout prevents infinite wait if edge function is unresponsive
 - **12-11 Display-time parseIngredient fallback:** legacy ingredients lacking amount/unit fields parsed at display time in displayIngredient to enable unit conversion without data re-ingestion; only converts if parsed result has non-null amount + unit and is not ambiguous
 - **12-11 search_path = public, extensions:** both family invite RPCs (create_family_invite, accept_family_invite) now set search_path to include extensions schema so pgcrypto (gen_random_bytes, digest) is found; NOTIFY pgrst included to reload schema cache
+- **12-10 confirmAction pattern extended to collections:** all Alert.alert calls in collections/[id].tsx replaced with web-compatible confirmAction/showAlert helpers; now standard pattern for all screens with destructive dialogs
+- **12-10 Inline text link for signup Sign In nav:** bordered ghost button replaced with accentWarm inline text link — signup and login screens now use consistent cross-navigation text link pattern
 
 ### For v1.1
 
