@@ -1,0 +1,9 @@
+{
+  "pid": 68721,
+  "startedAt": "2026-03-11T17:19:00.842Z",
+  "unitType": "complete-slice",
+  "unitId": "M001/S13",
+  "unitStartedAt": "2026-03-11T17:19:00.842Z",
+  "completedUnits": 1,
+  "sessionFile": "/Users/elinicholson/.gsd/sessions/2026-03-11T17-19-00-842Z_c3517a09-efaa-4c56-9068-fc34dd20d1fe.jsonl"
+}

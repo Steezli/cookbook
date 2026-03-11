@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "projectStartedAt": 1773249511702,
+  "units": [
+    {
+      "type": "reassess-roadmap",
+      "id": "M001/S12",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773249511729,
+      "finishedAt": 1773249540622,
+      "tokens": {
+        "input": 4,
+        "output": 1135,
+        "cacheRead": 41238,
+        "cacheWrite": 42423,
+        "total": 84800
+      },
+      "cost": 0.31415775,
+      "toolCalls": 0,
+      "assistantMessages": 2,
+      "userMessages": 0
+    }
+  ]
+}

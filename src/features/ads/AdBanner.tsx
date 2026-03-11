@@ -1,0 +1,166 @@
+/**
+ * AdBanner — platform-branched ad banner component.
+ *
+ * Requirements:
+ *   ADS-01: Ad banner (320×50 mobile, 728×90 web) with platform branching
+ *   ADS-02: Ads only on public browsing screens
+ *
+ * On native (iOS/Android): renders a Google AdMob banner via
+ * react-native-google-mobile-ads (or a styled placeholder if the SDK
+ * is not available — common in Expo Go dev).
+ *
+ * On web: renders a styled placeholder banner (AdMob doesn't support RN web).
+ *
+ * Platform branching is done via React Native's Platform.select and runtime
+ * checks rather than .native.tsx/.web.tsx file extensions, so the component
+ * can be tested in a single Node test environment.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { Platform, View, Text, StyleSheet } from 'react-native';
+
+import { getBannerSize, getBannerAdUnitId, getAdPlatform } from './config';
+import type { AdBannerSize } from './config';
+
+export interface AdBannerProps {
+  /** Override the computed banner size (for testing or custom layouts) */
+  size?: AdBannerSize;
+  /** Test ID for testing frameworks */
+  testID?: string;
+}
+
+/**
+ * Platform-branched ad banner.
+ * - iOS/Android: attempts to load AdMob; falls back to placeholder
+ * - Web: always renders a styled placeholder
+ */
+export function AdBanner({ size: sizeProp, testID }: AdBannerProps) {
+  const platform = getAdPlatform();
+  const size = sizeProp ?? getBannerSize();
+
+  if (platform === 'web') {
+    return <AdPlaceholder size={size} testID={testID} />;
+  }
+
+  // On native, try to render AdMob banner
+  return <NativeAdBanner size={size} testID={testID} />;
+}
+
+// ---------------------------------------------------------------------------
+// Web / Fallback placeholder
+// ---------------------------------------------------------------------------
+
+interface PlaceholderProps {
+  size: AdBannerSize;
+  testID?: string;
+}
+
+export function AdPlaceholder({ size, testID }: PlaceholderProps) {
+  return (
+    <View
+      testID={testID ?? 'ad-placeholder'}
+      style={[
+        styles.placeholder,
+        { width: size.width, height: size.height },
+      ]}
+      accessibilityLabel="Advertisement placeholder"
+      accessibilityRole="none"
+    >
+      <Text style={styles.placeholderText}>Ad Space — {size.label}</Text>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Native AdMob banner (with graceful fallback)
+// ---------------------------------------------------------------------------
+
+interface NativeAdBannerProps {
+  size: AdBannerSize;
+  testID?: string;
+}
+
+function NativeAdBanner({ size, testID }: NativeAdBannerProps) {
+  const [sdkAvailable, setSdkAvailable] = useState<boolean | null>(null);
+  const [AdMobBanner, setAdMobBanner] = useState<React.ComponentType<any> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAdMob() {
+      try {
+        const mod = await import('react-native-google-mobile-ads');
+        if (!cancelled) {
+          setAdMobBanner(() => mod.BannerAd);
+          setSdkAvailable(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setSdkAvailable(false);
+        }
+      }
+    }
+
+    loadAdMob();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Still loading SDK check
+  if (sdkAvailable === null) {
+    return <AdPlaceholder size={size} testID={testID} />;
+  }
+
+  // SDK not available (Expo Go, dev builds without native modules)
+  if (!sdkAvailable || !AdMobBanner) {
+    return <AdPlaceholder size={size} testID={testID} />;
+  }
+
+  // SDK available — render real AdMob banner
+  const adUnitId = getBannerAdUnitId();
+  const bannerSize = Platform.OS === 'ios' || Platform.OS === 'android'
+    ? `${size.label}`
+    : 'BANNER';
+
+  return (
+    <View testID={testID ?? 'ad-banner-native'} style={styles.nativeContainer}>
+      <AdMobBanner
+        unitId={adUnitId}
+        size={bannerSize}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        onAdFailedToLoad={(error: Error) => {
+          console.warn('[AdBanner] Failed to load ad:', error.message);
+        }}
+      />
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  placeholder: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    overflow: 'hidden',
+  },
+  placeholderText: {
+    fontSize: 12,
+    color: '#9E9E9E',
+    fontWeight: '500',
+  },
+  nativeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+});
+
+export default AdBanner;
