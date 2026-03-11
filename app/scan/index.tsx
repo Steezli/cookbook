@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import { uploadScanPhotosWithValidation, ScanUploadResult } from '@/features/scan/scan-upload';
+import { RecentScans } from '@/features/scan/RecentScans';
 import {
   fontFamilyDisplay,
   fontFamilyBody,
@@ -176,11 +177,19 @@ export default function ScanUploadScreen() {
           Upload photos of a recipe to automatically extract ingredients and instructions
         </Text>
 
+        {/* Main content: upload + recent scans */}
+        <View
+          style={{
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 24 : 32,
+          }}
+        >
+
         {/* Upload Zone */}
         <View
           style={{
-            alignSelf: isMobile ? 'stretch' : 'center',
-            width: isMobile ? '100%' : '100%',
+            flex: isMobile ? undefined : 1,
+            width: isMobile ? '100%' : undefined,
             maxWidth: uploadZoneMaxWidth,
           }}
         >
@@ -505,6 +514,18 @@ export default function ScanUploadScreen() {
               </View>
             )}
         </View>
+
+        {/* Recent Scans */}
+        <View
+          style={{
+            flex: isMobile ? undefined : 1,
+            maxWidth: isMobile ? undefined : 400,
+          }}
+        >
+          <RecentScans limit={5} />
+        </View>
+
+        </View>{/* end main content row/column */}
       </ScrollView>
     </PageContainer>
   );

@@ -129,6 +129,7 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
 
     let channel: ReturnType<typeof subscribeToJob> | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
     const loadPhotos = async (jobId: string) => {
       try {
@@ -161,6 +162,10 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
+      }
+      if (pollIntervalId) {
+        clearInterval(pollIntervalId);
+        pollIntervalId = null;
       }
     };
 
@@ -211,6 +216,21 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
             setLoading(false);
           }
         });
+
+        // Polling fallback: Supabase Realtime can silently fail to deliver events.
+        // Poll every 4 seconds as a safety net alongside the subscription.
+        pollIntervalId = setInterval(async () => {
+          try {
+            const polledDraft = await scanDraftService.getDraftByJobId(draftId, userId);
+            if (polledDraft) {
+              unsubscribe();
+              setJobStatus('completed');
+              await finalizeDraft(polledDraft);
+            }
+          } catch {
+            // Ignore polling errors — subscription or next poll will handle it
+          }
+        }, 4000);
       } catch (err) {
         console.error('Failed to load draft:', err);
         setError(err instanceof Error ? err.message : 'Failed to load draft');
