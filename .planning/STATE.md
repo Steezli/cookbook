@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 12 (Remaining Screens)
-Plan: 12-10 — COMPLETE
-Status: Phase 12 gap closure complete — 12-10 done (signup text link, collections web alerts, Supabase Dashboard config); 12-11 pending (migration deployment to remote Supabase awaits user action)
-Last activity: 2026-03-10 — 12-10 complete: signup text link, collections web-compatible alerts, Supabase Dashboard Site URL updated
+Plan: 12-11 — COMPLETE
+Status: Phase 12 fully complete — all gap closure plans done; 12-11 search_path migration deployed to remote Supabase, family invite RPC unblocked, legacy ingredient unit conversion live
+Last activity: 2026-03-10 — 12-11 complete: search_path migration deployed, UAT Tests 9 and 15 resolved
 
 Progress: [██████████] 100%
 

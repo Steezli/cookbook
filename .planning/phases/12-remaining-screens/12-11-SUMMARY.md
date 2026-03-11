@@ -52,7 +52,7 @@ completed: 2026-03-10
 - **Duration:** ~2 min
 - **Started:** 2026-03-10T23:04:55Z
 - **Completed:** 2026-03-10T23:06:16Z
-- **Tasks:** 1 of 2 complete (Task 2 is a human-action checkpoint: deploy migration to remote Supabase)
+- **Tasks:** 2 of 2 complete
 - **Files modified:** 3
 
 ## Accomplishments
@@ -67,8 +67,7 @@ completed: 2026-03-10
 Each task was committed atomically:
 
 1. **Task 1: Migration for RPC search_path + parseIngredient fallback** - `ec8d753` (fix)
-
-**Plan metadata:** (pending — Task 2 awaits human deployment of migration)
+2. **Task 2: Deploy search_path migration to remote Supabase** - (manual deployment confirmed by user)
 
 ## Files Created/Modified
 
@@ -88,15 +87,9 @@ None - plan executed exactly as written.
 
 None.
 
-## User Setup Required
+## Deployment
 
-**Task 2 requires manual deployment.** Apply the migration to the remote Supabase instance using one of:
-- CLI: `npx supabase db push`
-- Dashboard: Copy contents of `supabase/migrations/20260310100000_fix_rpc_search_path.sql` into Supabase Dashboard SQL Editor and run
-
-After deploying, verify:
-1. Family invite: navigate to a family, tap "Invite Members", enter an email — should succeed
-2. Unit preference: toggle Imperial/Metric on Profile, navigate to a recipe with legacy plain-text ingredients — display should change
+Migration deployed to remote Supabase (confirmed by user). Family invite RPC and legacy ingredient unit conversion are now live.
 
 ## Next Phase Readiness
 
