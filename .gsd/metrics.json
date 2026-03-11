@@ -307,6 +307,96 @@
       "toolCalls": 0,
       "assistantMessages": 15,
       "userMessages": 0
+    },
+    {
+      "type": "reassess-roadmap",
+      "id": "M002/S02",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773258167122,
+      "finishedAt": 1773258205307,
+      "tokens": {
+        "input": 4,
+        "output": 1103,
+        "cacheRead": 63497,
+        "cacheWrite": 12414,
+        "total": 77018
+      },
+      "cost": 0.136931,
+      "toolCalls": 0,
+      "assistantMessages": 2,
+      "userMessages": 0
+    },
+    {
+      "type": "research-slice",
+      "id": "M002/S03",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773258205308,
+      "finishedAt": 1773258574409,
+      "tokens": {
+        "input": 37,
+        "output": 10532,
+        "cacheRead": 2003151,
+        "cacheWrite": 48914,
+        "total": 2062634
+      },
+      "cost": 1.5707730000000002,
+      "toolCalls": 0,
+      "assistantMessages": 35,
+      "userMessages": 0
+    },
+    {
+      "type": "plan-slice",
+      "id": "M002/S03",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773258574410,
+      "finishedAt": 1773258762251,
+      "tokens": {
+        "input": 14,
+        "output": 7250,
+        "cacheRead": 578982,
+        "cacheWrite": 30116,
+        "total": 616362
+      },
+      "cost": 0.659036,
+      "toolCalls": 0,
+      "assistantMessages": 12,
+      "userMessages": 0
+    },
+    {
+      "type": "execute-task",
+      "id": "M002/S03/T01",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773258762252,
+      "finishedAt": 1773258992650,
+      "tokens": {
+        "input": 19,
+        "output": 10706,
+        "cacheRead": 753436,
+        "cacheWrite": 26123,
+        "total": 790284
+      },
+      "cost": 0.8077317499999999,
+      "toolCalls": 0,
+      "assistantMessages": 17,
+      "userMessages": 0
+    },
+    {
+      "type": "execute-task",
+      "id": "M002/S03/T02",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773258992651,
+      "finishedAt": 1773259278004,
+      "tokens": {
+        "input": 46,
+        "output": 8186,
+        "cacheRead": 1865532,
+        "cacheWrite": 30288,
+        "total": 1904052
+      },
+      "cost": 1.326946,
+      "toolCalls": 0,
+      "assistantMessages": 42,
+      "userMessages": 1
     }
   ]
 }

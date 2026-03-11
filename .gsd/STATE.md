@@ -4,8 +4,9 @@
 
 ## M002: Production Polish — ACTIVE
 
-- Slices: 2/5
-- Status: S01, S02 complete and merged
-- Current: S03 (SEO Structured Data) — next up
-- Branch: gsd/M002/S02 (ready for merge)
-- Tests: 353 passing, zero TS errors
+- Slices: 3/5
+- Status: S01, S02, S03 complete and merged
+- Current: Ready for S04 (Production Ads + GDPR)
+- Branch: gsd/M002/S03
+- Tests: 415 passing, zero regressions
+- Next: Merge S03 to main, then start S04 (Production Ads + GDPR)

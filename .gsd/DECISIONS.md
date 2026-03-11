@@ -97,3 +97,25 @@
 - **Decision:** In multi-draft helpers, a draft is considered "saved" when its status field equals `'ready'` — matching the status set by `convertToRecipe()`
 - **Why:** Consistent with S01's domain model where `convertToRecipe` transitions a draft to `ready` status. No new status value needed.
 - **Trade-off:** If the status lifecycle changes upstream, the helpers need updating; mitigated by the test suite catching this
+
+## S03: SEO Structured Data
+
+### Pure functions in src/lib/seo/ over component-level logic
+- **Decision:** JSON-LD and meta tag generation lives in `src/lib/seo/` as pure functions (`generateRecipeJsonLd`, `generateRecipeMetaTags`, `minutesToIsoDuration`), not inline in the page component
+- **Why:** Pure functions are trivially testable in the Node.js Jest environment without React rendering. Keeps the page component clean. Functions can be reused if other pages need structured data later.
+- **Trade-off:** Extra module indirection; justified by testability and reuse
+
+### Client-side Head injection via expo-router/head (no static rendering)
+- **Decision:** Use `expo-router/head` (wraps `react-helmet-async`) for client-side `<head>` injection. Do not enable `web.output: "static"` in this slice.
+- **Why:** Static rendering requires `generateStaticParams` with a build-time Supabase query — a larger change. M002 Context explicitly accepts client-side JSON-LD: "start with client-side and verify with Search Console." The `Head` approach works identically when static rendering is later enabled.
+- **Trade-off:** Google may deprioritize client-rendered structured data; accepted risk per M002 scope
+
+### JSON roundtrip as undefined-value safety net
+- **Decision:** `generateRecipeJsonLd` runs `JSON.parse(JSON.stringify(result))` before returning, stripping any `undefined` values that would produce invalid JSON-LD.
+- **Why:** Conditional field assembly could accidentally leave `undefined` values. JSON roundtrip is a cheap, foolproof guard. Structured data validators reject `undefined` in JSON.
+- **Trade-off:** Marginal runtime cost; negligible for a function called once per page load
+
+### Production domain as canonical OG/meta URL
+- **Decision:** OG `url` and canonical page URL use `https://berven.app/recipe/{id}` (hardcoded production domain), not the current hostname.
+- **Why:** OG URLs should point to the canonical production URL regardless of the environment the page is rendered in. Prevents dev/staging URLs from leaking into social previews.
+- **Trade-off:** Means dev/staging social previews point to production; acceptable since social sharing is a production concern

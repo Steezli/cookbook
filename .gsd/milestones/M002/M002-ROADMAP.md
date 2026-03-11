@@ -55,7 +55,7 @@ This milestone is complete only when all are true:
   > After this: uploading a photo with 2+ recipes produces separate drafts for each; edge function detects and splits recipes; unit tests prove parsing logic
 - [x] **S02: Multi-Draft UX** `risk:medium` `depends:[S01]`
   > After this: draft review screen shows a list of drafts when a job produces multiple; each draft can be reviewed, edited, and saved as an independent recipe
-- [ ] **S03: SEO Structured Data** `risk:medium` `depends:[]`
+- [x] **S03: SEO Structured Data** `risk:medium` `depends:[]`
   > After this: public recipe detail pages include schema.org/Recipe JSON-LD; passes Google Rich Results Test; Open Graph and Twitter Card meta tags present
 - [ ] **S04: Production Ads + GDPR** `risk:medium` `depends:[]`
   > After this: ad config reads production unit IDs from environment; GDPR consent banner appears for EU users; consent state persists and gates personalized ads

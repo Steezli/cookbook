@@ -256,6 +256,15 @@ Cursor-based pagination for public recipe listing
 
 A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. S01 contract-verified the data layer; S02 completes the UI layer (draft list, per-draft review/edit/save, batch save, RecentScans badges). End-to-end proof with real photos requires S05 UAT.
 
+### SEO-01 — Recipe structured data markup for search engine indexing
+
+- Status: active
+- Class: core-capability
+- Source: M002 roadmap
+- Primary Slice: M002/S03
+
+Public recipe detail pages include valid schema.org/Recipe JSON-LD structured data generated from real recipe data. Client-side rendered via expo-router/head. 62 unit tests prove generation logic; browser verification confirms runtime rendering. Google Rich Results Test validation deferred to S05 UAT (requires production URL).
+
 ## Deferred
 
 ## Out of Scope

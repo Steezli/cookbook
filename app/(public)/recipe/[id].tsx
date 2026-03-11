@@ -2,15 +2,19 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import Head from 'expo-router/head';
 import { UtensilsCrossed } from 'lucide-react-native';
 
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import { generateRecipeJsonLd } from '@/lib/seo/json-ld';
+import { generateRecipeMetaTags } from '@/lib/seo/meta-tags';
 import { PublicDetailNavBar } from '@/components/public/PublicNavHeader';
 import AdSlot from '@/components/public/AdSlot';
 import { getRecipeById } from '@/features/recipes/api';
@@ -130,6 +134,33 @@ export default function PublicRecipeDetail() {
     ? ingredients
     : ingredients.slice(0, 3);
   const hiddenCount = ingredients.length - 3;
+
+  // -------------------------------------------------------------------------
+  // SEO head (web only)
+  // -------------------------------------------------------------------------
+
+  function renderSeoHead() {
+    if (Platform.OS !== 'web') return null;
+
+    const pageUrl = `https://berven.app/recipe/${r.id}`;
+    const jsonLd = generateRecipeJsonLd(r, author, heroUrl);
+    const metaTags = generateRecipeMetaTags(r, heroUrl, pageUrl);
+
+    return (
+      <Head>
+        <title>{r.title} | Berven</title>
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+        {metaTags.map((tag, i) => (
+          <meta
+            key={i}
+            {...(tag.property ? { property: tag.property } : {})}
+            {...(tag.name ? { name: tag.name } : {})}
+            content={tag.content}
+          />
+        ))}
+      </Head>
+    );
+  }
 
   // -------------------------------------------------------------------------
   // Shared sub-renders
@@ -465,6 +496,7 @@ export default function PublicRecipeDetail() {
   if (breakpoint === 'web') {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage }}>
+        {renderSeoHead()}
         <PublicDetailNavBar onBack={() => router.back()} />
         <ScrollView
           contentContainerStyle={{
@@ -528,6 +560,7 @@ export default function PublicRecipeDetail() {
 
   return (
     <View style={{ flex: 1, backgroundColor: bgPage }}>
+      {renderSeoHead()}
       <PublicDetailNavBar onBack={() => router.back()} />
       <ScrollView>
         {renderHero()}
