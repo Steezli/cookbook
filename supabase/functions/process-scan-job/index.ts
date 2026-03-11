@@ -24,6 +24,7 @@ interface InlineImage {
 interface ScanResult {
   rawText: string
   confidence: number
+  sourceImageIndex?: number
   extracted: {
     title?: string
     ingredients?: { name: string; amount: string; unit: string; preparation?: string }[]
@@ -42,8 +43,9 @@ interface ScanResult {
 const RECIPE_JSON_SCHEMA = `{
   "recipes": [
     {
-      "rawText": "the complete text you read from the image(s), preserving original formatting",
+      "rawText": "the complete text you read from the image for this recipe, preserving original formatting",
       "confidence": 0.0 to 1.0,
+      "sourceImageIndex": 1,
       "title": "recipe title",
       "ingredients": [
         { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
@@ -62,7 +64,9 @@ const COMMON_INSTRUCTIONS = `Important:
 - If prep/cook time or servings aren't mentioned, use null
 - Include ALL ingredients and ALL instructions, don't summarize
 - confidence should reflect how legible the image was and how complete the extraction is
+- sourceImageIndex is the 1-based index of the image this recipe was found in
 - Return at most 5 recipes per response. If you detect more than 5, return the 5 most complete ones.
+- Do NOT return the same recipe twice. Each recipe in the array must be a distinct recipe with its own title.
 - Always wrap your response in the { "recipes": [...] } format, even for a single recipe.`
 
 /**
@@ -70,12 +74,26 @@ const COMMON_INSTRUCTIONS = `Important:
  * inputs, always requests the array-wrapped JSON format for consistent parsing.
  */
 function buildClaudePrompt(imageCount: number): string {
-  const intro =
-    imageCount > 1
-      ? `These ${imageCount} photos may contain one or more recipes (multiple pages or angles). Read ALL the text from every image. If you detect multiple distinct recipes, return each one separately.`
-      : `This is a photo of a recipe. Read ALL the text visible in the image. If the photo contains more than one recipe, return each one separately.`
+  if (imageCount <= 1) {
+    return `This is a photo of a recipe. Read ALL the text visible in the image. If the photo contains more than one recipe (e.g. two recipes on one page), return each one separately as a distinct entry in the recipes array. Set sourceImageIndex to 1 for all recipes.
 
-  return `${intro}
+Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
+
+${RECIPE_JSON_SCHEMA}
+
+${COMMON_INSTRUCTIONS}`
+  }
+
+  return `You are looking at ${imageCount} separate photos of recipe pages. The images are labeled Image 1 through Image ${imageCount} in the order they were provided.
+
+IMPORTANT — treat each image independently:
+- Each image is a SEPARATE page that may contain one or more recipes.
+- Do NOT combine content across images unless text explicitly continues from one image to the next (e.g. "continued on next page").
+- A single image may contain multiple recipes — return each as a separate entry.
+- Set sourceImageIndex to the 1-based image number where each recipe was found.
+- Every distinct recipe across all images should appear exactly once in your response.
+
+Read ALL the text from every image. Return each distinct recipe as its own entry in the recipes array.
 
 Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
 
@@ -104,6 +122,7 @@ function parseSingleRecipe(parsed: any): ScanResult {
   return {
     rawText: parsed.rawText || '',
     confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
+    sourceImageIndex: typeof parsed.sourceImageIndex === 'number' ? parsed.sourceImageIndex : undefined,
     extracted: {
       title: parsed.title || undefined,
       ingredients: Array.isArray(parsed.ingredients)
@@ -157,6 +176,62 @@ function parseMultiScanResult(parsed: any): ScanResult[] {
   }
 
   return []
+}
+
+// ---------------------------------------------------------------------------
+// Deduplication
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize a title for fuzzy comparison: lowercase, strip punctuation and
+ * extra whitespace.
+ */
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Remove likely-duplicate recipes from a result set. Two recipes are
+ * considered duplicates when their normalized titles match exactly.
+ * When duplicates are found, the one with higher confidence wins.
+ */
+function deduplicateResults(
+  results: ScanResult[]
+): { deduplicated: ScanResult[]; removedCount: number } {
+  if (results.length <= 1) {
+    return { deduplicated: results, removedCount: 0 }
+  }
+
+  const seen = new Map<string, ScanResult>()
+
+  for (const r of results) {
+    const title = r.extracted.title || ''
+    const key = normalizeTitle(title)
+
+    if (!key) {
+      seen.set(`__untitled_${seen.size}`, r)
+      continue
+    }
+
+    const existing = seen.get(key)
+    if (existing) {
+      if (r.confidence > existing.confidence) {
+        seen.set(key, r)
+      }
+    } else {
+      seen.set(key, r)
+    }
+  }
+
+  const deduplicated = Array.from(seen.values())
+  return {
+    deduplicated,
+    removedCount: results.length - deduplicated.length,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +309,18 @@ serve(async (req) => {
         throw new Error('Claude response could not be parsed into any recipes')
       }
 
-      console.log(`Detected ${results.length} recipe(s) for job ${jobId}`)
+      const rawTitles = results.map(r => r.extracted.title || '(untitled)')
+      console.log(`Parsed ${results.length} recipe(s) for job ${jobId}: ${JSON.stringify(rawTitles)}`)
+
+      // Deduplicate — Claude sometimes returns the same recipe twice in multi-image scans
+      const { deduplicated, removedCount } = deduplicateResults(results)
+      if (removedCount > 0) {
+        console.warn(`Removed ${removedCount} duplicate recipe(s) for job ${jobId}`)
+      }
+      results = deduplicated
+
+      const finalTitles = results.map(r => r.extracted.title || '(untitled)')
+      console.log(`Detected ${results.length} recipe(s) for job ${jobId}: ${JSON.stringify(finalTitles)}`)
 
       // Insert one scan_drafts row per recipe with sequential draft_index
       for (let i = 0; i < results.length; i++) {
@@ -294,7 +380,8 @@ serve(async (req) => {
           throw new Error(`Draft insert failed for draft_index ${i}: ${draftError.message}`)
         }
 
-        console.log(`Inserted draft ${i + 1}/${results.length} for job ${jobId}`)
+        const sourceLabel = result.sourceImageIndex ? ` (from image ${result.sourceImageIndex})` : ''
+        console.log(`Inserted draft ${i + 1}/${results.length} for job ${jobId}: "${result.extracted.title || '(untitled)'}"${sourceLabel}`)
       }
 
       await supabase

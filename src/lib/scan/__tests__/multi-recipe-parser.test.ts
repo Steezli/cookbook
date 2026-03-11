@@ -2,6 +2,7 @@ import {
   parseSingleRecipe,
   parseMultiScanResult,
   buildScanPrompt,
+  deduplicateResults,
   ScanResult,
 } from '../multi-recipe-parser';
 
@@ -96,6 +97,21 @@ describe('parseSingleRecipe', () => {
     expect(ing.amount).toBe('');
     expect(ing.unit).toBe('');
     expect(ing.preparation).toBe('');
+  });
+
+  it('parses sourceImageIndex when present', () => {
+    const result = parseSingleRecipe(makeRecipe({ sourceImageIndex: 2 }));
+    expect(result.sourceImageIndex).toBe(2);
+  });
+
+  it('sourceImageIndex is undefined when missing', () => {
+    const result = parseSingleRecipe(makeRecipe());
+    expect(result.sourceImageIndex).toBeUndefined();
+  });
+
+  it('sourceImageIndex is undefined when not a number', () => {
+    const result = parseSingleRecipe(makeRecipe({ sourceImageIndex: 'first' }));
+    expect(result.sourceImageIndex).toBeUndefined();
   });
 });
 
@@ -221,6 +237,108 @@ describe('parseMultiScanResult', () => {
 });
 
 // ---------------------------------------------------------------------------
+// deduplicateResults
+// ---------------------------------------------------------------------------
+
+describe('deduplicateResults', () => {
+  it('returns same array when no duplicates', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: 'Pancakes', confidence: 0.9 })),
+      parseSingleRecipe(makeRecipe({ title: 'Waffles', confidence: 0.85 })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(2);
+    expect(removedCount).toBe(0);
+  });
+
+  it('removes exact title duplicates, keeping higher confidence', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: 'Pancakes', confidence: 0.7 })),
+      parseSingleRecipe(makeRecipe({ title: 'Pancakes', confidence: 0.95 })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(1);
+    expect(removedCount).toBe(1);
+    expect(deduplicated[0].confidence).toBe(0.95);
+  });
+
+  it('normalizes case and punctuation for comparison', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: "Grandma's Cookies!", confidence: 0.9 })),
+      parseSingleRecipe(makeRecipe({ title: 'grandmas cookies', confidence: 0.8 })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(1);
+    expect(removedCount).toBe(1);
+    expect(deduplicated[0].confidence).toBe(0.9);
+  });
+
+  it('preserves untitled recipes (cannot deduplicate)', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: undefined })),
+      parseSingleRecipe(makeRecipe({ title: undefined })),
+      parseSingleRecipe(makeRecipe({ title: 'Pancakes' })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(3);
+    expect(removedCount).toBe(0);
+  });
+
+  it('handles empty array', () => {
+    const { deduplicated, removedCount } = deduplicateResults([]);
+    expect(deduplicated).toHaveLength(0);
+    expect(removedCount).toBe(0);
+  });
+
+  it('handles single-element array', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: 'Solo' })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(1);
+    expect(removedCount).toBe(0);
+  });
+
+  it('handles three-way duplicates', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: 'Cookies', confidence: 0.6 })),
+      parseSingleRecipe(makeRecipe({ title: 'Cookies', confidence: 0.9 })),
+      parseSingleRecipe(makeRecipe({ title: 'Cookies', confidence: 0.7 })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(1);
+    expect(removedCount).toBe(2);
+    expect(deduplicated[0].confidence).toBe(0.9);
+  });
+
+  it('keeps distinct recipes while removing duplicates', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: 'Pot Roast', confidence: 0.9 })),
+      parseSingleRecipe(makeRecipe({ title: 'Turkey Stir Fry', confidence: 0.85 })),
+      parseSingleRecipe(makeRecipe({ title: 'Turkey Stir Fry', confidence: 0.7 })),
+      parseSingleRecipe(makeRecipe({ title: 'Fried Chicken', confidence: 0.88 })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(3);
+    expect(removedCount).toBe(1);
+    const titles = deduplicated.map(r => r.extracted.title);
+    expect(titles).toContain('Pot Roast');
+    expect(titles).toContain('Turkey Stir Fry');
+    expect(titles).toContain('Fried Chicken');
+  });
+
+  it('empty-string title treated as untitled (not deduped)', () => {
+    const results: ScanResult[] = [
+      parseSingleRecipe(makeRecipe({ title: '' })),
+      parseSingleRecipe(makeRecipe({ title: '' })),
+    ];
+    const { deduplicated, removedCount } = deduplicateResults(results);
+    expect(deduplicated).toHaveLength(2);
+    expect(removedCount).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildScanPrompt
 // ---------------------------------------------------------------------------
 
@@ -230,19 +348,29 @@ describe('buildScanPrompt', () => {
     expect(prompt).toMatch(/photo/i);
   });
 
-  it('single-image prompt does NOT contain "multiple pages" language', () => {
+  it('single-image prompt does NOT contain "separate photos" language', () => {
     const prompt = buildScanPrompt(1);
-    expect(prompt).not.toMatch(/multiple pages/i);
+    expect(prompt).not.toMatch(/separate photos/i);
   });
 
-  it('multi-image prompt contains multi-image language', () => {
+  it('multi-image prompt contains separate photos language', () => {
     const prompt = buildScanPrompt(3);
-    expect(prompt).toMatch(/multiple pages/i);
+    expect(prompt).toMatch(/separate photos/i);
   });
 
   it('multi-image prompt references the image count', () => {
     const prompt = buildScanPrompt(3);
     expect(prompt).toContain('3');
+  });
+
+  it('multi-image prompt instructs to treat images independently', () => {
+    const prompt = buildScanPrompt(2);
+    expect(prompt).toMatch(/treat each image independently/i);
+  });
+
+  it('multi-image prompt warns against combining across images', () => {
+    const prompt = buildScanPrompt(2);
+    expect(prompt).toMatch(/do not combine/i);
   });
 
   it('both prompts contain recipes array schema', () => {
@@ -265,7 +393,6 @@ describe('buildScanPrompt', () => {
     const single = buildScanPrompt(1);
     const multi = buildScanPrompt(3);
 
-    // Should tell Claude to always wrap in recipes array
     expect(single).toMatch(/always wrap/i);
     expect(multi).toMatch(/always wrap/i);
   });
@@ -276,5 +403,20 @@ describe('buildScanPrompt', () => {
     expect(prompt).toContain('"confidence"');
     expect(prompt).toContain('"ingredients"');
     expect(prompt).toContain('"instructions"');
+  });
+
+  it('schema includes sourceImageIndex', () => {
+    const prompt = buildScanPrompt(1);
+    expect(prompt).toContain('"sourceImageIndex"');
+  });
+
+  it('instructions mention sourceImageIndex', () => {
+    const prompt = buildScanPrompt(1);
+    expect(prompt).toMatch(/sourceImageIndex/);
+  });
+
+  it('instructions warn against returning duplicates', () => {
+    const prompt = buildScanPrompt(1);
+    expect(prompt).toMatch(/same recipe twice/i);
   });
 });
