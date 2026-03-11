@@ -84,3 +84,91 @@ export async function getAccessibleFamilies(): Promise<{ id: string; name: strin
   if (error) throw error;
   return data || [];
 }
+
+// --- Public browsing (cursor-based pagination) ---
+
+export type PublicBrowseCursor = { page: number };
+
+export type PublicBrowseFilters = {
+  query?: string;
+  tag?: string; // single tag chip — ignored when 'All'
+  cursor?: PublicBrowseCursor;
+  pageSize?: number; // default 20
+};
+
+export type PublicBrowsePage = {
+  recipes: Recipe[];
+  hasMore: boolean;
+  nextCursor: PublicBrowseCursor | null;
+};
+
+/**
+ * Search public recipes with cursor-based pagination.
+ *
+ * Fetches pageSize+1 rows to detect hasMore without a separate count query.
+ * Always filters visibility='public' and orders by created_at desc.
+ */
+export async function searchPublicRecipes(
+  filters: PublicBrowseFilters = {}
+): Promise<PublicBrowsePage> {
+  const pageSize = filters.pageSize ?? 20;
+  const page = filters.cursor?.page ?? 0;
+  const from = page * pageSize;
+  const to = from + pageSize; // Supabase range is inclusive, so this fetches pageSize+1 rows
+
+  let query = supabase
+    .from("recipes")
+    .select("*")
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false });
+
+  // Title search (case-insensitive substring match)
+  if (filters.query && filters.query.trim()) {
+    query = query.ilike("title", `%${filters.query.trim()}%`);
+  }
+
+  // Tag filter (single tag, ignored for 'All')
+  if (filters.tag && filters.tag !== "All") {
+    query = query.overlaps("tags", [filters.tag]);
+  }
+
+  query = query.range(from, to);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  const items = (data as Recipe[]) || [];
+  const hasMore = items.length > pageSize;
+  const recipes = hasMore ? items.slice(0, pageSize) : items;
+  const nextCursor = hasMore ? { page: page + 1 } : null;
+
+  return { recipes, hasMore, nextCursor };
+}
+
+/**
+ * Get exact count of public recipes matching filters.
+ *
+ * Uses head:true + count:'exact' for efficiency (no row data transferred).
+ */
+export async function getPublicRecipeCount(
+  filters: { query?: string; tag?: string } = {}
+): Promise<number> {
+  let query = supabase
+    .from("recipes")
+    .select("id", { count: "exact", head: true })
+    .eq("visibility", "public");
+
+  if (filters.query && filters.query.trim()) {
+    query = query.ilike("title", `%${filters.query.trim()}%`);
+  }
+
+  if (filters.tag && filters.tag !== "All") {
+    query = query.overlaps("tags", [filters.tag]);
+  }
+
+  const { count, error } = await query;
+
+  if (error) throw error;
+  return count ?? 0;
+}

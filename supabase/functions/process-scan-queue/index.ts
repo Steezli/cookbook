@@ -55,54 +55,18 @@ serve(async (req) => {
 
     // Process job
     try {
-      // Call OCR service (placeholder for now)
-      const { data: ocrResult, error: ocrError } = await supabase.functions.invoke('ocr-extract', {
-        body: {
-          imageUrl: job.photo_url,
-          jobId: job.id
-        }
+      // Call process-scan-job which handles OCR + parsing via Claude
+      // Job is already in 'processing' status from above
+      const { data: result, error: processError } = await supabase.functions.invoke('process-scan-job', {
+        body: { jobId: job.id }
       });
 
-      if (ocrError) {
-        throw new Error(`OCR extraction failed: ${ocrError.message}`);
+      if (processError) {
+        throw new Error(`Scan processing failed: ${processError.message}`);
       }
-
-      // Create scan draft with results
-      const { error: draftError } = await supabase
-        .from('scan_drafts')
-        .insert({
-          job_id: job.id,
-          user_id: job.user_id,
-          raw_text: ocrResult.rawText || '',
-          ocr_confidence_score: ocrResult.confidence || 0.5,
-          title: ocrResult.title || '',
-          ingredients: ocrResult.ingredients || [],
-          instructions: ocrResult.instructions || [],
-          prep_time_minutes: ocrResult.prepTime || null,
-          cook_time_minutes: ocrResult.cookTime || null,
-          servings: ocrResult.servings || null,
-          status: 'draft',
-          confidence_level: ocrResult.confidence > 0.8 ? 'high' : 
-                         ocrResult.confidence > 0.6 ? 'medium' : 'low'
-        });
-
-      if (draftError) {
-        console.error('Failed to create scan draft:', draftError);
-        // Don't fail the job - update status with error
-        throw new Error(`Failed to save scan results: ${draftError.message}`);
-      }
-
-      // Mark job as completed
-      await supabase
-        .from('scan_jobs')
-        .update({ 
-          status: 'completed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', job.id);
 
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           message: 'Job processed successfully',
           jobId: job.id,
           draftCreated: true

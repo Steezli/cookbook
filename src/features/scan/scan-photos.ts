@@ -16,7 +16,7 @@ export function getScanPhotoUrl(storagePath: string): string {
   const { data } = supabase.storage
     .from("scan-photos")
     .getPublicUrl(storagePath);
-  
+
   return data.publicUrl;
 }
 
@@ -29,7 +29,81 @@ export function getScanThumbnailUrl(storagePath: string, width: number = 400): s
 }
 
 /**
- * Upload multiple photos for scanning (React Native compatible)
+ * Read a file URI as a base64 string.
+ * Works on both web (fetch → arrayBuffer) and React Native (FileReader on XHR blob).
+ */
+async function readFileAsBase64(uri: string): Promise<{ base64: string; mediaType: string }> {
+  if (Platform.OS === "web") {
+    const response = await fetch(uri);
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    const mediaType = detectMediaType(bytes);
+    const base64 = uint8ArrayToBase64(bytes);
+    return { base64, mediaType };
+  }
+
+  // React Native (iOS/Android): read blob via XHR, then use FileReader
+  const blob: Blob = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => resolve(xhr.response);
+    xhr.onerror = () => reject(new Error('Failed to read image file'));
+    xhr.responseType = 'blob';
+    xhr.open('GET', uri, true);
+    xhr.send(null);
+  });
+
+  const base64: string = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      // Strip the "data:...;base64," prefix
+      const b64 = dataUrl.split(',')[1];
+      if (!b64) {
+        reject(new Error('FileReader produced empty base64'));
+        return;
+      }
+      resolve(b64);
+    };
+    reader.onerror = () => reject(new Error('FileReader failed'));
+    reader.readAsDataURL(blob);
+  });
+
+  // Detect media type from the first bytes (decode a small prefix)
+  const sampleBytes = Uint8Array.from(atob(base64.slice(0, 16)), c => c.charCodeAt(0));
+  const mediaType = detectMediaType(sampleBytes);
+
+  return { base64, mediaType };
+}
+
+/**
+ * Detect image media type from magic bytes.
+ */
+function detectMediaType(bytes: Uint8Array): string {
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return 'image/png';
+  if (bytes[0] === 0x47 && bytes[1] === 0x49) return 'image/gif';
+  if (bytes[0] === 0x52 && bytes[1] === 0x49) return 'image/webp';
+  return 'image/jpeg';
+}
+
+/**
+ * Convert Uint8Array to base64 string (chunk-safe).
+ */
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+/**
+ * Upload multiple photos for scanning (React Native compatible).
+ *
+ * On native platforms, images are sent as base64 directly to the edge function
+ * to avoid Supabase Storage upload issues (0-byte files on iOS).
+ * On web, images are still uploaded to Storage for URL-based processing.
  */
 export async function uploadScanPhotos(
   files: { uri: string; name: string; type: string }[],
@@ -47,39 +121,38 @@ export async function uploadScanPhotos(
     enableCompression = true
   } = options;
 
-  // Generate base timestamp for this batch
+  // --- Native path: skip Storage, send base64 inline ---
+  if (Platform.OS !== "web") {
+    return uploadScanPhotosInline(files);
+  }
+
+  // --- Web path: upload to Storage as before ---
   const batchTimestamp = Date.now();
-  const uploadedPhotos: Array<{ photoUrl: string; storagePath: string }> = [];
+  const uploadedPhotos: Array<{ photoUrl: string; storagePath: string; index: number }> = [];
   const failedUploads: Array<{ index: number; name: string; error: string }> = [];
 
-  // Upload photos with controlled concurrency (max 3 simultaneous)
   const MAX_CONCURRENT = 3;
   for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
     const batch = files.slice(i, i + MAX_CONCURRENT);
     const batchPromises = batch.map(async (file, batchIndex) => {
       const fileIndex = i + batchIndex;
       try {
-        // Generate filename with sequence number
         const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const sequenceNum = String(fileIndex + 1).padStart(3, '0');
         const fileName = `${batchTimestamp}-${sequenceNum}.${fileExt}`;
         const storagePath = `scans/${fileName}`;
 
-        let fileData: any = file.uri;
+        let fileData: ArrayBuffer;
 
-        // For web platform, convert to blob if needed
-        if (Platform.OS === "web") {
-          if (enableCompression) {
-            const compressedFile = await compressImageWeb(file, maxWidth, maxHeight, quality);
-            fileData = compressedFile.uri;
-          } else {
-            const response = await fetch(file.uri);
-            const blob = await response.blob();
-            fileData = blob;
-          }
+        if (enableCompression) {
+          const compressedFile = await compressImageWeb(file, maxWidth, maxHeight, quality);
+          const response = await fetch(compressedFile.uri);
+          fileData = await response.arrayBuffer();
+        } else {
+          const response = await fetch(file.uri);
+          fileData = await response.arrayBuffer();
         }
 
-        // Upload to scan-photos bucket
         const { error: uploadError } = await supabase.storage
           .from("scan-photos")
           .upload(storagePath, fileData, {
@@ -89,13 +162,11 @@ export async function uploadScanPhotos(
 
         if (uploadError) throw uploadError;
 
-        // Get public URL for the scan photo
         const { data: urlData } = supabase.storage
           .from("scan-photos")
           .getPublicUrl(storagePath);
 
         const photoUrl = urlData.publicUrl;
-
         return { photoUrl, storagePath, index: fileIndex };
       } catch (error) {
         console.error(`Failed to upload photo ${fileIndex + 1}:`, error);
@@ -109,43 +180,91 @@ export async function uploadScanPhotos(
     });
 
     const batchResults = await Promise.all(batchPromises);
-
-    // Collect successful uploads
     batchResults.forEach(result => {
-      if (result) {
-        uploadedPhotos.push(result);
-      }
+      if (result) uploadedPhotos.push(result);
     });
 
     console.log(`Uploaded batch ${Math.floor(i / MAX_CONCURRENT) + 1}: ${batchResults.filter(r => r).length}/${batch.length} successful`);
   }
 
-  // Check if we have at least one successful upload
   if (uploadedPhotos.length === 0) {
     throw new Error('All photo uploads failed. Please try again.');
   }
 
-  // Sort by index to maintain order
-  uploadedPhotos.sort((a, b) => a.index! - b.index!);
+  uploadedPhotos.sort((a, b) => a.index - b.index);
   const photoUrls = uploadedPhotos.map(p => p.photoUrl);
 
-  // Create multi-photo scan job
   const job = await createMultiPhotoScanJob(photoUrls);
 
-  // Trigger queue processing (fire-and-forget)
-  supabase.functions.invoke('queue-worker').catch((err: unknown) => {
-    console.warn('Queue trigger failed (will retry on next poll):', err);
+  supabase.functions.invoke('process-scan-job', {
+    body: { jobId: job.id }
+  }).catch((err: unknown) => {
+    console.warn('Scan processing trigger failed:', err);
   });
 
-  // If some uploads failed, log warning
   if (failedUploads.length > 0) {
     console.warn(`${failedUploads.length} photo(s) failed to upload:`, failedUploads);
   }
 
-  return {
-    jobId: job.id,
-    photoUrls
-  };
+  return { jobId: job.id, photoUrls };
+}
+
+/**
+ * Native-only: read images as base64 and send them inline to the edge function.
+ * Avoids the 0-byte Supabase Storage upload bug on iOS.
+ * The edge function saves images to Storage server-side and updates photo_urls.
+ */
+async function uploadScanPhotosInline(
+  files: { uri: string; name: string; type: string }[]
+): Promise<{ jobId: string; photoUrls: string[] }> {
+  // Read all images as base64
+  const images: Array<{ base64: string; mediaType: string }> = [];
+  const failedReads: Array<{ index: number; name: string; error: string }> = [];
+
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const result = await readFileAsBase64(files[i].uri);
+      if (!result.base64 || result.base64.length < 100) {
+        throw new Error(`Base64 data too small (${result.base64?.length || 0} chars)`);
+      }
+      images.push(result);
+      console.log(`Read photo ${i + 1}: ${Math.round(result.base64.length / 1024)}KB base64, type: ${result.mediaType}`);
+    } catch (error) {
+      console.error(`Failed to read photo ${i + 1}:`, error);
+      failedReads.push({
+        index: i,
+        name: files[i].name,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  if (images.length === 0) {
+    throw new Error('Failed to read all photos. Please try again.');
+  }
+
+  // Create scan job with placeholder URLs — edge function will update with real URLs
+  const placeholderUrls = images.map((_, i) => `inline://photo-${i + 1}`);
+  const job = await createMultiPhotoScanJob(placeholderUrls);
+
+  // Send images inline to the edge function (it will save to Storage server-side)
+  supabase.functions.invoke('process-scan-job', {
+    body: {
+      jobId: job.id,
+      images: images.map(img => ({
+        base64: img.base64,
+        mediaType: img.mediaType,
+      })),
+    }
+  }).catch((err: unknown) => {
+    console.warn('Scan processing trigger failed:', err);
+  });
+
+  if (failedReads.length > 0) {
+    console.warn(`${failedReads.length} photo(s) failed to read:`, failedReads);
+  }
+
+  return { jobId: job.id, photoUrls: placeholderUrls };
 }
 
 /**
@@ -192,7 +311,12 @@ async function compressImageWeb(
 
       // Calculate new dimensions
       let { width, height } = img;
-      
+
+      if (!width || !height) {
+        reject(new Error('Invalid image dimensions'));
+        return;
+      }
+
       if (width > maxWidth || height > maxHeight) {
         const aspectRatio = width / height;
         
@@ -294,13 +418,15 @@ export async function deleteScanPhoto(jobId: string): Promise<void> {
   // Get all photo URLs (multi-photo or single)
   const photoUrls = job.photo_urls || [job.photo_url];
 
-  // Extract storage paths from URLs
-  const storagePaths = photoUrls.map(photoUrl => {
-    const url = new URL(photoUrl);
-    const pathParts = url.pathname.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-    return `scans/${fileName}`;
-  });
+  // Extract storage paths from URLs (skip inline:// placeholders)
+  const storagePaths = photoUrls
+    .filter((photoUrl: string) => !photoUrl.startsWith('inline://'))
+    .map((photoUrl: string) => {
+      const url = new URL(photoUrl);
+      const pathParts = url.pathname.split('/');
+      const fileName = pathParts[pathParts.length - 1];
+      return `scans/${fileName}`;
+    });
 
   // Delete all photos from storage
   if (storagePaths.length > 0) {

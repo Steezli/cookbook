@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { uploadScanPhoto, uploadScanPhotos, estimateImageQuality } from "./scan-photos";
 import { checkJobLimit } from "./scan-service";
@@ -40,10 +41,10 @@ export async function uploadScanPhotosWithValidation(
   options: ScanUploadOptions = {}
 ): Promise<MultiScanUploadResult> {
   try {
-    // Convert to consistent format
+    // Convert to consistent format — URL.createObjectURL only exists on web
     const normalizedFiles = files.map(file =>
       'uri' in file ? file : {
-        uri: URL.createObjectURL(file),
+        uri: Platform.OS === 'web' ? URL.createObjectURL(file) : '',
         name: file.name,
         type: file.type,
         size: file.size

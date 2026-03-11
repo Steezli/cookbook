@@ -1,9 +1,28 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
 
 import { isValidPassword } from "@/features/auth/password";
 import { supabase } from "@/lib/supabase";
+import {
+  accentGreen,
+  accentWarm,
+  bgCard,
+  borderDefault,
+  fontFamilyBody,
+  fontFamilyBodyBold,
+  fontFamilyBodyMedium,
+  fontFamilyDisplayBold,
+  fontSizeBase,
+  fontSizeSm,
+  fontSizeXs,
+  radiusMd,
+  radiusPill,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  white,
+} from "@/lib/tokens";
 
 function parseParamsFromHash(hash: string): Record<string, string> {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
@@ -11,6 +30,15 @@ function parseParamsFromHash(hash: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of params.entries()) out[k] = v;
   return out;
+}
+
+function showAlert(title: string, message?: string) {
+  if (Platform.OS === "web") {
+    window.alert(message ? `${title}\n\n${message}` : title);
+  } else {
+    const { Alert } = require("react-native");
+    Alert.alert(title, message);
+  }
 }
 
 export default function ResetPasswordScreen() {
@@ -21,6 +49,8 @@ export default function ResetPasswordScreen() {
   const [password, setPassword] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const hashParams = useMemo(() => {
     if (Platform.OS !== "web") return null;
@@ -31,7 +61,6 @@ export default function ResetPasswordScreen() {
   useEffect(() => {
     async function init() {
       try {
-        // For Supabase recovery links, web typically provides access/refresh tokens in the hash.
         const accessToken =
           (Platform.OS === "web" ? hashParams?.access_token : null) ??
           (typeof access_token === "string" ? access_token : null);
@@ -42,13 +71,13 @@ export default function ResetPasswordScreen() {
         if (accessToken && refreshToken) {
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
-            refresh_token: refreshToken
+            refresh_token: refreshToken,
           });
           if (error) throw error;
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Invalid reset link";
-        Alert.alert("Reset link error", msg);
+        showAlert("Reset link error", msg);
       } finally {
         setIsReady(true);
       }
@@ -58,23 +87,35 @@ export default function ResetPasswordScreen() {
   }, [hashParams, access_token, refresh_token]);
 
   async function onUpdatePassword() {
+    setErrorMsg(null);
+
     if (!isValidPassword(password)) {
-      Alert.alert(
-        "Password requirements",
-        "Use at least 8 characters and include a number or symbol."
-      );
+      setErrorMsg("Use at least 8 characters and include a number or symbol.");
       return;
     }
 
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      Alert.alert("Password updated", "You can now continue.");
-      router.replace("/");
+      if (error) {
+        // Supabase returns this message when the new password matches the old one
+        if (
+          error.message?.toLowerCase().includes("same password") ||
+          error.message?.toLowerCase().includes("different from the old password")
+        ) {
+          setErrorMsg("New password must be different from your current password.");
+          return;
+        }
+        throw error;
+      }
+      setIsSuccess(true);
+      // Navigate after a brief delay so user sees the success state
+      setTimeout(() => {
+        router.replace("/");
+      }, 2000);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Password update failed";
-      Alert.alert("Password update failed", msg);
+      setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,63 +123,139 @@ export default function ResetPasswordScreen() {
 
   if (!isReady) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Preparing…</Text>
+      <View style={{ flex: 1, padding: 24, justifyContent: "center", alignItems: "center", gap: 12 }}>
+        <ActivityIndicator size="large" color={accentWarm} />
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textSecondary }}>
+          Preparing...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isSuccess) {
+    return (
+      <View style={{ flex: 1, padding: 24, justifyContent: "center", alignItems: "center", gap: 16 }}>
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            backgroundColor: accentGreen + "20",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 28 }}>✓</Text>
+        </View>
+        <Text
+          style={{
+            fontFamily: fontFamilyDisplayBold,
+            fontSize: 22,
+            color: textPrimary,
+            textAlign: "center",
+          }}
+        >
+          Password updated
+        </Text>
+        <Text
+          style={{
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeBase,
+            color: textSecondary,
+            textAlign: "center",
+          }}
+        >
+          You're all set. Redirecting you now...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Choose a new password</Text>
+    <View style={{ flex: 1, padding: 24, gap: 16, justifyContent: "center", maxWidth: 440, alignSelf: "center", width: "100%" }}>
+      <Text
+        style={{
+          fontFamily: fontFamilyDisplayBold,
+          fontSize: 22,
+          color: textPrimary,
+          marginBottom: 4,
+        }}
+      >
+        Choose a new password
+      </Text>
 
-      <TextInput
-        autoCapitalize="none"
-        autoComplete="new-password"
-        placeholder="New password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-      <Text style={styles.hint}>8+ chars, must include a number or symbol.</Text>
+      <View style={{ gap: 6 }}>
+        <Text
+          style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs + 1, color: textPrimary }}
+        >
+          New Password
+        </Text>
+        <TextInput
+          autoCapitalize="none"
+          autoComplete="new-password"
+          placeholder="New password"
+          placeholderTextColor={textTertiary}
+          value={password}
+          onChangeText={(t) => {
+            setPassword(t);
+            setErrorMsg(null);
+          }}
+          secureTextEntry
+          style={{
+            height: 48,
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            borderWidth: 1,
+            borderColor: errorMsg ? accentWarm : borderDefault,
+            paddingHorizontal: 16,
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeBase,
+            color: textPrimary,
+          }}
+        />
+        <Text
+          style={{
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeSm - 1,
+            color: textTertiary,
+          }}
+        >
+          8+ characters, must include a number or symbol.
+        </Text>
+      </View>
+
+      {errorMsg && (
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeSm,
+            color: accentWarm,
+          }}
+        >
+          {errorMsg}
+        </Text>
+      )}
 
       <Pressable
         onPress={onUpdatePassword}
         disabled={isSubmitting}
-        style={({ pressed }) => [
-          styles.button,
-          (pressed || isSubmitting) && styles.buttonPressed
-        ]}
+        style={({ pressed }) => ({
+          height: 48,
+          backgroundColor: accentWarm,
+          borderRadius: radiusPill,
+          justifyContent: "center",
+          alignItems: "center",
+          opacity: pressed || isSubmitting ? 0.8 : 1,
+        })}
       >
-        <Text style={styles.buttonText}>
-          {isSubmitting ? "Updating…" : "Update password"}
-        </Text>
+        {isSubmitting ? (
+          <ActivityIndicator color={white} />
+        ) : (
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
+            Update password
+          </Text>
+        )}
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 12, justifyContent: "center" },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16
-  },
-  hint: { fontSize: 12, opacity: 0.7, marginTop: -6 },
-  button: {
-    marginTop: 6,
-    backgroundColor: "black",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  buttonPressed: { opacity: 0.8 },
-  buttonText: { color: "white", fontSize: 16, fontWeight: "600" }
-});
-

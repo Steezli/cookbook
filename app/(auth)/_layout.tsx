@@ -4,7 +4,7 @@ export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
-        headerTitle: "Account"
+        headerShown: false,
       }}
     />
   );

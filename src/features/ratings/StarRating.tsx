@@ -102,9 +102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  star: {
-    lineHeight: undefined, // Let the font determine line height
-  },
+  star: {},
   halfStarContainer: {
     position: 'relative',
   },

@@ -300,7 +300,7 @@ export function ScanJobList() {
                         {job.status === "completed" && (
                           <TouchableOpacity
                             style={styles.viewResultsButton}
-                            onPress={() => router.push(`/(scan)/draft/${job.id}`)}
+                            onPress={() => router.push(`/scan/draft/${job.id}`)}
                           >
                             <Text style={styles.viewResultsButtonText}>
                               View Scan Results →

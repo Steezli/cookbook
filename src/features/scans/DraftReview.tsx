@@ -1,9 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  Animated,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { router } from 'expo-router';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
 import { ParsedRecipe, FieldConfidence } from '@/lib/ai/recipe-parsing-service';
-import { useSession } from "@/features/auth/session";
+import { getJobPhotos, subscribeToJob } from '@/features/scan/scan-service';
+import { getScanPhotoUrl, getScanThumbnailUrl } from '@/features/scan/scan-photos';
+import { useSession } from '@/features/auth/session';
+import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import {
+  fontFamilyDisplay,
+  fontFamilyBody,
+  fontFamilyBodyMedium,
+  fontFamilyBodyBold,
+  fontSize2xl,
+  fontSizeXl,
+  fontSizeLg,
+  fontSizeBase,
+  fontSizeSm,
+  fontSizeXs,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  accentBlue,
+  accentCoral,
+  accentGreen,
+  bgPage,
+  bgCard,
+  borderDefault,
+  borderSubtle,
+  radiusMd,
+  radiusSm,
+  radiusPill,
+  white,
+  shadowSm,
+  shadowMd,
+  noPhotoBg,
+  noPhotoIcon,
+} from '@/lib/tokens';
 
 interface DraftReviewProps {
   draftId: string;
@@ -11,10 +53,10 @@ interface DraftReviewProps {
   onEdit?: () => void;
 }
 
-const getConfidenceStyle = (confidence: number): { bg: string; text: string } => {
-  if (confidence >= 0.85) return { bg: '#dcfce7', text: '#166534' };
-  if (confidence >= 0.65) return { bg: '#fef9c3', text: '#854d0e' };
-  return { bg: '#fef2f2', text: '#991b1b' };
+const getConfidenceColor = (confidence: number): { bg: string; text: string } => {
+  if (confidence >= 0.85) return { bg: '#DCFCE7', text: '#166534' };
+  if (confidence >= 0.65) return { bg: '#FEF9C3', text: '#854D0E' };
+  return { bg: '#FEF2F2', text: '#991B1B' };
 };
 
 const getConfidenceLabel = (confidence: number): string => {
@@ -23,92 +65,254 @@ const getConfidenceLabel = (confidence: number): string => {
   return 'Low';
 };
 
-const ConfidenceIndicator = ({
-  confidence,
-  field,
-}: {
-  confidence: number;
-  field: string;
-}) => {
-  const colorStyle = getConfidenceStyle(confidence);
+function ConfidenceBadge({ confidence, label }: { confidence: number; label?: string }) {
+  const color = getConfidenceColor(confidence);
   return (
-    <View style={styles.confidenceRow}>
-      <Text style={styles.confidenceField}>{field}</Text>
-      <View style={[styles.confidenceBadge, { backgroundColor: colorStyle.bg }]}>
-        <Text style={[styles.confidenceBadgeText, { color: colorStyle.text }]}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+      }}
+    >
+      {label && (
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeXs,
+            color: textSecondary,
+          }}
+        >
+          {label}
+        </Text>
+      )}
+      <View
+        style={{
+          backgroundColor: color.bg,
+          paddingHorizontal: 8,
+          paddingVertical: 3,
+          borderRadius: radiusPill,
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeXs,
+            color: color.text,
+          }}
+        >
           {getConfidenceLabel(confidence)} ({Math.round(confidence * 100)}%)
         </Text>
       </View>
     </View>
   );
-};
+}
 
 export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProps) {
   const { session, isLoading: authLoading } = useSession();
+  const { breakpoint } = useBreakpoint();
+  const isMobile = breakpoint === 'mobile';
+  const isSideBySide = breakpoint === 'tablet' || breakpoint === 'web';
+
   const [draft, setDraft] = useState<ScanDraft | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [jobStatus, setJobStatus] = useState<string>('checking');
   const [error, setError] = useState<string | null>(null);
 
+  // Animated value for mobile collapsible photo
+  const scrollY = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
+    if (!draftId || !session?.user?.id) return;
+
+    let channel: ReturnType<typeof subscribeToJob> | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let pollIntervalId: ReturnType<typeof setInterval> | null = null;
+
+    const loadPhotos = async (jobId: string) => {
+      try {
+        const photos = await getJobPhotos(jobId);
+        const urls = photos.map((photoUrl: string) => {
+          if (photoUrl.startsWith('http')) {
+            return photoUrl;
+          }
+          return getScanPhotoUrl(photoUrl);
+        });
+        setPhotoUrls(urls);
+      } catch (photoErr) {
+        console.warn('Failed to load scan photos:', photoErr);
+        // Don't fail the whole screen if photos fail to load
+      }
+    };
+
+    const finalizeDraft = async (draftData: ScanDraft) => {
+      setDraft(draftData);
+      onDraftUpdated?.(draftData);
+      await loadPhotos(draftData.jobId);
+      setLoading(false);
+    };
+
+    const unsubscribe = () => {
+      if (channel) {
+        channel.unsubscribe();
+        channel = null;
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (pollIntervalId) {
+        clearInterval(pollIntervalId);
+        pollIntervalId = null;
+      }
+    };
+
     const loadDraft = async () => {
       try {
         setLoading(true);
+        setJobStatus('checking');
         const userId = session!.user.id;
         const draftData = await scanDraftService.getDraftByJobId(draftId, userId);
 
-        if (!draftData) {
-          setError('Draft not found');
+        if (draftData) {
+          // Draft already exists — edge function has completed
+          setJobStatus('completed');
+          await finalizeDraft(draftData);
           return;
         }
 
-        setDraft(draftData);
-        onDraftUpdated?.(draftData);
+        // Draft not found yet — subscribe to job status changes and wait
+        setJobStatus('processing');
+
+        // Safety timeout: 60 seconds
+        timeoutId = setTimeout(() => {
+          unsubscribe();
+          setError('Processing is taking longer than expected. Please try again.');
+          setLoading(false);
+        }, 60000);
+
+        channel = subscribeToJob(draftId, async (job) => {
+          if (job.status === 'completed') {
+            unsubscribe();
+            try {
+              const retryDraft = await scanDraftService.getDraftByJobId(draftId, userId);
+              if (retryDraft) {
+                setJobStatus('completed');
+                await finalizeDraft(retryDraft);
+              } else {
+                setError('Draft not found after processing completed. Please try again.');
+                setLoading(false);
+              }
+            } catch (err) {
+              console.error('Failed to load draft after job completion:', err);
+              setError(err instanceof Error ? err.message : 'Failed to load draft');
+              setLoading(false);
+            }
+          } else if (job.status === 'failed') {
+            unsubscribe();
+            setError('Scan processing failed. Please try again.');
+            setLoading(false);
+          }
+        });
+
+        // Polling fallback: Supabase Realtime can silently fail to deliver events.
+        // Poll every 4 seconds as a safety net alongside the subscription.
+        pollIntervalId = setInterval(async () => {
+          try {
+            const polledDraft = await scanDraftService.getDraftByJobId(draftId, userId);
+            if (polledDraft) {
+              unsubscribe();
+              setJobStatus('completed');
+              await finalizeDraft(polledDraft);
+            }
+          } catch {
+            // Ignore polling errors — subscription or next poll will handle it
+          }
+        }, 4000);
       } catch (err) {
         console.error('Failed to load draft:', err);
         setError(err instanceof Error ? err.message : 'Failed to load draft');
-      } finally {
         setLoading(false);
       }
     };
 
-    if (draftId && session?.user?.id) {
-      loadDraft();
-    }
+    loadDraft();
+
+    return () => {
+      unsubscribe();
+    };
   }, [draftId, session, onDraftUpdated]);
+
+  // --- Loading / Auth / Error states ---
 
   if (authLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
+        <ActivityIndicator size="large" color={accentBlue} />
       </View>
     );
   }
 
   if (!session) {
     return (
-      <View style={styles.outerContainer}>
-        <View style={styles.warningCard}>
-          <Text style={styles.warningTitle}>Authentication Required</Text>
-          <Text style={styles.warningText}>Please log in to review drafts</Text>
+      <View style={{ flex: 1, padding: 16, backgroundColor: bgPage }}>
+        <View
+          style={{
+            backgroundColor: '#FEFCE8',
+            borderWidth: 1,
+            borderColor: '#FDE68A',
+            borderRadius: radiusSm,
+            padding: 20,
+          }}
+        >
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#92400E', marginBottom: 8 }}>
+            Authentication Required
+          </Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#A16207' }}>
+            Please log in to review drafts
+          </Text>
         </View>
       </View>
     );
   }
 
   if (loading) {
+    const isProcessing = jobStatus === 'processing';
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
+        <ActivityIndicator size="large" color={accentBlue} />
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 12 }}>
+          {isProcessing ? 'Processing your scan...' : 'Loading draft...'}
+        </Text>
+        {isProcessing && (
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginTop: 6 }}>
+            This usually takes 10-30 seconds
+          </Text>
+        )}
       </View>
     );
   }
 
   if (error || !draft) {
     return (
-      <View style={styles.outerContainer}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Error Loading Draft</Text>
-          <Text style={styles.errorText}>{error || 'Draft not found'}</Text>
+      <View style={{ flex: 1, padding: 16, backgroundColor: bgPage }}>
+        <View
+          style={{
+            backgroundColor: '#FEF2F2',
+            borderWidth: 1,
+            borderColor: '#FCA5A5',
+            borderRadius: radiusSm,
+            padding: 20,
+          }}
+        >
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#991B1B', marginBottom: 8 }}>
+            Error Loading Draft
+          </Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#DC2626' }}>
+            {error || 'Draft not found'}
+          </Text>
         </View>
       </View>
     );
@@ -117,570 +321,393 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
   const recipe = draft.recipe;
   const fieldConfidence = draft.fieldConfidence;
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header */}
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.heading1}>Recipe Draft Review</Text>
-            <Text style={styles.subtitleText}>
-              Review and edit the extracted recipe data before saving
+  // --- Photo Section ---
+
+  const PhotoSection = ({ height }: { height?: number | Animated.AnimatedInterpolation<number> }) => (
+    <View>
+      {photoUrls.length > 0 ? (
+        <View>
+          {/* Main photo */}
+          <Animated.View style={{ height: height || 300, overflow: 'hidden', borderRadius: radiusSm }}>
+            <Image
+              source={{ uri: photoUrls[activePhotoIndex] }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </Animated.View>
+
+          {/* Thumbnail strip for multi-photo */}
+          {photoUrls.length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingVertical: 8 }}
+            >
+              {photoUrls.map((url, index) => (
+                <Pressable
+                  key={index}
+                  onPress={() => setActivePhotoIndex(index)}
+                  style={{
+                    borderWidth: 2,
+                    borderColor: index === activePhotoIndex ? accentBlue : borderDefault,
+                    borderRadius: radiusSm / 2,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    source={{ uri: getScanThumbnailUrl(url, 80) }}
+                    style={{ width: 56, height: 56 }}
+                    resizeMode="cover"
+                  />
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      ) : (
+        <View
+          style={{
+            height: 200,
+            backgroundColor: noPhotoBg,
+            borderRadius: radiusSm,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: noPhotoIcon }}>
+            No photo available
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  // --- Draft Fields Section ---
+
+  const DraftFields = () => (
+    <View style={{ gap: 16 }}>
+      {/* Header + Overall Confidence */}
+      <View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={{ fontFamily: fontFamilyDisplay, fontSize: fontSize2xl, color: textPrimary, marginBottom: 4 }}>
+              Recipe Draft Review
+            </Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
+              Review extracted recipe data before saving
             </Text>
           </View>
-
-          <View style={styles.headerRight}>
-            {/* Overall Confidence */}
-            <View style={styles.overallConfidenceContainer}>
-              <View
-                style={[
-                  styles.overallConfidenceBadge,
-                  { backgroundColor: getConfidenceStyle(draft.overallConfidence.score).bg },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.overallConfidenceText,
-                    { color: getConfidenceStyle(draft.overallConfidence.score).text },
-                  ]}
-                >
-                  Overall: {Math.round(draft.overallConfidence.score * 100)}%
-                </Text>
-              </View>
-              <Text style={styles.confidenceLabelSmall}>Confidence</Text>
-            </View>
-
-            {/* Action Buttons */}
-            <TouchableOpacity style={styles.primaryButton} onPress={onEdit}>
-              <Text style={styles.primaryButtonText}>Edit Draft</Text>
-            </TouchableOpacity>
-          </View>
+          <ConfidenceBadge confidence={draft.overallConfidence.score} label="Overall" />
         </View>
-      </View>
 
-      {/* Original Photo */}
-      <View style={styles.card}>
-        <Text style={styles.heading2}>Original Photo</Text>
-        <View style={styles.photoPlaceholder}>
-          <Text style={styles.photoPlaceholderEmoji}>{'📷'}</Text>
-          <Text style={styles.photoPlaceholderText}>
-            Original photo would be displayed here
-          </Text>
-          <Text style={styles.photoPlaceholderSubtext}>
-            From scan job: {draft.jobId}
-          </Text>
-        </View>
-      </View>
-
-      {/* Raw OCR Text */}
-      <View style={styles.card}>
-        <Text style={styles.heading2}>Raw Extracted Text</Text>
-        <View style={styles.rawTextContainer}>
-          <Text style={styles.monospace}>{draft.rawText}</Text>
-        </View>
-        <View style={styles.ocrConfidenceRow}>
-          <Text style={styles.secondaryText}>
-            OCR Confidence: {Math.round(draft.ocrConfidence * 100)}%
-          </Text>
-          <ConfidenceIndicator
-            confidence={draft.ocrConfidence}
-            field="OCR Quality"
-          />
+        {/* Action buttons */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+          <Pressable
+            onPress={onEdit}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? '#0066DD' : accentBlue,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: radiusSm,
+            })}
+          >
+            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>
+              Edit Draft
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? borderDefault : bgCard,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: radiusSm,
+            })}
+          >
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textPrimary }}>
+              Back to Scans
+            </Text>
+          </Pressable>
         </View>
       </View>
 
       {/* Recipe Title */}
-      <View style={styles.card}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.heading2}>Recipe Title</Text>
-          <ConfidenceIndicator
-            confidence={fieldConfidence.title}
-            field="Title"
-          />
-        </View>
-        <View style={styles.fieldValueContainer}>
-          <Text style={styles.fieldValueText}>
-            {recipe.title || 'No title detected'}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
+            Recipe Title
           </Text>
+          <ConfidenceBadge confidence={fieldConfidence.title} />
+        </View>
+        <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXl, color: textPrimary }}>
+          {recipe.title || 'No title detected'}
+        </Text>
+      </View>
+
+      {/* Recipe Details */}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
+        <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary, marginBottom: 12 }}>
+          Recipe Details
+        </Text>
+        <View style={{ gap: 10 }}>
+          <DetailRow
+            label="Servings"
+            value={recipe.servings ? String(recipe.servings) : 'Not detected'}
+            confidence={fieldConfidence.servings}
+          />
+          <DetailRow
+            label="Prep Time"
+            value={recipe.prepTimeMinutes ? `${recipe.prepTimeMinutes} min` : 'Not detected'}
+            confidence={fieldConfidence.prepTime}
+          />
+          <DetailRow
+            label="Cook Time"
+            value={recipe.cookTimeMinutes ? `${recipe.cookTimeMinutes} min` : 'Not detected'}
+            confidence={fieldConfidence.cookTime}
+          />
+          <DetailRow label="Category" value={recipe.category || 'Not detected'} />
+          <DetailRow label="Cuisine" value={recipe.cuisine || 'Not detected'} />
         </View>
       </View>
 
-      {/* Metadata */}
-      <View style={styles.card}>
-        <Text style={styles.heading2}>Recipe Details</Text>
-        <View style={styles.detailsContainer}>
-          {/* Servings */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Servings:</Text>
-            <View style={styles.detailValueRow}>
-              <Text style={styles.detailValue}>
-                {recipe.servings || 'Not detected'}
-              </Text>
-              <ConfidenceIndicator
-                confidence={fieldConfidence.servings}
-                field="Servings"
-              />
-            </View>
-          </View>
-
-          {/* Prep Time */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Prep Time:</Text>
-            <View style={styles.detailValueRow}>
-              <Text style={styles.detailValue}>
-                {recipe.prepTimeMinutes
-                  ? `${recipe.prepTimeMinutes} min`
-                  : 'Not detected'}
-              </Text>
-              <ConfidenceIndicator
-                confidence={fieldConfidence.prepTime}
-                field="Prep Time"
-              />
-            </View>
-          </View>
-
-          {/* Cook Time */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Cook Time:</Text>
-            <View style={styles.detailValueRow}>
-              <Text style={styles.detailValue}>
-                {recipe.cookTimeMinutes
-                  ? `${recipe.cookTimeMinutes} min`
-                  : 'Not detected'}
-              </Text>
-              <ConfidenceIndicator
-                confidence={fieldConfidence.cookTime}
-                field="Cook Time"
-              />
-            </View>
-          </View>
-
-          {/* Category */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Category:</Text>
-            <Text style={styles.detailValue}>
-              {recipe.category || 'Not detected'}
-            </Text>
-          </View>
-
-          {/* Cuisine */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Cuisine:</Text>
-            <Text style={styles.detailValue}>
-              {recipe.cuisine || 'Not detected'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Ingredients Preview */}
-      <View style={styles.card}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.heading2}>
+      {/* Ingredients */}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
             Ingredients ({recipe.ingredients?.length || 0})
           </Text>
-          <ConfidenceIndicator
-            confidence={fieldConfidence.ingredients}
-            field="Ingredients"
-          />
+          <ConfidenceBadge confidence={fieldConfidence.ingredients} />
         </View>
-        <View style={styles.listContainer}>
+        <View style={{ gap: 6 }}>
           {recipe.ingredients?.map((ingredient, index) => {
-            const ingStyle = getConfidenceStyle(ingredient.confidence);
+            const ingColor = getConfidenceColor(ingredient.confidence);
             return (
-              <View key={index} style={styles.listItemRow}>
-                <Text style={styles.listItemText}>
+              <View
+                key={index}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: white,
+                  borderRadius: radiusSm / 2,
+                  padding: 10,
+                }}
+              >
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary, flex: 1, marginRight: 8 }}>
                   {ingredient.amount && `${ingredient.amount} `}
                   {ingredient.unit && `${ingredient.unit} `}
                   {ingredient.name}
                   {ingredient.preparation && `, ${ingredient.preparation}`}
                 </Text>
-                <View
-                  style={[
-                    styles.inlineConfidenceBadge,
-                    { backgroundColor: ingStyle.bg },
-                  ]}
-                >
-                  <Text style={[styles.inlineConfidenceText, { color: ingStyle.text }]}>
+                <View style={{ backgroundColor: ingColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                  <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: ingColor.text }}>
                     {Math.round(ingredient.confidence * 100)}%
                   </Text>
                 </View>
               </View>
             );
           }) || (
-            <Text style={styles.emptyText}>No ingredients detected</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary, textAlign: 'center', paddingVertical: 16 }}>
+              No ingredients detected
+            </Text>
           )}
         </View>
       </View>
 
-      {/* Instructions Preview */}
-      <View style={styles.card}>
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.heading2}>
+      {/* Instructions */}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
             Instructions ({recipe.instructions?.length || 0})
           </Text>
-          <ConfidenceIndicator
-            confidence={fieldConfidence.instructions}
-            field="Instructions"
-          />
+          <ConfidenceBadge confidence={fieldConfidence.instructions} />
         </View>
-        <View style={styles.listContainer}>
+        <View style={{ gap: 8 }}>
           {recipe.instructions?.map((instruction, index) => (
-            <View key={index} style={styles.instructionRow}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>{index + 1}</Text>
+            <View
+              key={index}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                backgroundColor: white,
+                borderRadius: radiusSm / 2,
+                padding: 10,
+              }}
+            >
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: accentBlue,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: 10,
+                  flexShrink: 0,
+                }}
+              >
+                <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>
+                  {index + 1}
+                </Text>
               </View>
-              <Text style={styles.instructionText}>{instruction}</Text>
+              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary, flex: 1 }}>
+                {instruction}
+              </Text>
             </View>
           )) || (
-            <Text style={styles.emptyText}>No instructions detected</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary, textAlign: 'center', paddingVertical: 16 }}>
+              No instructions detected
+            </Text>
           )}
         </View>
       </View>
 
-      {/* Status and Actions */}
-      <View style={styles.card}>
-        <View style={styles.statusRow}>
-          <View style={styles.statusLeft}>
-            <Text style={styles.heading3}>Draft Status</Text>
-            <Text style={styles.statusDescription}>
-              {draft.status === 'ready' &&
-                'This draft is ready to be saved as a recipe'}
-              {draft.status === 'needs_review' &&
-                'This draft needs review - check extracted fields'}
-              {draft.status === 'enhanced' &&
-                'This draft has been AI-enhanced'}
+      {/* Raw OCR Text */}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
+            Raw Extracted Text
+          </Text>
+          <ConfidenceBadge confidence={draft.ocrConfidence} label="OCR" />
+        </View>
+        <View style={{ backgroundColor: white, borderRadius: radiusSm / 2, padding: 12 }}>
+          <Text style={{ fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier', fontSize: fontSizeXs, color: textSecondary }}>
+            {draft.rawText}
+          </Text>
+        </View>
+      </View>
+
+      {/* Status + Actions */}
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16, marginBottom: 24 }}>
+        <View style={{ flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
+              Draft Status
+            </Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 4 }}>
+              {draft.status === 'ready' && 'This draft is ready to be saved as a recipe'}
+              {draft.status === 'needs_review' && 'This draft needs review - check extracted fields'}
+              {draft.status === 'enhanced' && 'This draft has been AI-enhanced'}
             </Text>
           </View>
-
-          <View style={styles.statusActions}>
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={() => router.back()}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Pressable
+              onPress={onEdit}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#0066DD' : accentBlue,
+                paddingVertical: 12,
+                paddingHorizontal: 20,
+                borderRadius: radiusMd,
+                flex: isMobile ? 1 : undefined,
+                alignItems: 'center',
+              })}
             >
-              <Text style={styles.secondaryButtonText}>Back to Scans</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={onEdit}>
-              <Text style={styles.primaryButtonText}>Continue Editing</Text>
-            </TouchableOpacity>
+              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
+                Save as Recipe
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#FEE2E2' : 'transparent',
+                borderWidth: 1,
+                borderColor: accentCoral,
+                paddingVertical: 12,
+                paddingHorizontal: 20,
+                borderRadius: radiusMd,
+                flex: isMobile ? 1 : undefined,
+                alignItems: 'center',
+              })}
+            >
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: accentCoral }}>
+                Discard Draft
+              </Text>
+            </Pressable>
           </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
+  );
+
+  // --- Mobile Layout (collapsible photo) ---
+
+  if (isMobile) {
+    const photoHeight = scrollY.interpolate({
+      inputRange: [0, 200],
+      outputRange: [300, 60],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={{ flex: 1, backgroundColor: bgPage }}>
+        {/* Collapsible photo */}
+        <PhotoSection height={photoHeight} />
+
+        {/* Scrollable draft fields */}
+        <Animated.ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
+          <DraftFields />
+        </Animated.ScrollView>
+      </View>
+    );
+  }
+
+  // --- Tablet / Web Layout (side-by-side) ---
+
+  return (
+    <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row' }}>
+      {/* Left panel - Photo (~40%) */}
+      <View
+        style={{
+          width: '40%',
+          padding: 16,
+          borderRightWidth: 1,
+          borderRightColor: borderSubtle,
+        }}
+      >
+        <PhotoSection />
+      </View>
+
+      {/* Right panel - Draft fields (~60%) */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+      >
+        <DraftFields />
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  outerContainer: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f3f4f6',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 16,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
-  },
-  heading1: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  heading2: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  heading3: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  subtitleText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  secondaryText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  overallConfidenceContainer: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  overallConfidenceBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  overallConfidenceText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  confidenceLabelSmall: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  confidenceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  confidenceField: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginRight: 8,
-  },
-  confidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  confidenceBadgeText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  primaryButton: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  secondaryButtonText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  photoPlaceholder: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoPlaceholderEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  photoPlaceholderText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  photoPlaceholderSubtext: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  rawTextContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 16,
-  },
-  monospace: {
-    fontSize: 14,
-    color: '#374151',
-    fontFamily: 'monospace',
-  },
-  ocrConfidenceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  fieldValueContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 12,
-  },
-  fieldValueText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#111827',
-  },
-  detailsContainer: {
-    gap: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-  },
-  detailValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#111827',
-    marginRight: 8,
-  },
-  listContainer: {
-    gap: 8,
-  },
-  listItemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 8,
-  },
-  listItemText: {
-    fontSize: 14,
-    color: '#111827',
-    flex: 1,
-    marginRight: 8,
-  },
-  inlineConfidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  inlineConfidenceText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  instructionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 8,
-  },
-  stepBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#e5e7eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  stepBadgeText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
-  },
-  instructionText: {
-    fontSize: 14,
-    color: '#111827',
-    flex: 1,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusLeft: {
-    flex: 1,
-    marginRight: 16,
-  },
-  statusDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
-  },
-  statusActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  warningCard: {
-    backgroundColor: '#fefce8',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: 12,
-    padding: 20,
-  },
-  warningTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#92400e',
-    marginBottom: 8,
-  },
-  warningText: {
-    fontSize: 14,
-    color: '#a16207',
-  },
-  errorCard: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: 12,
-    padding: 20,
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#991b1b',
-    marginBottom: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#dc2626',
-  },
-});
+// --- Helper components ---
+
+function DetailRow({
+  label,
+  value,
+  confidence,
+}: {
+  label: string;
+  value: string;
+  confidence?: number;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
+        {label}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>
+          {value}
+        </Text>
+        {confidence !== undefined && <ConfidenceBadge confidence={confidence} />}
+      </View>
+    </View>
+  );
+}

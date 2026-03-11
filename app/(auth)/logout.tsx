@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useEffect } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 
@@ -18,8 +17,7 @@ export default function LogoutScreen() {
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Logout failed";
         Alert.alert("Logout failed", msg);
-      } finally {
-        router.replace("/");
+        // Reactive redirect in (tabs)/_layout.tsx handles navigation when session becomes null
       }
     }
     void run();
