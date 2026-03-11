@@ -6,6 +6,8 @@ import {
   fontFamilyBodyMedium,
   textTertiary,
 } from '@/lib/tokens';
+import { AdBanner } from '@/features/ads';
+import { BANNER_SIZE_MOBILE, BANNER_SIZE_WEB } from '@/features/ads/config';
 
 type AdSlotProps = {
   variant: 'mobile' | 'leaderboard' | 'sidebar';
@@ -19,17 +21,38 @@ const SIZES = {
 };
 
 /**
- * Native ad slot placeholder.
- * Phase 11: static placeholder. Phase 13 replaces with AdMob integration.
+ * Native ad slot — delegates to AdBanner for mobile/leaderboard variants.
+ *
+ * - mobile: renders consent-gated AdBanner at 320×50
+ * - leaderboard: renders consent-gated AdBanner at 728×90
+ * - sidebar: keeps static placeholder (AdBanner doesn't support sidebar format)
  *
  * Consumers import as: import AdSlot from '@/components/public/AdSlot'
  * React Native platform resolution picks .native.tsx automatically.
  */
 export default function AdSlot({ variant, style }: AdSlotProps) {
-  const size = SIZES[variant];
-  const iconSize = variant === 'mobile' ? 14 : 16;
-  const fontSize = variant === 'mobile' ? 10 : 11;
-  const radius = variant === 'mobile' ? 8 : 10;
+  // Mobile and leaderboard variants delegate to the consent-gated AdBanner
+  if (variant === 'mobile') {
+    return (
+      <View style={style}>
+        <AdBanner size={BANNER_SIZE_MOBILE} testID="ad-slot-mobile" />
+      </View>
+    );
+  }
+
+  if (variant === 'leaderboard') {
+    return (
+      <View style={style}>
+        <AdBanner size={BANNER_SIZE_WEB} testID="ad-slot-leaderboard" />
+      </View>
+    );
+  }
+
+  // Sidebar: static placeholder (no AdBanner support for this format)
+  const size = SIZES.sidebar;
+  const iconSize = 16;
+  const fontSize = 11;
+  const radius = 10;
 
   return (
     <View
@@ -43,8 +66,8 @@ export default function AdSlot({ variant, style }: AdSlotProps) {
           borderColor: borderDefault,
           alignItems: 'center',
           justifyContent: 'center',
-          flexDirection: variant === 'sidebar' ? 'column' : 'row',
-          gap: variant === 'sidebar' ? 8 : 6,
+          flexDirection: 'column',
+          gap: 8,
         },
         style,
       ]}

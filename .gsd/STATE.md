@@ -4,9 +4,9 @@
 
 ## M002: Production Polish — ACTIVE
 
-- Slices: 3/5
-- Status: S01, S02, S03 complete and merged
-- Current: Ready for S04 (Production Ads + GDPR)
-- Branch: gsd/M002/S03
-- Tests: 415 passing, zero regressions
-- Next: Merge S03 to main, then start S04 (Production Ads + GDPR)
+- Slices: 4/5
+- Status: S01, S02, S03, S04 complete; S04 pending merge
+- Current: S04 complete, ready for merge
+- Branch: gsd/M002/S04
+- Tests: 474 passing, zero TypeScript errors, zero regressions
+- Next: Merge S04, then S05 (UX Polish)

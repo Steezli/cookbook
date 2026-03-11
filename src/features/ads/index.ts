@@ -10,6 +10,9 @@
 export { AdBanner, AdPlaceholder } from './AdBanner';
 export type { AdBannerProps } from './AdBanner';
 
+export { GdprConsentBanner } from './GdprConsentBanner';
+export type { GdprConsentBannerProps } from './GdprConsentBanner';
+
 export {
   getAdPlatform,
   getBannerAdUnitId,
@@ -28,6 +31,15 @@ export {
   isTrackingAuthorized,
 } from './att';
 export type { ATTStatus } from './att';
+
+export {
+  getConsentStatus,
+  requestConsent,
+  canShowPersonalizedAds,
+  setWebConsentStatus,
+  CONSENT_STORAGE_KEY,
+} from './consent';
+export type { ConsentStatus } from './consent';
 
 export { useAdPlacement, evaluateAdPlacement } from './useAdPlacement';
 export type { AdPlacementResult } from './useAdPlacement';

@@ -21,6 +21,8 @@ import { Platform, View, Text, StyleSheet } from 'react-native';
 
 import { getBannerSize, getBannerAdUnitId, getAdPlatform } from './config';
 import type { AdBannerSize } from './config';
+import { getConsentStatus, requestConsent, canShowPersonalizedAds } from './consent';
+import type { ConsentStatus } from './consent';
 
 export interface AdBannerProps {
   /** Override the computed banner size (for testing or custom layouts) */
@@ -83,7 +85,9 @@ interface NativeAdBannerProps {
 function NativeAdBanner({ size, testID }: NativeAdBannerProps) {
   const [sdkAvailable, setSdkAvailable] = useState<boolean | null>(null);
   const [AdMobBanner, setAdMobBanner] = useState<React.ComponentType<any> | null>(null);
+  const [consentStatus, setConsentStatus] = useState<ConsentStatus | null>(null);
 
+  // Load AdMob SDK
   useEffect(() => {
     let cancelled = false;
 
@@ -105,8 +109,36 @@ function NativeAdBanner({ size, testID }: NativeAdBannerProps) {
     return () => { cancelled = true; };
   }, []);
 
-  // Still loading SDK check
-  if (sdkAvailable === null) {
+  // Check consent status and request if needed
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveConsent() {
+      try {
+        const status = await getConsentStatus();
+
+        if (status === 'unknown' || status === 'required') {
+          // Triggers UMP form on native, returns 'required' on web
+          const resolved = await requestConsent();
+          if (!cancelled) setConsentStatus(resolved);
+        } else {
+          if (!cancelled) setConsentStatus(status);
+        }
+      } catch (error) {
+        console.warn(
+          '[AdsConsent] Consent check failed at render time:',
+          error instanceof Error ? error.message : String(error),
+        );
+        if (!cancelled) setConsentStatus('unavailable');
+      }
+    }
+
+    resolveConsent();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Still loading SDK or consent check
+  if (sdkAvailable === null || consentStatus === null) {
     return <AdPlaceholder size={size} testID={testID} />;
   }
 
@@ -115,18 +147,21 @@ function NativeAdBanner({ size, testID }: NativeAdBannerProps) {
     return <AdPlaceholder size={size} testID={testID} />;
   }
 
-  // SDK available — render real AdMob banner
+  // SDK available — render real AdMob banner with consent-driven personalization
   const adUnitId = getBannerAdUnitId();
   const bannerSize = Platform.OS === 'ios' || Platform.OS === 'android'
     ? `${size.label}`
     : 'BANNER';
+
+  // Only show personalized ads when consent is explicitly obtained
+  const nonPersonalized = !canShowPersonalizedAds(consentStatus);
 
   return (
     <View testID={testID ?? 'ad-banner-native'} style={styles.nativeContainer}>
       <AdMobBanner
         unitId={adUnitId}
         size={bannerSize}
-        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        requestOptions={{ requestNonPersonalizedAdsOnly: nonPersonalized }}
         onAdFailedToLoad={(error: Error) => {
           console.warn('[AdBanner] Failed to load ad:', error.message);
         }}

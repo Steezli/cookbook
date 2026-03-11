@@ -57,7 +57,7 @@ This milestone is complete only when all are true:
   > After this: draft review screen shows a list of drafts when a job produces multiple; each draft can be reviewed, edited, and saved as an independent recipe
 - [x] **S03: SEO Structured Data** `risk:medium` `depends:[]`
   > After this: public recipe detail pages include schema.org/Recipe JSON-LD; passes Google Rich Results Test; Open Graph and Twitter Card meta tags present
-- [ ] **S04: Production Ads + GDPR** `risk:medium` `depends:[]`
+- [x] **S04: Production Ads + GDPR** `risk:medium` `depends:[]`
   > After this: ad config reads production unit IDs from environment; GDPR consent banner appears for EU users; consent state persists and gates personalized ads
 - [ ] **S05: UX Polish** `risk:low` `depends:[S01,S02,S03,S04]`
   > After this: all visual bugs fixed, performance improvements applied, UI refinements complete; full UAT pass across iOS/web

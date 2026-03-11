@@ -3,10 +3,12 @@
  *
  * Covers:
  *   ADS-01: Ad banner component (320×50 mobile, 728×90 web) with platform branching
+ *   GDPR: Consent-gated ad loading (personalization driven by canShowPersonalizedAds)
  *
- * These tests verify the component's platform-branching logic and configuration
- * without requiring a React rendering environment. The component's behavior is
- * driven by config.ts which is thoroughly tested in config.test.ts.
+ * These tests verify the component's platform-branching logic, configuration,
+ * and consent-gated personalization behavior without requiring a React rendering
+ * environment. The component's behavior is driven by config.ts and consent.ts
+ * which are thoroughly tested in their own test files.
  *
  * For full component rendering tests, a React Native testing environment
  * (e.g., @testing-library/react-native) would be needed — deferred to
@@ -14,6 +16,8 @@
  */
 
 import { getBannerSize, getAdPlatform, getBannerAdUnitId, BANNER_SIZE_MOBILE, BANNER_SIZE_WEB } from '../config';
+import { canShowPersonalizedAds } from '../consent';
+import type { ConsentStatus } from '../consent';
 
 // ---------------------------------------------------------------------------
 // Mock Platform
@@ -120,6 +124,78 @@ describe('banner size constants', () => {
       width: 728,
       height: 90,
       label: 'LEADERBOARD',
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Consent-gated ad loading logic
+// ---------------------------------------------------------------------------
+
+describe('consent-gated ad personalization', () => {
+  describe('canShowPersonalizedAds determines requestNonPersonalizedAdsOnly', () => {
+    /**
+     * The NativeAdBanner component sets:
+     *   requestNonPersonalizedAdsOnly = !canShowPersonalizedAds(consentStatus)
+     *
+     * These tests verify the consent→personalization mapping that drives
+     * the AdMob requestOptions at the logic level.
+     */
+
+    it('consent "obtained" → personalized ads allowed (requestNonPersonalizedAdsOnly: false)', () => {
+      const status: ConsentStatus = 'obtained';
+      const personalized = canShowPersonalizedAds(status);
+      expect(personalized).toBe(true);
+      // Component would set: requestNonPersonalizedAdsOnly = !true = false
+      expect(!personalized).toBe(false);
+    });
+
+    it('consent "not_required" → non-personalized ads (requestNonPersonalizedAdsOnly: true)', () => {
+      const status: ConsentStatus = 'not_required';
+      const personalized = canShowPersonalizedAds(status);
+      expect(personalized).toBe(false);
+      expect(!personalized).toBe(true);
+    });
+
+    it('consent "unavailable" → non-personalized ads as safe default (requestNonPersonalizedAdsOnly: true)', () => {
+      const status: ConsentStatus = 'unavailable';
+      const personalized = canShowPersonalizedAds(status);
+      expect(personalized).toBe(false);
+      expect(!personalized).toBe(true);
+    });
+
+    it('consent "unknown" → non-personalized ads (requestNonPersonalizedAdsOnly: true)', () => {
+      const status: ConsentStatus = 'unknown';
+      const personalized = canShowPersonalizedAds(status);
+      expect(personalized).toBe(false);
+      expect(!personalized).toBe(true);
+    });
+
+    it('consent "required" → non-personalized ads (requestNonPersonalizedAdsOnly: true)', () => {
+      const status: ConsentStatus = 'required';
+      const personalized = canShowPersonalizedAds(status);
+      expect(personalized).toBe(false);
+      expect(!personalized).toBe(true);
+    });
+  });
+
+  describe('all ConsentStatus values produce valid personalization flags', () => {
+    const ALL_STATUSES: ConsentStatus[] = [
+      'unknown',
+      'required',
+      'obtained',
+      'not_required',
+      'unavailable',
+    ];
+
+    it.each(ALL_STATUSES)('status "%s" returns a boolean', (status) => {
+      const result = canShowPersonalizedAds(status);
+      expect(typeof result).toBe('boolean');
+    });
+
+    it('only "obtained" enables personalized ads', () => {
+      const personalizedStatuses = ALL_STATUSES.filter(canShowPersonalizedAds);
+      expect(personalizedStatuses).toEqual(['obtained']);
     });
   });
 });

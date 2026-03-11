@@ -9,14 +9,22 @@
 import { Platform } from 'react-native';
 
 // ---------------------------------------------------------------------------
-// Ad unit IDs — test IDs from Google AdMob documentation.
-// Replace with real IDs before production release.
+// Ad unit IDs — Google AdMob test IDs used as fallback when env vars are absent.
+// Production IDs are read from EXPO_PUBLIC_ADMOB_IOS_BANNER_ID /
+// EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID at build time.
 // ---------------------------------------------------------------------------
 
+/** Google AdMob test banner ID for iOS */
+export const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
+/** Google AdMob test banner ID for Android */
+export const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
+/** Placeholder for web (no real AdMob on web) */
+export const TEST_BANNER_ID_WEB = 'placeholder';
+
 const TEST_BANNER_IDS = {
-  ios: 'ca-app-pub-3940256099942544/2934735716',
-  android: 'ca-app-pub-3940256099942544/6300978111',
-  web: 'placeholder', // Web uses a placeholder component, not real AdMob
+  ios: TEST_BANNER_ID_IOS,
+  android: TEST_BANNER_ID_ANDROID,
+  web: TEST_BANNER_ID_WEB,
 } as const;
 
 export type AdPlatform = 'ios' | 'android' | 'web';
@@ -27,8 +35,27 @@ export function getAdPlatform(): AdPlatform {
   return 'web';
 }
 
+/**
+ * Returns the banner ad unit ID for the current platform.
+ *
+ * Reads from environment variables on iOS/Android:
+ *   - iOS: EXPO_PUBLIC_ADMOB_IOS_BANNER_ID
+ *   - Android: EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID
+ *
+ * Falls back to Google's test banner IDs when env vars are absent or empty.
+ * Web always returns the placeholder string.
+ */
 export function getBannerAdUnitId(): string {
-  return TEST_BANNER_IDS[getAdPlatform()];
+  const platform = getAdPlatform();
+
+  if (platform === 'ios') {
+    return process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID || TEST_BANNER_ID_IOS;
+  }
+  if (platform === 'android') {
+    return process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID || TEST_BANNER_ID_ANDROID;
+  }
+
+  return TEST_BANNER_ID_WEB;
 }
 
 // ---------------------------------------------------------------------------

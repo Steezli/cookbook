@@ -15,6 +15,9 @@ import {
   BANNER_SIZE_WEB,
   PUBLIC_ROUTE_PATTERNS,
   PRIVATE_ROUTE_PATTERNS,
+  TEST_BANNER_ID_IOS,
+  TEST_BANNER_ID_ANDROID,
+  TEST_BANNER_ID_WEB,
 } from '../config';
 
 // ---------------------------------------------------------------------------
@@ -65,29 +68,94 @@ describe('getAdPlatform', () => {
 });
 
 // ---------------------------------------------------------------------------
-// getBannerAdUnitId
+// getBannerAdUnitId — fallback to test IDs
 // ---------------------------------------------------------------------------
 
 describe('getBannerAdUnitId', () => {
   afterEach(() => setPlatform('web'));
 
-  it('returns iOS test ad unit ID', () => {
+  it('returns iOS test ad unit ID when env var is absent', () => {
     setPlatform('ios');
-    const id = getBannerAdUnitId();
-    expect(id).toMatch(/^ca-app-pub-/);
-    expect(id).toContain('2934735716'); // iOS test banner
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_IOS);
   });
 
-  it('returns Android test ad unit ID', () => {
+  it('returns Android test ad unit ID when env var is absent', () => {
     setPlatform('android');
-    const id = getBannerAdUnitId();
-    expect(id).toMatch(/^ca-app-pub-/);
-    expect(id).toContain('6300978111'); // Android test banner
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_ANDROID);
   });
 
-  it('returns placeholder for web', () => {
+  it('returns placeholder for web regardless of env vars', () => {
     setPlatform('web');
-    expect(getBannerAdUnitId()).toBe('placeholder');
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_WEB);
+  });
+
+  it('never returns undefined or empty string', () => {
+    for (const os of ['ios', 'android', 'web', 'windows']) {
+      setPlatform(os);
+      const id = getBannerAdUnitId();
+      expect(id).toBeTruthy();
+      expect(typeof id).toBe('string');
+      expect(id.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getBannerAdUnitId — env-var resolution
+// ---------------------------------------------------------------------------
+
+describe('getBannerAdUnitId env-var resolution', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    // Restore original env
+    delete process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID;
+    delete process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID;
+    setPlatform('web');
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  it('returns EXPO_PUBLIC_ADMOB_IOS_BANNER_ID on iOS when set', () => {
+    const prodId = 'ca-app-pub-1234567890123456/1111111111';
+    process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID = prodId;
+    setPlatform('ios');
+    expect(getBannerAdUnitId()).toBe(prodId);
+  });
+
+  it('returns EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID on Android when set', () => {
+    const prodId = 'ca-app-pub-1234567890123456/2222222222';
+    process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID = prodId;
+    setPlatform('android');
+    expect(getBannerAdUnitId()).toBe(prodId);
+  });
+
+  it('falls back to iOS test ID when env var is empty string', () => {
+    process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID = '';
+    setPlatform('ios');
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_IOS);
+  });
+
+  it('falls back to Android test ID when env var is empty string', () => {
+    process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID = '';
+    setPlatform('android');
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_ANDROID);
+  });
+
+  it('ignores Android env var on iOS and vice versa', () => {
+    process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID = 'ca-app-pub-android/9999';
+    setPlatform('ios');
+    // iOS should still return test ID, not the Android env var
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_IOS);
+  });
+
+  it('web always returns placeholder even if env vars are set', () => {
+    process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID = 'ca-app-pub-ios/1111';
+    process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID = 'ca-app-pub-android/2222';
+    setPlatform('web');
+    expect(getBannerAdUnitId()).toBe(TEST_BANNER_ID_WEB);
   });
 });
 
@@ -174,6 +242,24 @@ describe('shouldShowAds', () => {
 
   it('returns false for empty string', () => {
     expect(shouldShowAds('')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test ID constants integrity
+// ---------------------------------------------------------------------------
+
+describe('test banner ID constants', () => {
+  it('iOS test ID matches Google AdMob format', () => {
+    expect(TEST_BANNER_ID_IOS).toMatch(/^ca-app-pub-\d+\/\d+$/);
+  });
+
+  it('Android test ID matches Google AdMob format', () => {
+    expect(TEST_BANNER_ID_ANDROID).toMatch(/^ca-app-pub-\d+\/\d+$/);
+  });
+
+  it('web placeholder is a non-empty string', () => {
+    expect(TEST_BANNER_ID_WEB).toBe('placeholder');
   });
 });
 

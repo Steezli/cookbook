@@ -265,6 +265,24 @@ A single photo containing multiple recipes is detected and split by the edge fun
 
 Public recipe detail pages include valid schema.org/Recipe JSON-LD structured data generated from real recipe data. Client-side rendered via expo-router/head. 62 unit tests prove generation logic; browser verification confirms runtime rendering. Google Rich Results Test validation deferred to S05 UAT (requires production URL).
 
+### ADS-04 — Production ad unit ID configuration via environment variables
+
+- Status: active
+- Class: core-capability
+- Source: M002 roadmap
+- Primary Slice: M002/S04
+
+Ad config reads `EXPO_PUBLIC_ADMOB_IOS_BANNER_ID` and `EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID` from env vars, falling back to Google test IDs. `app.config.ts` reads app-level IDs for the Expo plugin. `.env.example` documents all four ADMOB vars. 13 unit tests prove env-var resolution, fallback, cross-platform isolation. Full validation requires setting production IDs and loading real ads (S05 UAT).
+
+### ADS-05 — GDPR ad consent management for EU users
+
+- Status: active
+- Class: core-capability
+- Source: M002 roadmap
+- Primary Slice: M002/S04
+
+Unified consent API (`getConsentStatus`, `requestConsent`, `canShowPersonalizedAds`, `setWebConsentStatus`) with platform-branched implementation: native via UMP SDK dynamic import, web via AsyncStorage + custom `GdprConsentBanner`. Consent status gates `requestNonPersonalizedAdsOnly` in AdBanner — only `'obtained'` enables personalized ads. 38 consent tests + 11 consent-gated AdBanner tests. Full validation requires real-device UMP form testing with configured AdMob account (S05 UAT).
+
 ## Deferred
 
 ## Out of Scope

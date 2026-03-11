@@ -43,8 +43,8 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - [ ] Web subscription checkout via RevenueCat Web Billing / Stripe (SUB-03)
 - [~] Recipe structured data markup for search engine indexing (SEO-01) — client-side JSON-LD implemented, Google Rich Results Test deferred to S05
 - [ ] Server-rendered public recipe pages for SEO crawlers (SEO-02)
-- [ ] Production ad unit ID configuration (ADS-04, candidate)
-- [ ] GDPR ad consent management for EU users (ADS-05, candidate)
+- [~] Production ad unit ID configuration (ADS-04) — env-var config with test-ID fallback built, real-device testing deferred to S05
+- [~] GDPR ad consent management for EU users (ADS-05) — consent module and web banner built, UMP form testing deferred to S05
 
 ### Out of Scope
 
@@ -62,8 +62,8 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✅ S01: Multi-Recipe Scan (edge function + data layer for 1 photo → N drafts) — complete
 - ✅ S02: Multi-Draft UX (draft list, per-draft review/edit/save, batch save, RecentScans badges) — complete
 - ✅ S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags) — complete
-- S04: Production Ads + GDPR (env-based unit IDs + consent banner) — next
-- S05: UX Polish (bug fixes, performance, visual refinements)
+- ✅ S04: Production Ads + GDPR (env-based unit IDs, GDPR consent module, consent-gated ads) — complete
+- S05: UX Polish (bug fixes, performance, visual refinements) — next
 
 ## Completed Milestones
 
@@ -104,4 +104,4 @@ Advertising module with platform-branched AdMob/placeholder, ATT permission, rou
 | SECURITY DEFINER for public RPCs | Bypasses RLS for anonymous author attribution | ✓ Good |
 
 ---
-*Last updated: 2026-03-11 after M002/S03 completion*
+*Last updated: 2026-03-11 after M002/S04 completion*

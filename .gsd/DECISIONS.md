@@ -119,3 +119,25 @@
 - **Decision:** OG `url` and canonical page URL use `https://berven.app/recipe/{id}` (hardcoded production domain), not the current hostname.
 - **Why:** OG URLs should point to the canonical production URL regardless of the environment the page is rendered in. Prevents dev/staging URLs from leaking into social previews.
 - **Trade-off:** Means dev/staging social previews point to production; acceptable since social sharing is a production concern
+
+## S04: Production Ads + GDPR
+
+### app.json → app.config.ts migration for env-based plugin config
+- **Decision:** Convert `app.json` to `app.config.ts` (JS config) so the `react-native-google-mobile-ads` Expo plugin can read app IDs from `process.env` at EAS Build time.
+- **Why:** `app.json` is static — can't read env vars. `app.config.ts` is evaluated at build time and can reference `process.env`, enabling dev/staging/prod to use different AdMob app IDs without changing code.
+- **Trade-off:** Must verify all existing plugins and Expo Router still work after migration. Minor one-time effort.
+
+### UMP SDK on native, custom consent banner on web
+- **Decision:** Native GDPR consent uses Google's UMP SDK (`AdsConsent` from `react-native-google-mobile-ads`) via dynamic import. Web uses a custom `GdprConsentBanner` component with AsyncStorage persistence.
+- **Why:** UMP is Google's official consent framework, required for AdMob compliance on native. UMP is not available on web (`react-native-google-mobile-ads` is native-only). The custom web banner is a UX placeholder acceptable for MVP since web ads aren't live.
+- **Trade-off:** Two consent paths (native vs web) increase complexity; mitigated by a unified API (`consent.ts`) that abstracts the platform difference.
+
+### Consent-gated ad personalization over blanket non-personalized
+- **Decision:** `AdBanner` reads consent status at mount and sets `requestNonPersonalizedAdsOnly` dynamically (true when no consent, false when consent obtained), replacing the hardcoded `true`.
+- **Why:** Maximizes ad revenue when users consent while remaining compliant when they don't. Hardcoding non-personalized leaves revenue on the table.
+- **Trade-off:** More complex ad loading path; mitigated by clean consent API and safe fallback (non-personalized on any error).
+
+### GDPR consent check before ATT prompt
+- **Decision:** The recommended flow is GDPR consent first, then ATT prompt based on GDPR purpose-one consent. This matches the `react-native-google-mobile-ads` library docs.
+- **Why:** Avoids double-prompting. GDPR consent may indicate ATT is not needed. Library docs recommend this specific ordering.
+- **Trade-off:** Full ATT+GDPR sequencing is deferred to S05 integration; S04 builds the consent module independently.
