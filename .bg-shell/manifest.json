@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "6bb31bbf",
+    "label": "ios-admob-build",
+    "command": "cd /Users/elinicholson/development/cookbook && npx expo run:ios --device \"E7F8B549-64E6-407E-A476-23D3BBD117F6\" 2>&1",
+    "cwd": "/Users/elinicholson/development/cookbook",
+    "startedAt": 1773269196034,
+    "processType": "build",
+    "group": null,
+    "readyPattern": "BUILD SUCCEEDED|Installing on",
+    "readyPort": null,
+    "pid": 50744
+  }
+]
