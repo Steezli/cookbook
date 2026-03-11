@@ -2,6 +2,10 @@
 
 ## Active
 
+(No active requirements — all moved to Validated or Deferred.)
+
+## Validated
+
 ### ADS-01 — Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
 
 - Status: validated
@@ -28,8 +32,6 @@ Ad placement on public browsing screens only (never authenticated screens). Rout
 - Primary Slice: M002/S04, M002/S05 (GDPR→ATT sequencing)
 
 ATT permission module with dynamic import (S04). GDPR→ATT consent sequencing wired in root layout (S05). Real-device ATT prompt requires iOS build (operational verification).
-
-## Validated
 
 ### DESIGN-01 — Design token system (tokens.ts) extracting all cookbook.pen $ variables as TypeScript constants
 

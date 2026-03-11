@@ -35,6 +35,9 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✓ Ad banner with platform branching (AdMob native, placeholder web) — v1.1
 - ✓ Ad placement restricted to public browsing screens only — v1.1
 - ✓ ATT permission prompt on iOS for ad tracking — v1.1
+
+### Validated (M002)
+
 - ✓ Multi-recipe scan: 1 photo → N drafts with data layer, UI, and integration polish — v1.2
 - ✓ Recipe structured data (JSON-LD + OG tags) on public recipe pages — v1.2
 - ✓ Production ad unit ID configuration via env vars with test-ID fallback — v1.2
@@ -55,18 +58,11 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - Offline mode — real-time sync and RLS are core
 - Full version history for recipes — "duplicate and edit" covers needs
 
-## Current Milestone: M002 — Production Polish
-
-**Goal:** Multi-recipe scan support, SEO structured data for public recipes, production ads with GDPR consent, UX polish.
-
-**Slices:**
-- ✅ S01: Multi-Recipe Scan (edge function + data layer for 1 photo → N drafts) — complete
-- ✅ S02: Multi-Draft UX (draft list, per-draft review/edit/save, batch save, RecentScans badges) — complete
-- ✅ S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags) — complete
-- ✅ S04: Production Ads + GDPR (env-based unit IDs, GDPR consent module, consent-gated ads) — complete
-- ✅ S05: UX Polish (consent wiring, ErrorBoundary, Pressable migration, a11y labels, pull-to-refresh, UAT) — complete
-
 ## Completed Milestones
+
+### M002: Production Polish (completed 2026-03-11)
+
+Multi-recipe scan (1 photo → N drafts with full review UI), schema.org/Recipe SEO structured data, production ad config with GDPR consent gating, UX polish (ErrorBoundary, Pressable migration, 46 a11y labels, pull-to-refresh). 5 slices, 16 tasks, 483 tests, zero TypeScript errors. Remaining operational items: production AdMob env vars, Google Rich Results Test, real-device UMP/ATT testing, real-photo multi-recipe scan.
 
 ### M001: Migration (completed 2026-03-11)
 
@@ -78,7 +74,10 @@ Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, 
 88 TypeScript source files, 32 route files.
 Design system: tokens.ts (24 variables), useBreakpoint hook, PageContainer, MobileTabBar, WebSidebar.
 Public browsing with cursor-based pagination and SECURITY DEFINER RPCs for author attribution.
-Advertising module with platform-branched AdMob/placeholder, ATT permission, route-based placement.
+Advertising module with platform-branched AdMob/placeholder, ATT permission, route-based placement, GDPR consent gating.
+SEO: schema.org/Recipe JSON-LD + OG/Twitter Card meta tags on public recipe detail pages (client-side rendered).
+Multi-recipe scan: edge function splits 1 photo → N drafts; multi-draft review UI with batch save.
+483 tests across 22 suites. Zero TypeScript errors.
 
 ## Constraints
 
@@ -99,10 +98,15 @@ Advertising module with platform-branched AdMob/placeholder, ATT permission, rou
 | JSONB for ingredients/steps | Flexible structured data without extra tables | ✓ Good |
 | Canonical unit storage with preference display | Enables conversion without data loss | ✓ Good |
 | Flat token naming for StyleSheet.create | Ergonomic over nested objects | ✓ Good |
-| Pure function extraction for testing | getBreakpoint, getContainerStyle, evaluateAdPlacement | ✓ Good |
+| Pure function extraction for testing | getBreakpoint, getContainerStyle, evaluateAdPlacement, SEO generators | ✓ Good |
 | Dynamic imports for native SDKs | Web bundles never polluted; graceful degradation | ✓ Good |
 | Route-pattern allowlist for ads | Fail-safe: new routes default to no-ads | ✓ Good |
 | SECURITY DEFINER for public RPCs | Bypasses RLS for anonymous author attribution | ✓ Good |
+| Single-pass multi-recipe detection | One Claude call with array-always format; avoids double cost/latency | ✓ Good |
+| Client-side JSON-LD via expo-router/head | Forward-compatible with future SSR; accepted trade-off per M002 scope | ✓ Good |
+| UMP SDK native + custom web consent banner | Unified API abstracts platform split | ✓ Good |
+| Env-var ad config with test-ID fallback | Production IDs activate via config, not code change | ✓ Good |
+| app.json → app.config.ts | Enables env-based Expo plugin config at EAS Build time | ✓ Good |
 
 ---
-*Last updated: 2026-03-11 after M002/S05 completion (M002 complete)*
+*Last updated: 2026-03-11 after M002 completion*
