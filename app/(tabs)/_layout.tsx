@@ -1,4 +1,5 @@
-import { Redirect } from "expo-router";
+import { useEffect, useRef } from "react";
+import { router } from "expo-router";
 import { Tabs, TabList, TabTrigger, TabSlot } from "expo-router/ui";
 
 import { useSession } from "@/features/auth/session";
@@ -11,14 +12,23 @@ export default function TabsLayout() {
   const { breakpoint } = useBreakpoint();
   const isWeb = breakpoint === "web";
 
-  // Hold render while session is resolving to avoid a flash of the login screen.
-  if (isLoading) {
-    return null;
-  }
+  const hasRedirectedToLogin = useRef(false);
 
-  // Redirect unauthenticated users to login.
-  if (!session) {
-    return <Redirect href="/(auth)/login" />;
+  // Redirect unauthenticated users to login (once, not on every focus cycle).
+  useEffect(() => {
+    if (isLoading) return;
+    if (session) {
+      hasRedirectedToLogin.current = false;
+      return;
+    }
+    if (hasRedirectedToLogin.current) return;
+    hasRedirectedToLogin.current = true;
+    router.replace("/(auth)/login");
+  }, [isLoading, session]);
+
+  // Hold render while session is resolving to avoid a flash of the login screen.
+  if (isLoading || !session) {
+    return null;
   }
 
   return (
@@ -35,7 +45,7 @@ export default function TabsLayout() {
           pointerEvents: "none",
         }}
       >
-        <TabTrigger name="index" href="/(tabs)" />
+        <TabTrigger name="index" href="/" />
         <TabTrigger name="my-recipes" href={"/recipes" as any} />
         <TabTrigger name="collections" href={"/collections" as any} />
         <TabTrigger name="family" href={"/family" as any} />
