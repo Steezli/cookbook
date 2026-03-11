@@ -50,8 +50,12 @@ export default function HomeScreen() {
   const sectionGap = breakpoint === 'mobile' ? 24 : 32;
   const numColumns = getNumColumns(breakpoint);
 
+  // Stabilize on user id — don't refetch just because the session object reference changed
+  const userId = session?.user?.id;
+  const userEmail = session?.user?.email;
+
   const loadData = useCallback(async () => {
-    if (!session?.user) return;
+    if (!userId) return;
 
     setIsLoading(true);
     try {
@@ -59,12 +63,12 @@ export default function HomeScreen() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .single();
 
       const name =
         (profile as { display_name?: string | null } | null)?.display_name?.trim() ||
-        (session.user.email?.split('@')[0] ?? '');
+        (userEmail?.split('@')[0] ?? '');
       setDisplayName(name);
 
       // Load recipes (most recent first)
@@ -86,7 +90,7 @@ export default function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [userId, userEmail]);
 
   useEffect(() => {
     loadData();

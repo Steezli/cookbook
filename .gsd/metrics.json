@@ -37,6 +37,24 @@
       "toolCalls": 0,
       "assistantMessages": 50,
       "userMessages": 0
+    },
+    {
+      "type": "complete-milestone",
+      "id": "M001",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773250011110,
+      "finishedAt": 1773250456201,
+      "tokens": {
+        "input": 63,
+        "output": 18462,
+        "cacheRead": 3432226,
+        "cacheWrite": 58650,
+        "total": 3509401
+      },
+      "cost": 2.5445404999999996,
+      "toolCalls": 0,
+      "assistantMessages": 61,
+      "userMessages": 0
     }
   ]
 }

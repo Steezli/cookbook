@@ -30,6 +30,9 @@ const storage =
       }
     : AsyncStorage;
 
+// Simple in-memory lock set for serializing auth operations (token refresh, etc.)
+const _activeLocks = new Set<string>();
+
 export const supabase = createClient(url, anonKey, {
   auth: {
     storage,
@@ -37,9 +40,24 @@ export const supabase = createClient(url, anonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: false,
     // React Native has no Web Locks API (navigator.locks).
-    // Provide a simple sequential lock to prevent the abort timeout error.
+    // Provide a proper sequential lock to serialize auth operations and prevent
+    // overlapping token refreshes that produce duplicate state change events.
     lock: async (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
-      return await fn();
+      const key = `lock:${name}`;
+      // Wait for any existing lock to release
+      const start = Date.now();
+      while (_activeLocks.has(key)) {
+        if (Date.now() - start > acquireTimeout) {
+          throw new Error(`Lock acquisition timed out: ${name}`);
+        }
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      _activeLocks.add(key);
+      try {
+        return await fn();
+      } finally {
+        _activeLocks.delete(key);
+      }
     },
   }
 });
