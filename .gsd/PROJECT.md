@@ -60,8 +60,8 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 **Slices:**
 - ✅ S01: Multi-Recipe Scan (edge function + data layer for 1 photo → N drafts) — complete
-- S02: Multi-Draft UX (draft list + per-draft review) — next
-- S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags)
+- ✅ S02: Multi-Draft UX (draft list, per-draft review/edit/save, batch save, RecentScans badges) — complete
+- S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags) — next
 - S04: Production Ads + GDPR (env-based unit IDs + consent banner)
 - S05: UX Polish (bug fixes, performance, visual refinements)
 
@@ -104,4 +104,4 @@ Advertising module with platform-branched AdMob/placeholder, ATT permission, rou
 | SECURITY DEFINER for public RPCs | Bypasses RLS for anonymous author attribution | ✓ Good |
 
 ---
-*Last updated: 2026-03-11 after M002/S01 completion*
+*Last updated: 2026-03-11 after M002/S02 completion*

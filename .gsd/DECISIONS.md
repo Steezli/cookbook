@@ -61,7 +61,39 @@
 - **Why:** Edge functions run on Deno with no access to the app's `src/` tree. Keeping a testable source-of-truth in `src/` while inlining into the edge function gives us Jest testability without fighting Deno's module system.
 - **Trade-off:** Two copies of the logic that could drift; mitigated by parser tests that validate the canonical behavior
 
+## S02: Multi-Draft UX
+
+### Optional `draft` prop pattern for dual-loading components
+- **Decision:** DraftReview and DraftEditor accept an optional `draft: ScanDraft` prop. When provided, skip internal fetch/subscribe. When absent, existing jobId-based loading path runs as before.
+- **Why:** Avoids a breaking refactor of the route param naming (`draftId` → `jobId`). Multi-draft parent passes the object; single-draft route passes `draftId` as before. Both paths tested.
+- **Trade-off:** Two loading paths in each component add complexity; mitigated by clear branching on `draft` prop presence.
+
+### Inline draft selection over sub-routes
+- **Decision:** Multi-draft selection uses inline component state within the existing `/scan/draft/[id]` route, not new Expo Router sub-routes (e.g., `[id]/[draftIndex]`)
+- **Why:** Keeps route structure simple, avoids Expo Router nesting complexity, keeps multi-draft context visible while reviewing individual drafts. Research recommendation.
+- **Trade-off:** No deep-linking to a specific draft within a multi-draft job; acceptable since draft review is a transient workflow.
+
+### Single-draft fast path
+- **Decision:** When `getDraftsByJobId()` returns exactly 1 draft, render `DraftReview` directly — no list UI
+- **Why:** Single-draft is the common case. Showing a "list of 1" adds an unnecessary intermediate step that degrades UX.
+- **Trade-off:** Route screen has a branching path; but both paths are simple and clearly separated.
+
 ### Array-always response schema
 - **Decision:** Claude prompt always requests `{ "recipes": [...] }` even for single-recipe images — the array has length 1 in that case
 - **Why:** Uniform response shape eliminates branching in the parser. Backward compat with legacy single-object format is handled as a fallback in `parseMultiScanResult` for robustness.
 - **Trade-off:** Slightly more verbose prompt; negligible cost
+
+### Sequential batch save (not parallel)
+- **Decision:** "Save All as Recipes" iterates through unsaved drafts sequentially (not Promise.all), updating progress after each
+- **Why:** Avoids overwhelming the API with concurrent requests; provides meaningful per-draft progress feedback to the user; partial failures continue with remaining drafts and report failure count
+- **Trade-off:** Slower than parallel for large draft sets; acceptable since typical multi-draft jobs have 2-5 drafts
+
+### DraftEditor `onConverted` callback for multi-draft coordination
+- **Decision:** Added optional `onConverted` prop to DraftEditor. When provided by the multi-draft parent, it overrides the default `router.replace('/recipes/${recipeId}')` navigation after converting a draft to a recipe.
+- **Why:** In multi-draft context, the user should stay on the draft list after saving one draft (to continue with remaining drafts). The default navigation makes sense for single-draft but would break the multi-draft flow.
+- **Trade-off:** Slightly more complex DraftEditor; mitigated by clean fallthrough to existing behavior when prop is absent
+
+### Draft "saved" status maps to `status === 'ready'`
+- **Decision:** In multi-draft helpers, a draft is considered "saved" when its status field equals `'ready'` — matching the status set by `convertToRecipe()`
+- **Why:** Consistent with S01's domain model where `convertToRecipe` transitions a draft to `ready` status. No new status value needed.
+- **Trade-off:** If the status lifecycle changes upstream, the helpers need updating; mitigated by the test suite catching this

@@ -254,7 +254,7 @@ Cursor-based pagination for public recipe listing
 - Source: M002 roadmap
 - Primary Slice: M002/S01 (data layer), M002/S02 (UI)
 
-A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. Contract-verified in S01; end-to-end proof requires S02 (UI) and S05 (UAT with real photos).
+A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. S01 contract-verified the data layer; S02 completes the UI layer (draft list, per-draft review/edit/save, batch save, RecentScans badges). End-to-end proof with real photos requires S05 UAT.
 
 ## Deferred
 

@@ -4,7 +4,8 @@
 
 ## M002: Production Polish — ACTIVE
 
-- Slices: 1/5
-- Status: S01 complete and merged
-- Current: Ready for S02 (Multi-Draft UX)
-- Next: S02 (Multi-Draft UX) — depends on S01's getDraftsByJobId() contract
+- Slices: 2/5
+- Status: S01, S02 complete and merged
+- Current: S03 (SEO Structured Data) — next up
+- Branch: gsd/M002/S02 (ready for merge)
+- Tests: 353 passing, zero TS errors

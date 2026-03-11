@@ -30,7 +30,7 @@ import {
   radiusMd,
 } from '@/lib/tokens';
 
-type ScanWithDraft = ScanJob & { draft?: ScanDraft | null };
+type ScanWithDraft = ScanJob & { draft?: ScanDraft | null; draftCount?: number };
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   queued: { color: '#f59e0b', label: 'Queued' },
@@ -81,15 +81,25 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
         scanDraftService.getUserDrafts(session.user.id, undefined, 20, 0),
       ]);
 
-      const draftsByJobId = new Map<string, ScanDraft>();
+      // Group drafts by jobId — keep first draft as representative, count all
+      const draftsByJobId = new Map<string, ScanDraft[]>();
       for (const d of drafts) {
-        draftsByJobId.set(d.jobId, d);
+        const existing = draftsByJobId.get(d.jobId);
+        if (existing) {
+          existing.push(d);
+        } else {
+          draftsByJobId.set(d.jobId, [d]);
+        }
       }
 
-      const merged: ScanWithDraft[] = scanJobs.slice(0, limit).map((job) => ({
-        ...job,
-        draft: draftsByJobId.get(job.id) || null,
-      }));
+      const merged: ScanWithDraft[] = scanJobs.slice(0, limit).map((job) => {
+        const jobDrafts = draftsByJobId.get(job.id) || [];
+        return {
+          ...job,
+          draft: jobDrafts[0] || null,
+          draftCount: jobDrafts.length,
+        };
+      });
 
       setJobs(merged);
     } catch (err) {
@@ -183,17 +193,39 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
 
               {/* Info */}
               <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: fontFamilyBodyMedium,
-                    fontSize: fontSizeBase,
-                    color: textPrimary,
-                    marginBottom: 4,
-                  }}
-                  numberOfLines={1}
-                >
-                  {name}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeBase,
+                      color: textPrimary,
+                      flexShrink: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {name}
+                  </Text>
+                  {(job.draftCount ?? 0) > 1 && (
+                    <View
+                      style={{
+                        backgroundColor: '#EFF6FF',
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: fontFamilyBodyMedium,
+                          fontSize: fontSizeXs,
+                          color: '#1D4ED8',
+                        }}
+                      >
+                        {job.draftCount} recipes
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View
                     style={{

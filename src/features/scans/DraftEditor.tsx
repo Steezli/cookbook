@@ -18,9 +18,14 @@ import { DraftManager } from './DraftManager';
 import { useSession } from "@/features/auth/session";
 
 interface DraftEditorProps {
-  draftId: string;
+  /** Pass a ScanDraft directly to skip internal fetch (multi-draft path) */
+  draft?: ScanDraft;
+  /** Job ID used to fetch the draft when `draft` prop is not provided (backward compat) */
+  draftId?: string;
   onSave?: (draft: ScanDraft) => void;
   onCancel?: () => void;
+  /** Override the default post-convert navigation (multi-draft path) */
+  onConverted?: (recipeId: string) => void;
 }
 
 interface EditHistory {
@@ -28,25 +33,41 @@ interface EditHistory {
   timestamp: number;
 }
 
-export function DraftEditor({ draftId, onSave, onCancel }: DraftEditorProps) {
+export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onConverted: onConvertedProp }: DraftEditorProps) {
   const { session, isLoading: authLoading } = useSession();
-  const [draft, setDraft] = useState<ScanDraft | null>(null);
-  const [recipe, setRecipe] = useState<ParsedRecipe | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState<ScanDraft | null>(draftProp ?? null);
+  const [recipe, setRecipe] = useState<ParsedRecipe | null>(draftProp?.recipe ?? null);
+  const [loading, setLoading] = useState(!draftProp);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<EditHistory[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [history, setHistory] = useState<EditHistory[]>(
+    draftProp ? [{ recipe: draftProp.recipe, timestamp: Date.now() }] : []
+  );
+  const [historyIndex, setHistoryIndex] = useState(draftProp ? 0 : -1);
+  const [lastSaved, setLastSaved] = useState<Date | null>(draftProp ? new Date() : null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
 
-  // Load draft on mount
+  // When draft prop changes (multi-draft path), sync into local state
   useEffect(() => {
+    if (!draftProp) return;
+    setDraft(draftProp);
+    setRecipe(draftProp.recipe);
+    setHistory([{ recipe: draftProp.recipe, timestamp: Date.now() }]);
+    setHistoryIndex(0);
+    setLastSaved(new Date());
+    setLoading(false);
+    setError(null);
+  }, [draftProp]);
+
+  // Legacy path: load draft by jobId when draft prop is not provided
+  useEffect(() => {
+    if (draftProp) return; // Skip — draft was passed directly
+
     const loadDraft = async () => {
       try {
         setLoading(true);
         const userId = session!.user.id;
-        const draftData = await scanDraftService.getDraftByJobId(draftId, userId);
+        const draftData = await scanDraftService.getDraftByJobId(draftId!, userId);
 
         if (!draftData) {
           setError('Draft not found');
@@ -69,7 +90,7 @@ export function DraftEditor({ draftId, onSave, onCancel }: DraftEditorProps) {
     if (draftId && session?.user?.id) {
       loadDraft();
     }
-  }, [draftId, session]);
+  }, [draftProp, draftId, session]);
 
   // Auto-save with debouncing
   const saveChanges = useCallback(async (recipeToSave: ParsedRecipe) => {
@@ -133,8 +154,12 @@ export function DraftEditor({ draftId, onSave, onCancel }: DraftEditorProps) {
 
   // Draft management handlers
   const handleDraftConverted = useCallback((recipeId: string) => {
-    router.replace(`/recipes/${recipeId}`);
-  }, []);
+    if (onConvertedProp) {
+      onConvertedProp(recipeId);
+    } else {
+      router.replace(`/recipes/${recipeId}`);
+    }
+  }, [onConvertedProp]);
 
   const handleDraftDiscarded = useCallback(() => {
     router.replace('/scan');

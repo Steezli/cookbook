@@ -48,8 +48,13 @@ import {
 } from '@/lib/tokens';
 
 interface DraftReviewProps {
-  draftId: string;
+  /** Pass a ScanDraft directly to skip internal fetch (multi-draft path) */
+  draft?: ScanDraft;
+  /** Job ID used to fetch the draft when `draft` prop is not provided (backward compat) */
+  draftId?: string;
   onDraftUpdated?: (draft: ScanDraft) => void;
+  /** Called when the draft is saved as a recipe (multi-draft parent coordination) */
+  onDraftSaved?: (draft: ScanDraft) => void;
   onEdit?: () => void;
 }
 
@@ -108,32 +113,64 @@ function ConfidenceBadge({ confidence, label }: { confidence: number; label?: st
   );
 }
 
-export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProps) {
+export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraftSaved, onEdit }: DraftReviewProps) {
   const { session, isLoading: authLoading } = useSession();
   const { breakpoint } = useBreakpoint();
   const isMobile = breakpoint === 'mobile';
   const isSideBySide = breakpoint === 'tablet' || breakpoint === 'web';
 
-  const [draft, setDraft] = useState<ScanDraft | null>(null);
+  const [draft, setDraft] = useState<ScanDraft | null>(draftProp ?? null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [jobStatus, setJobStatus] = useState<string>('checking');
+  const [loading, setLoading] = useState(!draftProp);
+  const [jobStatus, setJobStatus] = useState<string>(draftProp ? 'completed' : 'checking');
   const [error, setError] = useState<string | null>(null);
 
   // Animated value for mobile collapsible photo
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  // Resolve the job ID: from the passed draft, or from the legacy draftId prop (which is actually a jobId)
+  const jobId = draftProp?.jobId ?? draftId;
+
+  // When draft prop is provided, sync it into local state and load photos only
   useEffect(() => {
+    if (!draftProp) return;
+
+    setDraft(draftProp);
+    setLoading(false);
+    setJobStatus('completed');
+
+    // Still load photos via the job ID
+    const loadPhotos = async () => {
+      try {
+        const photos = await getJobPhotos(draftProp.jobId);
+        const urls = photos.map((photoUrl: string) => {
+          if (photoUrl.startsWith('http')) {
+            return photoUrl;
+          }
+          return getScanPhotoUrl(photoUrl);
+        });
+        setPhotoUrls(urls);
+      } catch (photoErr) {
+        console.warn('Failed to load scan photos:', photoErr);
+      }
+    };
+
+    loadPhotos();
+  }, [draftProp]);
+
+  // When draft prop is NOT provided, use the legacy fetch/subscribe path
+  useEffect(() => {
+    if (draftProp) return; // Skip — draft was passed directly
     if (!draftId || !session?.user?.id) return;
 
     let channel: ReturnType<typeof subscribeToJob> | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
-    const loadPhotos = async (jobId: string) => {
+    const loadPhotos = async (resolvedJobId: string) => {
       try {
-        const photos = await getJobPhotos(jobId);
+        const photos = await getJobPhotos(resolvedJobId);
         const urls = photos.map((photoUrl: string) => {
           if (photoUrl.startsWith('http')) {
             return photoUrl;
@@ -243,7 +280,7 @@ export function DraftReview({ draftId, onDraftUpdated, onEdit }: DraftReviewProp
     return () => {
       unsubscribe();
     };
-  }, [draftId, session, onDraftUpdated]);
+  }, [draftProp, draftId, session, onDraftUpdated]);
 
   // --- Loading / Auth / Error states ---
 
