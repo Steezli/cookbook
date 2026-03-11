@@ -117,20 +117,29 @@ describe('Unit Conversions', () => {
   });
 
   describe('formatAmount', () => {
-    it('strips trailing zeros', () => {
-      expect(formatAmount(2.10000)).toBe('2.1');
+    it('rounds to whole number', () => {
+      expect(formatAmount(2.10000)).toBe('2');
     });
 
-    it('strips decimal point for whole numbers', () => {
+    it('handles whole numbers', () => {
       expect(formatAmount(3.00)).toBe('3');
     });
 
-    it('rounds to 2 decimal places', () => {
-      expect(formatAmount(2.456)).toBe('2.46');
+    it('rounds up from .5', () => {
+      expect(formatAmount(2.5)).toBe('3');
     });
 
-    it('handles very small amounts', () => {
-      expect(formatAmount(0.125)).toBe('0.13');
+    it('rounds down below .5', () => {
+      expect(formatAmount(2.456)).toBe('2');
+    });
+
+    it('rounds small amounts', () => {
+      expect(formatAmount(0.125)).toBe('0');
+    });
+
+    it('rounds metric conversions to whole numbers', () => {
+      expect(formatAmount(236.588)).toBe('237');
+      expect(formatAmount(473.176)).toBe('473');
     });
   });
 
@@ -145,7 +154,7 @@ describe('Unit Conversions', () => {
 
     it('converts and displays ml to cup for imperial preference', () => {
       const result = displayAmount(500, 'ml', 'imperial', '500ml flour');
-      expect(result).toContain('2.1');
+      expect(result).toContain('2');
       expect(result).toContain('cup');
       expect(result).toContain('500 ml');
       expect(result).toContain('flour');

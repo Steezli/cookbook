@@ -524,7 +524,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
         </View>
         <View style={{ gap: 6 }}>
           {recipe.ingredients?.map((ingredient, index) => {
-            const ingColor = getConfidenceColor(ingredient.confidence);
+            const ingConfidence = typeof ingredient.confidence === 'number' ? ingredient.confidence : fieldConfidence.ingredients;
+            const ingColor = getConfidenceColor(ingConfidence);
             return (
               <View
                 key={index}
@@ -545,7 +546,7 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
                 </Text>
                 <View style={{ backgroundColor: ingColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                   <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: ingColor.text }}>
-                    {Math.round(ingredient.confidence * 100)}%
+                    {Math.round(ingConfidence * 100)}%
                   </Text>
                 </View>
               </View>

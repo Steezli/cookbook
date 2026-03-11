@@ -131,15 +131,8 @@ export function getTargetUnit(unit: string, preference: UnitSystem): string {
 }
 
 export function formatAmount(num: number): string {
-  // Round to 2 decimal places
-  const rounded = Math.round(num * 100) / 100;
-
-  // Convert to string and strip trailing zeros
-  const str = rounded.toString();
-  if (str.includes('.')) {
-    return str.replace(/\.?0+$/, '');
-  }
-  return str;
+  // Round to the nearest whole number
+  return Math.round(num).toString();
 }
 
 export function displayAmount(
