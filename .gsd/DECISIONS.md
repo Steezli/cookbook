@@ -48,3 +48,20 @@
 - **Decision:** Ship `.d.ts` type declarations for `expo-tracking-transparency` and `react-native-google-mobile-ads` rather than installing the packages
 - **Why:** These packages require native build tooling (EAS Build) that isn't needed during development; type declarations enable TypeScript compilation and IDE support without native dependencies
 - **Trade-off:** Types could drift from actual module API; mitigated by the packages' stable public APIs
+
+## S01: Multi-Recipe Scan
+
+### Single-pass multi-recipe detection over two-pass
+- **Decision:** Use a single Claude API call with a prompt that always requests `{ "recipes": [...] }` array format, rather than a separate detection pass followed by extraction
+- **Why:** An extra Claude call doubles cost and latency. Claude vision can detect recipe boundaries and structure output in one pass. If detection proves unreliable, a two-pass approach can be added later.
+- **Trade-off:** Less control over detection accuracy; mitigated by prompt guidance ("separate recipes have their own title, ingredient list, and instructions") and 5-recipe cap
+
+### Inlined pure functions in edge function (Deno isolation)
+- **Decision:** Multi-recipe parser and prompt builder are authored in `src/lib/scan/multi-recipe-parser.ts` for testing, then inlined/copied into the Deno edge function since it can't import from `src/`
+- **Why:** Edge functions run on Deno with no access to the app's `src/` tree. Keeping a testable source-of-truth in `src/` while inlining into the edge function gives us Jest testability without fighting Deno's module system.
+- **Trade-off:** Two copies of the logic that could drift; mitigated by parser tests that validate the canonical behavior
+
+### Array-always response schema
+- **Decision:** Claude prompt always requests `{ "recipes": [...] }` even for single-recipe images — the array has length 1 in that case
+- **Why:** Uniform response shape eliminates branching in the parser. Backward compat with legacy single-object format is handled as a fallback in `parseMultiScanResult` for robustness.
+- **Trade-off:** Slightly more verbose prompt; negligible cost

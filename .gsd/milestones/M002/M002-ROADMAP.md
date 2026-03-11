@@ -51,7 +51,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Multi-Recipe Scan** `risk:high` `depends:[]`
+- [x] **S01: Multi-Recipe Scan** `risk:high` `depends:[]`
   > After this: uploading a photo with 2+ recipes produces separate drafts for each; edge function detects and splits recipes; unit tests prove parsing logic
 - [ ] **S02: Multi-Draft UX** `risk:medium` `depends:[S01]`
   > After this: draft review screen shows a list of drafts when a job produces multiple; each draft can be reviewed, edited, and saved as an independent recipe

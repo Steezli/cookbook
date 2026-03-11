@@ -4,6 +4,7 @@
 
 ## M002: Production Polish — ACTIVE
 
-- Slices: 0/5
-- Status: planned
-- Next: S01 (Multi-Recipe Scan) or S03 (SEO) or S04 (Ads+GDPR) — S01/S03/S04 have no dependencies
+- Slices: 1/5
+- Status: S01 complete and merged
+- Current: Ready for S02 (Multi-Draft UX)
+- Next: S02 (Multi-Draft UX) — depends on S01's getDraftsByJobId() contract

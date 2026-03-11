@@ -26,6 +26,7 @@ export interface ScanDraft {
   processingTimeMs: number
   createdAt: string
   updatedAt: string
+  draftIndex?: number
 }
 
 export interface DraftEnhancement {
@@ -47,6 +48,28 @@ export interface DraftReviewAction {
 }
 
 export class ScanDraftService {
+  /**
+   * Map a database record to a ScanDraft interface object
+   */
+  private mapRecordToDraft(record: any): ScanDraft {
+    return {
+      id: record.id,
+      jobId: record.job_id,
+      userId: record.user_id,
+      rawText: record.raw_text,
+      ocrConfidence: record.ocr_confidence,
+      recipe: record.structured_data?.recipe || {},
+      fieldConfidence: record.field_confidence || {},
+      overallConfidence: record.structured_data?.overallConfidence || {},
+      status: record.status,
+      aiModelVersion: record.ai_model_version || '1.0',
+      processingTimeMs: record.processing_time_ms || 0,
+      createdAt: record.created_at,
+      updatedAt: record.updated_at,
+      draftIndex: record.draft_index ?? undefined,
+    }
+  }
+
   /**
    * Create a new scan draft from OCR results
    */
@@ -90,21 +113,7 @@ export class ScanDraftService {
       }
 
       // Convert database record to ScanDraft format
-      const scanDraft: ScanDraft = {
-        id: data.id,
-        jobId: data.job_id,
-        userId: data.user_id,
-        rawText: data.raw_text,
-        ocrConfidence: data.ocr_confidence,
-        recipe: data.structured_data?.recipe || {},
-        fieldConfidence: data.field_confidence || {},
-        overallConfidence: data.structured_data?.overallConfidence || {},
-        status: data.status,
-        aiModelVersion: data.ai_model_version || '1.0',
-        processingTimeMs: data.processing_time_ms || 0,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      }
+      const scanDraft = this.mapRecordToDraft(data)
 
       console.log(`Scan draft created successfully: ${scanDraft.id}`)
 
@@ -139,21 +148,7 @@ export class ScanDraftService {
         return null
       }
 
-      return {
-        id: data.id,
-        jobId: data.job_id,
-        userId: data.user_id,
-        rawText: data.raw_text,
-        ocrConfidence: data.ocr_confidence,
-        recipe: data.structured_data?.recipe || {},
-        fieldConfidence: data.field_confidence || {},
-        overallConfidence: data.structured_data?.overallConfidence || {},
-        status: data.status,
-        aiModelVersion: data.ai_model_version || '1.0',
-        processingTimeMs: data.processing_time_ms || 0,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      }
+      return this.mapRecordToDraft(data)
 
     } catch (error) {
       console.error('Failed to get scan draft:', error)
@@ -162,7 +157,7 @@ export class ScanDraftService {
   }
 
   /**
-   * Get a scan draft by job ID (resolves scan_jobs.id to scan_drafts record)
+   * Get the first scan draft by job ID (returns draft_index 0 when multiple drafts exist)
    */
   async getDraftByJobId(jobId: string, userId: string): Promise<ScanDraft | null> {
     try {
@@ -171,6 +166,8 @@ export class ScanDraftService {
         .select('*')
         .eq('job_id', jobId)
         .eq('user_id', userId)
+        .order('draft_index', { ascending: true })
+        .limit(1)
         .single()
 
       if (error) {
@@ -184,24 +181,34 @@ export class ScanDraftService {
         return null
       }
 
-      return {
-        id: data.id,
-        jobId: data.job_id,
-        userId: data.user_id,
-        rawText: data.raw_text,
-        ocrConfidence: data.ocr_confidence,
-        recipe: data.structured_data?.recipe || {},
-        fieldConfidence: data.field_confidence || {},
-        overallConfidence: data.structured_data?.overallConfidence || {},
-        status: data.status,
-        aiModelVersion: data.ai_model_version || '1.0',
-        processingTimeMs: data.processing_time_ms || 0,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
-      }
+      return this.mapRecordToDraft(data)
     } catch (error) {
       console.error('Failed to get scan draft by job ID:', error)
       throw new Error(`Failed to fetch scan draft by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Get all scan drafts for a job, ordered by draft_index ascending.
+   * Returns empty array when no drafts exist.
+   */
+  async getDraftsByJobId(jobId: string, userId: string): Promise<ScanDraft[]> {
+    try {
+      const { data, error } = await supabase
+        .from('scan_drafts')
+        .select('*')
+        .eq('job_id', jobId)
+        .eq('user_id', userId)
+        .order('draft_index', { ascending: true })
+
+      if (error) {
+        throw new Error(`Failed to fetch scan drafts by job ID: ${error.message}`)
+      }
+
+      return (data || []).map((record: any) => this.mapRecordToDraft(record))
+    } catch (error) {
+      console.error('Failed to get scan drafts by job ID:', error)
+      throw new Error(`Failed to fetch scan drafts by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -232,21 +239,7 @@ export class ScanDraftService {
         throw new Error(`Failed to fetch user drafts: ${error.message}`)
       }
 
-      return (data || []).map((record: any) => ({
-        id: record.id,
-        jobId: record.job_id,
-        userId: record.user_id,
-        rawText: record.raw_text,
-        ocrConfidence: record.ocr_confidence,
-        recipe: record.structured_data?.recipe || {},
-        fieldConfidence: record.field_confidence || {},
-        overallConfidence: record.structured_data?.overallConfidence || {},
-        status: record.status,
-        aiModelVersion: record.ai_model_version || '1.0',
-        processingTimeMs: record.processing_time_ms || 0,
-        createdAt: record.created_at,
-        updatedAt: record.updated_at
-      }))
+      return (data || []).map((record: any) => this.mapRecordToDraft(record))
 
     } catch (error) {
       console.error('Failed to get user drafts:', error)
@@ -392,21 +385,7 @@ export class ScanDraftService {
         throw new Error(`Failed to fetch drafts by status: ${error.message}`)
       }
 
-      return (data || []).map((record: any) => ({
-        id: record.id,
-        jobId: record.job_id,
-        userId: record.user_id,
-        rawText: record.raw_text,
-        ocrConfidence: record.ocr_confidence,
-        recipe: record.structured_data?.recipe || {},
-        fieldConfidence: record.field_confidence || {},
-        overallConfidence: record.structured_data?.overallConfidence || {},
-        status: record.status,
-        aiModelVersion: record.ai_model_version || '1.0',
-        processingTimeMs: record.processing_time_ms || 0,
-        createdAt: record.created_at,
-        updatedAt: record.updated_at
-      }))
+      return (data || []).map((record: any) => this.mapRecordToDraft(record))
 
     } catch (error) {
       console.error('Failed to get drafts by status:', error)

@@ -34,6 +34,135 @@ interface ScanResult {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Inlined prompt builder (mirrors src/lib/scan/multi-recipe-parser.ts)
+// Edge functions run on Deno and can't import from src/.
+// ---------------------------------------------------------------------------
+
+const RECIPE_JSON_SCHEMA = `{
+  "recipes": [
+    {
+      "rawText": "the complete text you read from the image(s), preserving original formatting",
+      "confidence": 0.0 to 1.0,
+      "title": "recipe title",
+      "ingredients": [
+        { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
+      ],
+      "instructions": ["step 1 text", "step 2 text"],
+      "prepTimeMinutes": number or null,
+      "cookTimeMinutes": number or null,
+      "servings": number or null
+    }
+  ]
+}`
+
+const COMMON_INSTRUCTIONS = `Important:
+- For ingredients, always separate amount, unit, and name. E.g. "2 cups flour" → amount: "2", unit: "cups", name: "flour"
+- If a fraction like "1/2" or "1 1/2" appears, keep it as a string: "1/2" or "1 1/2"
+- If prep/cook time or servings aren't mentioned, use null
+- Include ALL ingredients and ALL instructions, don't summarize
+- confidence should reflect how legible the image was and how complete the extraction is
+- Return at most 5 recipes per response. If you detect more than 5, return the 5 most complete ones.
+- Always wrap your response in the { "recipes": [...] } format, even for a single recipe.`
+
+/**
+ * Build the Claude prompt for recipe scanning. Handles single and multi-image
+ * inputs, always requests the array-wrapped JSON format for consistent parsing.
+ */
+function buildClaudePrompt(imageCount: number): string {
+  const intro =
+    imageCount > 1
+      ? `These ${imageCount} photos may contain one or more recipes (multiple pages or angles). Read ALL the text from every image. If you detect multiple distinct recipes, return each one separately.`
+      : `This is a photo of a recipe. Read ALL the text visible in the image. If the photo contains more than one recipe, return each one separately.`
+
+  return `${intro}
+
+Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
+
+${RECIPE_JSON_SCHEMA}
+
+${COMMON_INSTRUCTIONS}`
+}
+
+// ---------------------------------------------------------------------------
+// Inlined multi-recipe parser (mirrors src/lib/scan/multi-recipe-parser.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a single recipe object into a typed ScanResult.
+ * Applies safe defaults for missing/malformed fields.
+ */
+function parseSingleRecipe(parsed: any): ScanResult {
+  if (!parsed || typeof parsed !== 'object') {
+    return {
+      rawText: '',
+      confidence: 0.7,
+      extracted: {},
+    }
+  }
+
+  return {
+    rawText: parsed.rawText || '',
+    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
+    extracted: {
+      title: parsed.title || undefined,
+      ingredients: Array.isArray(parsed.ingredients)
+        ? parsed.ingredients.map((ing: any) => ({
+            name: ing.name || '',
+            amount: String(ing.amount || ''),
+            unit: ing.unit || '',
+            preparation: ing.preparation || '',
+          }))
+        : undefined,
+      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : undefined,
+      prepTimeMinutes:
+        typeof parsed.prepTimeMinutes === 'number' ? parsed.prepTimeMinutes : undefined,
+      cookTimeMinutes:
+        typeof parsed.cookTimeMinutes === 'number' ? parsed.cookTimeMinutes : undefined,
+      servings: typeof parsed.servings === 'number' ? parsed.servings : undefined,
+    },
+  }
+}
+
+/**
+ * Parse Claude's JSON response into an array of ScanResult objects.
+ *
+ * Supports two response shapes:
+ *  1. Array format — { recipes: [{ rawText, title, … }, …] }
+ *  2. Legacy single-object format — { rawText, title, … } (no wrapper)
+ *
+ * Returns an empty array when the input is null, undefined, or structurally
+ * unparseable.
+ */
+function parseMultiScanResult(parsed: any): ScanResult[] {
+  if (!parsed || typeof parsed !== 'object') {
+    return []
+  }
+
+  // Array format — { recipes: [...] }
+  if (Array.isArray(parsed.recipes)) {
+    if (parsed.recipes.length === 0) {
+      return []
+    }
+    return parsed.recipes.map((r: any) => parseSingleRecipe(r))
+  }
+
+  // Legacy single-object format — { rawText, title, … }
+  if (
+    parsed.rawText !== undefined ||
+    parsed.title !== undefined ||
+    parsed.ingredients !== undefined
+  ) {
+    return [parseSingleRecipe(parsed)]
+  }
+
+  return []
+}
+
+// ---------------------------------------------------------------------------
+// Edge function handler
+// ---------------------------------------------------------------------------
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -76,12 +205,12 @@ serve(async (req) => {
     }
 
     try {
-      let result: ScanResult
+      let results: ScanResult[]
 
       if (inlineImages?.length) {
         // Native path: images sent as base64 inline (bypasses Storage fetch bug)
         console.log(`Processing ${inlineImages.length} inline image(s) for job ${jobId}`)
-        result = await processWithClaudeInline(inlineImages)
+        results = await processWithClaudeInline(inlineImages)
 
         // Save images to Storage server-side so users can reference them later
         const savedUrls = await saveInlineImagesToStorage(supabase, job, inlineImages)
@@ -97,59 +226,75 @@ serve(async (req) => {
       } else {
         // Web path: fetch images from Storage URLs
         const imageUrls: string[] = job.photo_urls?.length ? job.photo_urls : [job.photo_url]
-        result = await processWithClaude(imageUrls)
+        results = await processWithClaude(imageUrls)
       }
 
-      // Build field confidence from Claude's self-reported confidence
-      const fieldConfidence = {
-        title: result.extracted.title ? result.confidence * 0.9 : 0,
-        ingredients: result.extracted.ingredients?.length ? result.confidence * 0.9 : 0,
-        instructions: result.extracted.instructions?.length ? result.confidence * 0.9 : 0,
-        prepTime: result.extracted.prepTimeMinutes ? result.confidence * 0.8 : 0,
-        cookTime: result.extracted.cookTimeMinutes ? result.confidence * 0.8 : 0,
-        servings: result.extracted.servings ? result.confidence * 0.8 : 0,
+      // Guard: if parsing returned nothing, treat as an error
+      if (results.length === 0) {
+        throw new Error('Claude response could not be parsed into any recipes')
       }
 
-      const avgConfidence = Object.values(fieldConfidence).reduce((a, b) => a + b, 0) / 6
+      console.log(`Detected ${results.length} recipe(s) for job ${jobId}`)
 
-      const draftStatus = avgConfidence >= 0.75 ? 'ready' : avgConfidence >= 0.5 ? 'needs_review' : 'enhanced'
-      const confidenceLevel = avgConfidence >= 0.8 ? 'high' : avgConfidence >= 0.5 ? 'medium' : 'low'
+      // Insert one scan_drafts row per recipe with sequential draft_index
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i]
 
-      const draftData = {
-        job_id: jobId,
-        user_id: job.user_id,
-        raw_text: result.rawText,
-        ocr_confidence: result.confidence,
-        title: result.extracted.title,
-        ingredients: result.extracted.ingredients,
-        instructions: result.extracted.instructions,
-        prep_time_minutes: result.extracted.prepTimeMinutes,
-        cook_time_minutes: result.extracted.cookTimeMinutes,
-        servings: result.extracted.servings,
-        status: draftStatus,
-        confidence_level: confidenceLevel,
-        structured_data: {
-          recipe: result.extracted,
-          fieldConfidence,
-          overallConfidence: {
-            score: avgConfidence,
-            status: draftStatus,
-            fieldScores: [
-              { field: 'title', confidence: fieldConfidence.title, status: fieldConfidence.title >= 0.8 ? 'ready' : 'needs_review' },
-              { field: 'ingredients', confidence: fieldConfidence.ingredients, status: fieldConfidence.ingredients >= 0.8 ? 'ready' : 'needs_review' },
-              { field: 'instructions', confidence: fieldConfidence.instructions, status: fieldConfidence.instructions >= 0.8 ? 'ready' : 'needs_review' },
-            ],
+        // Build field confidence from Claude's self-reported confidence
+        const fieldConfidence = {
+          title: result.extracted.title ? result.confidence * 0.9 : 0,
+          ingredients: result.extracted.ingredients?.length ? result.confidence * 0.9 : 0,
+          instructions: result.extracted.instructions?.length ? result.confidence * 0.9 : 0,
+          prepTime: result.extracted.prepTimeMinutes ? result.confidence * 0.8 : 0,
+          cookTime: result.extracted.cookTimeMinutes ? result.confidence * 0.8 : 0,
+          servings: result.extracted.servings ? result.confidence * 0.8 : 0,
+        }
+
+        const avgConfidence = Object.values(fieldConfidence).reduce((a, b) => a + b, 0) / 6
+
+        const draftStatus = avgConfidence >= 0.75 ? 'ready' : avgConfidence >= 0.5 ? 'needs_review' : 'enhanced'
+        const confidenceLevel = avgConfidence >= 0.8 ? 'high' : avgConfidence >= 0.5 ? 'medium' : 'low'
+
+        const draftData = {
+          job_id: jobId,
+          user_id: job.user_id,
+          draft_index: i,
+          raw_text: result.rawText,
+          ocr_confidence: result.confidence,
+          title: result.extracted.title,
+          ingredients: result.extracted.ingredients,
+          instructions: result.extracted.instructions,
+          prep_time_minutes: result.extracted.prepTimeMinutes,
+          cook_time_minutes: result.extracted.cookTimeMinutes,
+          servings: result.extracted.servings,
+          status: draftStatus,
+          confidence_level: confidenceLevel,
+          structured_data: {
+            recipe: result.extracted,
+            fieldConfidence,
+            overallConfidence: {
+              score: avgConfidence,
+              status: draftStatus,
+              fieldScores: [
+                { field: 'title', confidence: fieldConfidence.title, status: fieldConfidence.title >= 0.8 ? 'ready' : 'needs_review' },
+                { field: 'ingredients', confidence: fieldConfidence.ingredients, status: fieldConfidence.ingredients >= 0.8 ? 'ready' : 'needs_review' },
+                { field: 'instructions', confidence: fieldConfidence.instructions, status: fieldConfidence.instructions >= 0.8 ? 'ready' : 'needs_review' },
+              ],
+            },
           },
-        },
-        field_confidence: fieldConfidence,
-      }
+          field_confidence: fieldConfidence,
+        }
 
-      const { error: draftError } = await supabase
-        .from('scan_drafts')
-        .insert(draftData)
+        const { error: draftError } = await supabase
+          .from('scan_drafts')
+          .insert(draftData)
 
-      if (draftError) {
-        throw draftError
+        if (draftError) {
+          console.error(`Failed to insert draft ${i + 1}/${results.length} (draft_index: ${i}) for job ${jobId}:`, draftError)
+          throw new Error(`Draft insert failed for draft_index ${i}: ${draftError.message}`)
+        }
+
+        console.log(`Inserted draft ${i + 1}/${results.length} for job ${jobId}`)
       }
 
       await supabase
@@ -162,7 +307,7 @@ serve(async (req) => {
         .eq('id', jobId)
 
       return new Response(
-        JSON.stringify({ success: true, jobId, draftId: 'created' }),
+        JSON.stringify({ success: true, jobId, draftCount: results.length }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -220,8 +365,9 @@ serve(async (req) => {
 /**
  * Process recipe image(s) using Claude's vision API.
  * Performs OCR + structured extraction in a single call.
+ * Returns an array of ScanResult — one per detected recipe.
  */
-async function processWithClaude(imageUrls: string[]): Promise<ScanResult> {
+async function processWithClaude(imageUrls: string[]): Promise<ScanResult[]> {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not configured. Add it to Supabase Edge Function secrets.')
@@ -274,9 +420,7 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult> {
     })
   )
 
-  const prompt = imageUrls.length > 1
-    ? `These ${imageUrls.length} photos are of the same recipe (multiple pages or angles). Read ALL the text from every image and combine them into a single complete recipe.`
-    : `This is a photo of a recipe. Read ALL the text visible in the image.`
+  const prompt = buildClaudePrompt(imageUrls.length)
 
   const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -287,7 +431,7 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult> {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 4096,
+      max_tokens: 8192,
       messages: [
         {
           role: 'user',
@@ -295,29 +439,7 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult> {
             ...imageContents,
             {
               type: 'text',
-              text: `${prompt}
-
-Then extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
-
-{
-  "rawText": "the complete text you read from the image(s), preserving original formatting",
-  "confidence": 0.0 to 1.0 (how confident you are in the overall extraction quality),
-  "title": "recipe title",
-  "ingredients": [
-    { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
-  ],
-  "instructions": ["step 1 text", "step 2 text"],
-  "prepTimeMinutes": number or null,
-  "cookTimeMinutes": number or null,
-  "servings": number or null
-}
-
-Important:
-- For ingredients, always separate amount, unit, and name. E.g. "2 cups flour" → amount: "2", unit: "cups", name: "flour"
-- If a fraction like "1/2" or "1 1/2" appears, keep it as a string: "1/2" or "1 1/2"
-- If prep/cook time or servings aren't mentioned, use null
-- Include ALL ingredients and ALL instructions, don't summarize
-- confidence should reflect how legible the image was and how complete the extraction is`,
+              text: prompt,
             },
           ],
         },
@@ -342,14 +464,15 @@ Important:
   const jsonStr = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '').trim()
   const parsed = JSON.parse(jsonStr)
 
-  return parseScanResult(parsed)
+  return parseMultiScanResult(parsed)
 }
 
 /**
  * Process recipe image(s) from inline base64 data (native upload path).
  * Skips the Storage fetch entirely — images come directly from the client.
+ * Returns an array of ScanResult — one per detected recipe.
  */
-async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResult> {
+async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResult[]> {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not configured. Add it to Supabase Edge Function secrets.')
@@ -367,9 +490,7 @@ async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResul
     }
   })
 
-  const prompt = images.length > 1
-    ? `These ${images.length} photos are of the same recipe (multiple pages or angles). Read ALL the text from every image and combine them into a single complete recipe.`
-    : `This is a photo of a recipe. Read ALL the text visible in the image.`
+  const prompt = buildClaudePrompt(images.length)
 
   const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -380,7 +501,7 @@ async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResul
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 4096,
+      max_tokens: 8192,
       messages: [
         {
           role: 'user',
@@ -388,29 +509,7 @@ async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResul
             ...imageContents,
             {
               type: 'text',
-              text: `${prompt}
-
-Then extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
-
-{
-  "rawText": "the complete text you read from the image(s), preserving original formatting",
-  "confidence": 0.0 to 1.0 (how confident you are in the overall extraction quality),
-  "title": "recipe title",
-  "ingredients": [
-    { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
-  ],
-  "instructions": ["step 1 text", "step 2 text"],
-  "prepTimeMinutes": number or null,
-  "cookTimeMinutes": number or null,
-  "servings": number or null
-}
-
-Important:
-- For ingredients, always separate amount, unit, and name. E.g. "2 cups flour" → amount: "2", unit: "cups", name: "flour"
-- If a fraction like "1/2" or "1 1/2" appears, keep it as a string: "1/2" or "1 1/2"
-- If prep/cook time or servings aren't mentioned, use null
-- Include ALL ingredients and ALL instructions, don't summarize
-- confidence should reflect how legible the image was and how complete the extraction is`,
+              text: prompt,
             },
           ],
         },
@@ -433,32 +532,7 @@ Important:
 
   const jsonStr = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '').trim()
   const parsed = JSON.parse(jsonStr)
-  return parseScanResult(parsed)
-}
-
-/**
- * Parse Claude's JSON response into a ScanResult.
- */
-function parseScanResult(parsed: any): ScanResult {
-  return {
-    rawText: parsed.rawText || '',
-    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
-    extracted: {
-      title: parsed.title || undefined,
-      ingredients: Array.isArray(parsed.ingredients)
-        ? parsed.ingredients.map((ing: any) => ({
-            name: ing.name || '',
-            amount: String(ing.amount || ''),
-            unit: ing.unit || '',
-            preparation: ing.preparation || '',
-          }))
-        : undefined,
-      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : undefined,
-      prepTimeMinutes: typeof parsed.prepTimeMinutes === 'number' ? parsed.prepTimeMinutes : undefined,
-      cookTimeMinutes: typeof parsed.cookTimeMinutes === 'number' ? parsed.cookTimeMinutes : undefined,
-      servings: typeof parsed.servings === 'number' ? parsed.servings : undefined,
-    },
-  }
+  return parseMultiScanResult(parsed)
 }
 
 /**

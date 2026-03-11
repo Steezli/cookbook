@@ -274,10 +274,13 @@ describe('ScanDraftService', () => {
         processing_time_ms: 200,
         created_at: '2026-01-01',
         updated_at: '2026-01-01',
+        draft_index: 0,
       };
 
       const jobSingle = jest.fn().mockResolvedValue({ data: mockData, error: null });
-      const jobEq2 = jest.fn().mockReturnValue({ single: jobSingle });
+      const jobLimit = jest.fn().mockReturnValue({ single: jobSingle });
+      const jobOrder = jest.fn().mockReturnValue({ limit: jobLimit });
+      const jobEq2 = jest.fn().mockReturnValue({ order: jobOrder });
       const jobEq1 = jest.fn().mockReturnValue({ eq: jobEq2 });
       const jobSelect = jest.fn().mockReturnValue({ eq: jobEq1 });
 
@@ -290,6 +293,9 @@ describe('ScanDraftService', () => {
       // Must query by job_id, NOT by id
       expect(jobEq1).toHaveBeenCalledWith('job_id', 'job-uuid-1');
       expect(jobEq2).toHaveBeenCalledWith('user_id', 'user-1');
+      // Must use order + limit for deterministic multi-draft behavior
+      expect(jobOrder).toHaveBeenCalledWith('draft_index', { ascending: true });
+      expect(jobLimit).toHaveBeenCalledWith(1);
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('draft-uuid-1');
@@ -301,7 +307,9 @@ describe('ScanDraftService', () => {
         data: null,
         error: { code: 'PGRST116', message: 'Not found' },
       });
-      const jobEq2 = jest.fn().mockReturnValue({ single: jobSingle });
+      const jobLimit = jest.fn().mockReturnValue({ single: jobSingle });
+      const jobOrder = jest.fn().mockReturnValue({ limit: jobLimit });
+      const jobEq2 = jest.fn().mockReturnValue({ order: jobOrder });
       const jobEq1 = jest.fn().mockReturnValue({ eq: jobEq2 });
       const jobSelect = jest.fn().mockReturnValue({ eq: jobEq1 });
 
@@ -389,6 +397,228 @@ describe('ScanDraftService', () => {
       // The updateDraftStatus call should pass 'ready' (not 'approved')
       const statusUpdateArg = updateFn.mock.calls[0][0];
       expect(statusUpdateArg).toHaveProperty('status', 'ready');
+    });
+  });
+
+  describe('getDraftsByJobId', () => {
+    it('returns multiple drafts ordered by draft_index', async () => {
+      const mockRecords = [
+        {
+          id: 'draft-1',
+          job_id: 'job-1',
+          user_id: 'user-1',
+          raw_text: 'recipe 1',
+          ocr_confidence: 0.9,
+          structured_data: { recipe: { title: 'Recipe A' }, overallConfidence: { score: 0.9 } },
+          field_confidence: { title: 0.9 },
+          status: 'ready',
+          ai_model_version: '1.0',
+          processing_time_ms: 100,
+          created_at: '2026-01-01',
+          updated_at: '2026-01-01',
+          draft_index: 0,
+        },
+        {
+          id: 'draft-2',
+          job_id: 'job-1',
+          user_id: 'user-1',
+          raw_text: 'recipe 2',
+          ocr_confidence: 0.85,
+          structured_data: { recipe: { title: 'Recipe B' }, overallConfidence: { score: 0.8 } },
+          field_confidence: { title: 0.85 },
+          status: 'ready',
+          ai_model_version: '1.0',
+          processing_time_ms: 120,
+          created_at: '2026-01-01',
+          updated_at: '2026-01-01',
+          draft_index: 1,
+        },
+      ];
+
+      const orderFn = jest.fn().mockResolvedValue({ data: mockRecords, error: null });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftsByJobId('job-1', 'user-1');
+
+      expect(mockFrom).toHaveBeenCalledWith('scan_drafts');
+      expect(selectFn).toHaveBeenCalledWith('*');
+      expect(eq1).toHaveBeenCalledWith('job_id', 'job-1');
+      expect(eq2).toHaveBeenCalledWith('user_id', 'user-1');
+      expect(orderFn).toHaveBeenCalledWith('draft_index', { ascending: true });
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('draft-1');
+      expect(result[0].recipe.title).toBe('Recipe A');
+      expect(result[1].id).toBe('draft-2');
+      expect(result[1].recipe.title).toBe('Recipe B');
+    });
+
+    it('returns empty array when no drafts exist', async () => {
+      const orderFn = jest.fn().mockResolvedValue({ data: [], error: null });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftsByJobId('nonexistent-job', 'user-1');
+
+      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
+    });
+
+    it('includes draftIndex in returned objects', async () => {
+      const mockRecords = [
+        {
+          id: 'draft-1',
+          job_id: 'job-1',
+          user_id: 'user-1',
+          raw_text: 'recipe 1',
+          ocr_confidence: 0.9,
+          structured_data: { recipe: { title: 'Test' }, overallConfidence: {} },
+          field_confidence: {},
+          status: 'ready',
+          ai_model_version: '1.0',
+          processing_time_ms: 100,
+          created_at: '2026-01-01',
+          updated_at: '2026-01-01',
+          draft_index: 0,
+        },
+        {
+          id: 'draft-2',
+          job_id: 'job-1',
+          user_id: 'user-1',
+          raw_text: 'recipe 2',
+          ocr_confidence: 0.85,
+          structured_data: { recipe: { title: 'Test 2' }, overallConfidence: {} },
+          field_confidence: {},
+          status: 'ready',
+          ai_model_version: '1.0',
+          processing_time_ms: 120,
+          created_at: '2026-01-01',
+          updated_at: '2026-01-01',
+          draft_index: 1,
+        },
+      ];
+
+      const orderFn = jest.fn().mockResolvedValue({ data: mockRecords, error: null });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftsByJobId('job-1', 'user-1');
+
+      expect(result[0].draftIndex).toBe(0);
+      expect(result[1].draftIndex).toBe(1);
+    });
+
+    it('handles null data gracefully', async () => {
+      const orderFn = jest.fn().mockResolvedValue({ data: null, error: null });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftsByJobId('job-1', 'user-1');
+
+      expect(result).toEqual([]);
+    });
+
+    it('throws on database error', async () => {
+      const orderFn = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'connection failed' },
+      });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      await expect(service.getDraftsByJobId('job-1', 'user-1')).rejects.toThrow(
+        'Failed to fetch scan drafts by job ID: connection failed'
+      );
+    });
+  });
+
+  describe('getDraftByJobId (singular) with multi-draft support', () => {
+    it('still returns single draft (backward compat)', async () => {
+      const mockData = {
+        id: 'draft-uuid-1',
+        job_id: 'job-uuid-1',
+        user_id: 'user-1',
+        raw_text: 'recipe text',
+        ocr_confidence: 0.85,
+        structured_data: { recipe: { title: 'Test' }, overallConfidence: { score: 0.9 } },
+        field_confidence: { title: 0.9 },
+        status: 'ready',
+        ai_model_version: '1.0',
+        processing_time_ms: 200,
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+        draft_index: 0,
+      };
+
+      const singleFn = jest.fn().mockResolvedValue({ data: mockData, error: null });
+      const limitFn = jest.fn().mockReturnValue({ single: singleFn });
+      const orderFn = jest.fn().mockReturnValue({ limit: limitFn });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftByJobId('job-uuid-1', 'user-1');
+
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe('draft-uuid-1');
+      expect(result!.jobId).toBe('job-uuid-1');
+      expect(result!.draftIndex).toBe(0);
+    });
+
+    it('uses order + limit to return first draft when multiple exist', async () => {
+      const mockData = {
+        id: 'draft-first',
+        job_id: 'job-multi',
+        user_id: 'user-1',
+        raw_text: 'first recipe',
+        ocr_confidence: 0.9,
+        structured_data: { recipe: { title: 'First Recipe' }, overallConfidence: {} },
+        field_confidence: {},
+        status: 'ready',
+        ai_model_version: '1.0',
+        processing_time_ms: 100,
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+        draft_index: 0,
+      };
+
+      const singleFn = jest.fn().mockResolvedValue({ data: mockData, error: null });
+      const limitFn = jest.fn().mockReturnValue({ single: singleFn });
+      const orderFn = jest.fn().mockReturnValue({ limit: limitFn });
+      const eq2 = jest.fn().mockReturnValue({ order: orderFn });
+      const eq1 = jest.fn().mockReturnValue({ eq: eq2 });
+      const selectFn = jest.fn().mockReturnValue({ eq: eq1 });
+
+      mockFrom.mockReturnValue({ select: selectFn });
+
+      const result = await service.getDraftByJobId('job-multi', 'user-1');
+
+      // Verify the chain includes order + limit
+      expect(orderFn).toHaveBeenCalledWith('draft_index', { ascending: true });
+      expect(limitFn).toHaveBeenCalledWith(1);
+      expect(singleFn).toHaveBeenCalled();
+
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe('draft-first');
+      expect(result!.recipe.title).toBe('First Recipe');
     });
   });
 

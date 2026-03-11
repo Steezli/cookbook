@@ -247,6 +247,15 @@ Public navigation header with logo, Sign In, and Get Started CTA
 
 Cursor-based pagination for public recipe listing
 
+### SCAN-MULTI — Multi-recipe scan: a photo containing 2+ recipes produces separate drafts for each
+
+- Status: active
+- Class: core-capability
+- Source: M002 roadmap
+- Primary Slice: M002/S01 (data layer), M002/S02 (UI)
+
+A single photo containing multiple recipes is detected and split by the edge function into separate scan_drafts rows with draft_index ordering. Parser handles array and legacy formats. getDraftsByJobId() returns ScanDraft[] for the multi-draft UI. Contract-verified in S01; end-to-end proof requires S02 (UI) and S05 (UAT with real photos).
+
 ## Deferred
 
 ## Out of Scope
