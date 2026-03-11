@@ -45,9 +45,9 @@ Requirements for v1.1 Design & Responsive milestone. Each maps to roadmap phases
 
 ### Advertising
 
-- [ ] **ADS-01**: Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
-- [ ] **ADS-02**: Ad placement on public browsing screens only (never authenticated screens)
-- [ ] **ADS-03**: ATT permission prompt on iOS for ad tracking
+- [x] **ADS-01**: Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
+- [x] **ADS-02**: Ad placement on public browsing screens only (never authenticated screens)
+- [x] **ADS-03**: ATT permission prompt on iOS for ad tracking
 
 ## v1.2 Requirements
 
@@ -109,9 +109,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCREEN-08 | Phase 12 | Complete |
 | SCREEN-09 | Phase 12 | Complete |
 | SCREEN-10 | Phase 12 | Complete |
-| ADS-01 | Phase 13 | Pending |
-| ADS-02 | Phase 13 | Pending |
-| ADS-03 | Phase 13 | Pending |
+| ADS-01 | Phase 13 | Complete |
+| ADS-02 | Phase 13 | Complete |
+| ADS-03 | Phase 13 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 27 total
@@ -120,4 +120,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-08 after v1.1 milestone audit*
+*Last updated: 2026-03-11 after M001 milestone completion*

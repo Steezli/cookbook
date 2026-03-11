@@ -27,19 +27,21 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✓ Ingredients stored canonically with metric/imperial display preference — v1.0
 - ✓ Scan UI renders natively on iOS/Android (React Native components) — v1.0
 
-### Active
+### Validated (v1.1)
 
-<!-- v1.1: Design & Responsive -->
-- [ ] All screens match cookbook.pen designs across mobile (390px), tablet (768px), and web (1440px)
-- [ ] Missing screen designs created in .pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
-- [ ] Responsive layout system supporting all three breakpoints
-- [ ] Public recipe browsing (list + detail) without family membership
-- [ ] Public recipe attribution to the user who added them
-- [ ] Minimal ads on public browsing screens only
-- [ ] Scan feature gated by subscription entitlement (v1 hypothesis)
-- [ ] Home screen navigation to recipe features (currently undiscoverable)
-- [ ] Scan photo display in draft review (currently placeholder)
-- [ ] Photo thumbnails in recipe list views
+- ✓ All screens match cookbook.pen designs across mobile (390px), tablet (768px), and web (1440px)
+- ✓ Missing screen designs created in .pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
+- ✓ Responsive layout system supporting all three breakpoints
+- ✓ Public recipe browsing (list + detail) without family membership
+- ✓ Public recipe attribution to the user who added them
+- ✓ Minimal ads on public browsing screens only
+- ✓ Home screen navigation to recipe features
+- ✓ Scan photo display in draft review
+- ✓ Photo thumbnails in recipe list views
+
+### Deferred
+
+- [ ] Scan feature gated by subscription entitlement (v1.2)
 
 ### Out of Scope
 
@@ -49,18 +51,18 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - Offline mode — real-time sync and RLS are core
 - Full version history for recipes — "duplicate and edit" covers needs
 
-## Current Milestone: v1.1 Design & Responsive
+## Completed Milestone: v1.1 Design & Responsive (M001)
 
-**Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, and implement deferred v1.0 features (public browsing, home navigation, monetization hooks).
+**Completed:** 2026-03-11
 
-**Target features:**
+**Delivered:**
 - Design-first UI rebuild matching cookbook.pen across all 3 breakpoints
 - Missing .pen designs: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
-- Responsive layout system (mobile 390px, tablet 768px, web 1440px)
-- Public recipe browsing and attribution
+- Responsive layout system (mobile/tablet/web) with design tokens and breakpoint hook
+- Public recipe browsing with cursor-based pagination and author attribution
 - Home screen navigation to recipe features
-- Monetization hooks (ads, subscription gating)
-- Scan photo display and photo thumbnails
+- Advertising module (AdMob native, placeholder web) with route-based placement
+- ATT permission prompt for iOS ad tracking
 
 ## Context
 
@@ -96,4 +98,4 @@ v1.0 was mobile-only; v1.1 expands to fully responsive mobile/tablet/web.
 | Volume conversions via milliliter intermediate | Simplifies conversion matrix | ✓ Good |
 
 ---
-*Last updated: 2026-03-03 after v1.1 milestone start*
+*Last updated: 2026-03-11 after M001 (v1.1) milestone completion*

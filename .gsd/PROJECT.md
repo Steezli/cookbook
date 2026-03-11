@@ -10,7 +10,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Requirements
 
-### Validated
+### Validated (M001)
 
 - ✓ Users can create an account, log in, stay logged in, reset password, and log out — v1.0
 - ✓ Users can create/join invite-only family spaces with admin/member roles — v1.0
@@ -26,20 +26,25 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - ✓ Half-star ratings with averages and counts — v1.0
 - ✓ Ingredients stored canonically with metric/imperial display preference — v1.0
 - ✓ Scan UI renders natively on iOS/Android (React Native components) — v1.0
+- ✓ Design token system extracting all cookbook.pen variables — v1.1
+- ✓ Breakpoint detection hook for mobile/tablet/web — v1.1
+- ✓ Font loading for Bricolage Grotesque and DM Sans — v1.1
+- ✓ All screens rebuilt to cookbook.pen designs across mobile/tablet/web — v1.1
+- ✓ Navigation restructured with tabs, mobile bar, web sidebar — v1.1
+- ✓ Public recipe browsing with search, pagination, author attribution — v1.1
+- ✓ Ad banner with platform branching (AdMob native, placeholder web) — v1.1
+- ✓ Ad placement restricted to public browsing screens only — v1.1
+- ✓ ATT permission prompt on iOS for ad tracking — v1.1
 
-### Active
+### Deferred (to next milestone)
 
-<!-- v1.1: Design & Responsive -->
-- [ ] All screens match cookbook.pen designs across mobile (390px), tablet (768px), and web (1440px)
-- [ ] Missing screen designs created in .pen: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
-- [ ] Responsive layout system supporting all three breakpoints
-- [ ] Public recipe browsing (list + detail) without family membership
-- [ ] Public recipe attribution to the user who added them
-- [ ] Minimal ads on public browsing screens only
-- [ ] Scan feature gated by subscription entitlement (v1 hypothesis)
-- [ ] Home screen navigation to recipe features (currently undiscoverable)
-- [ ] Scan photo display in draft review (currently placeholder)
-- [ ] Photo thumbnails in recipe list views
+- [ ] Subscription gating on scan feature via RevenueCat entitlement (SUB-01)
+- [ ] Paywall UI displayed when non-subscriber accesses scan (SUB-02)
+- [ ] Web subscription checkout via RevenueCat Web Billing / Stripe (SUB-03)
+- [ ] Recipe structured data markup for search engine indexing (SEO-01)
+- [ ] Server-rendered public recipe pages for SEO crawlers (SEO-02)
+- [ ] Production ad unit ID configuration (ADS-04, candidate)
+- [ ] GDPR ad consent management for EU users (ADS-05, candidate)
 
 ### Out of Scope
 
@@ -49,26 +54,19 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - Offline mode — real-time sync and RLS are core
 - Full version history for recipes — "duplicate and edit" covers needs
 
-## Current Milestone: v1.1 Design & Responsive
+## Completed Milestones
 
-**Goal:** Rebuild all screens to match cookbook.pen designs across mobile/tablet/web, complete missing screen designs, and implement deferred v1.0 features (public browsing, home navigation, monetization hooks).
+### M001: Migration (completed 2026-03-11)
 
-**Target features:**
-- Design-first UI rebuild matching cookbook.pen across all 3 breakpoints
-- Missing .pen designs: Sign Up, Forgot Password, Profile/Settings, Invite, Draft Review
-- Responsive layout system (mobile 390px, tablet 768px, web 1440px)
-- Public recipe browsing and attribution
-- Home screen navigation to recipe features
-- Monetization hooks (ads, subscription gating)
-- Scan photo display and photo thumbnails
+Full-stack cross-platform family recipe app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, and advertising integration. 13 slices over 37 days. 297 tests (292 passing), zero TypeScript errors.
 
 ## Context
 
-Shipped v1.0 with 20,548 LOC TypeScript across 86 files.
-Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, edge functions, real-time), Google Cloud Vision API.
-6 phases completed over 29 days. Photo scanning with confidence scoring and multi-image support is the headline feature.
-cookbook.pen contains 9 screens × 3 breakpoints + 8 reusable components. Missing 5 screens that need design before implementation.
-v1.0 was mobile-only; v1.1 expands to fully responsive mobile/tablet/web.
+Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, edge functions, real-time), Google Cloud Vision API, OpenAI.
+88 TypeScript source files, 32 route files.
+Design system: tokens.ts (24 variables), useBreakpoint hook, PageContainer, MobileTabBar, WebSidebar.
+Public browsing with cursor-based pagination and SECURITY DEFINER RPCs for author attribution.
+Advertising module with platform-branched AdMob/placeholder, ATT permission, route-based placement.
 
 ## Constraints
 
@@ -88,12 +86,11 @@ v1.0 was mobile-only; v1.1 expands to fully responsive mobile/tablet/web.
 | Supabase RLS for access control | Server-side privacy enforcement | ✓ Good |
 | JSONB for ingredients/steps | Flexible structured data without extra tables | ✓ Good |
 | Canonical unit storage with preference display | Enables conversion without data loss | ✓ Good |
-| React Native Modal for dialogs | Cross-platform, replaces web position:fixed overlays | ✓ Good |
-| getDraftByJobId bridge pattern | Scan job ID → draft FK lookup resolves navigation | ✓ Good |
-| Confidence badges as { bg, text } objects | Dynamic styling without Tailwind on native | ✓ Good |
-| security_definer for recursive comments CTE | Avoids RLS recursion performance issues | ✓ Good |
-| Denormalized rating aggregates on recipes | Eliminates expensive joins in list views | ✓ Good |
-| Volume conversions via milliliter intermediate | Simplifies conversion matrix | ✓ Good |
+| Flat token naming for StyleSheet.create | Ergonomic over nested objects | ✓ Good |
+| Pure function extraction for testing | getBreakpoint, getContainerStyle, evaluateAdPlacement | ✓ Good |
+| Dynamic imports for native SDKs | Web bundles never polluted; graceful degradation | ✓ Good |
+| Route-pattern allowlist for ads | Fail-safe: new routes default to no-ads | ✓ Good |
+| SECURITY DEFINER for public RPCs | Bypasses RLS for anonymous author attribution | ✓ Good |
 
 ---
-*Last updated: 2026-03-03 after v1.1 milestone start*
+*Last updated: 2026-03-11 after M001 completion*
