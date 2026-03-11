@@ -1,5 +1,5 @@
 // Mock @/lib/supabase before importing anything
-const mockGetUser = jest.fn();
+const mockGetSession = jest.fn();
 const mockEq = jest.fn();
 const mockOrder = jest.fn();
 const mockSelect = jest.fn();
@@ -11,7 +11,7 @@ const mockChannel = jest.fn();
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      getUser: mockGetUser,
+      getSession: mockGetSession,
     },
     from: mockFrom,
     channel: mockChannel,
@@ -47,7 +47,7 @@ describe('scan-service', () => {
   describe('getUserScanJobs', () => {
     it('returns filtered jobs for authenticated user', async () => {
       const mockUser = { id: 'user-123' };
-      mockGetUser.mockResolvedValue({ data: { user: mockUser } });
+      mockGetSession.mockResolvedValue({ data: { session: { user: mockUser } } });
 
       // Chain: from('scan_jobs').select('*').eq('user_id', user.id).order(...)
       const mockJobs = [
@@ -61,15 +61,15 @@ describe('scan-service', () => {
 
       const result = await getUserScanJobs();
 
-      expect(mockGetUser).toHaveBeenCalled();
+      expect(mockGetSession).toHaveBeenCalled();
       expect(mockFrom).toHaveBeenCalledWith('scan_jobs');
       expect(mockSelect).toHaveBeenCalledWith('*');
       expect(mockEq).toHaveBeenCalledWith('user_id', 'user-123');
       expect(result).toEqual(mockJobs);
     });
 
-    it('throws "Not authenticated" when no user', async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null } });
+    it('throws "Not authenticated" when no session', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null } });
 
       await expect(getUserScanJobs()).rejects.toThrow('Not authenticated');
     });
@@ -78,25 +78,25 @@ describe('scan-service', () => {
   describe('retryScanJob', () => {
     it('delegates to RetryRecoveryService.retryJob with correct args', async () => {
       const mockUser = { id: 'user-456' };
-      mockGetUser.mockResolvedValue({ data: { user: mockUser } });
+      mockGetSession.mockResolvedValue({ data: { session: { user: mockUser } } });
       mockRetryJob.mockResolvedValue({ success: true, message: 'Retry scheduled' });
 
       await retryScanJob('job-789');
 
-      expect(mockGetUser).toHaveBeenCalled();
+      expect(mockGetSession).toHaveBeenCalled();
       expect(mockRetryJob).toHaveBeenCalledWith('job-789', 'user-456');
     });
 
     it('throws when RetryRecoveryService returns failure', async () => {
       const mockUser = { id: 'user-456' };
-      mockGetUser.mockResolvedValue({ data: { user: mockUser } });
+      mockGetSession.mockResolvedValue({ data: { session: { user: mockUser } } });
       mockRetryJob.mockResolvedValue({ success: false, message: 'Max retries exceeded' });
 
       await expect(retryScanJob('job-789')).rejects.toThrow('Max retries exceeded');
     });
 
-    it('throws "Not authenticated" when no user', async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null } });
+    it('throws "Not authenticated" when no session', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null } });
 
       await expect(retryScanJob('job-789')).rejects.toThrow('Not authenticated');
       expect(mockRetryJob).not.toHaveBeenCalled();
