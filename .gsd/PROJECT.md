@@ -54,11 +54,22 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 - Offline mode — real-time sync and RLS are core
 - Full version history for recipes — "duplicate and edit" covers needs
 
+## Current Milestone: M002 — Production Polish
+
+**Goal:** Multi-recipe scan support, SEO structured data for public recipes, production ads with GDPR consent, UX polish.
+
+**Slices:**
+- S01: Multi-Recipe Scan (edge function + data layer for 1 photo → N drafts)
+- S02: Multi-Draft UX (draft list + per-draft review)
+- S03: SEO Structured Data (schema.org/Recipe JSON-LD + meta tags)
+- S04: Production Ads + GDPR (env-based unit IDs + consent banner)
+- S05: UX Polish (bug fixes, performance, visual refinements)
+
 ## Completed Milestones
 
 ### M001: Migration (completed 2026-03-11)
 
-Full-stack cross-platform family recipe app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, and advertising integration. 13 slices over 37 days. 297 tests (292 passing), zero TypeScript errors.
+Full-stack cross-platform family recipe app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, and advertising integration. 13 slices over 37 days. 297 tests, zero TypeScript errors.
 
 ## Context
 

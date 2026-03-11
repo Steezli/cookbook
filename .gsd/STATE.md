@@ -1,12 +1,9 @@
 # GSD State
 
-<!-- Auto-generated. Updated by deriveState(). -->
+## M001: Migration — COMPLETED (2026-03-11)
 
-## M001: Migration — COMPLETED
+## M002: Production Polish — ACTIVE
 
-- Slices: 13/13
-- Status: completed
-- Completed: 2026-03-11
-- Tests: 297 total (292 passing, 5 pre-existing failures)
-- TypeScript: zero errors
-- Verification: passed
+- Slices: 0/5
+- Status: planned
+- Next: S01 (Multi-Recipe Scan) or S03 (SEO) or S04 (Ads+GDPR) — S01/S03/S04 have no dependencies
