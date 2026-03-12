@@ -19,6 +19,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: 'berven',
   version: '0.1.0',
   icon: './assets/icon.png',
+  splash: {
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#FFFBF5',
+  },
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   assetBundlePatterns: ['**/*'],
@@ -32,6 +37,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: 'com.steezli.berven',
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#E8784E',
+    },
   },
   web: {
     bundler: 'metro',
