@@ -186,6 +186,8 @@ export default function ForgotPasswordScreen() {
             placeholderTextColor={textTertiary}
             value={email}
             onChangeText={setEmail}
+            returnKeyType="go"
+            onSubmitEditing={onSubmit}
             style={{
               height: 48,
               backgroundColor: bgCard,

@@ -234,6 +234,8 @@ export default function SignupScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            returnKeyType="go"
+            onSubmitEditing={onSignup}
             style={inputStyle}
           />
         </View>

@@ -181,6 +181,8 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            returnKeyType="go"
+            onSubmitEditing={onLogin}
             style={{
               height: 48,
               backgroundColor: bgCard,
