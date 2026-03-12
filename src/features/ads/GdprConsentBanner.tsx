@@ -16,11 +16,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Platform, View, Text, Pressable, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import {
+  accentBlue,
   bgPage,
-  textPrimary,
-  textSecondary,
   borderDefault,
   fontFamilyBody,
   fontFamilyBodyMedium,
@@ -28,7 +28,8 @@ import {
   fontSizeXs,
   radiusSm,
   shadowMd,
-  accentBlue,
+  textPrimary,
+  textSecondary,
   white,
 } from '@/lib/tokens';
 
@@ -52,6 +53,7 @@ export function GdprConsentBanner({
   onConsentResult,
   testID,
 }: GdprConsentBannerProps) {
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
 
   // Check consent status on mount (web only)
@@ -99,7 +101,16 @@ export function GdprConsentBanner({
         <Text style={styles.message}>
           We use cookies and similar technologies to show you personalized ads.
           You can accept or decline — either way, you'll still see ads, just
-          less relevant ones if you decline.
+          less relevant ones if you decline. See our{' '}
+          <Text
+            style={styles.privacyLink}
+            onPress={() => router.push('/(public)/privacy')}
+            accessibilityRole="link"
+            accessibilityLabel="Privacy Policy"
+          >
+            Privacy Policy
+          </Text>
+          .
         </Text>
         <View style={styles.actions}>
           <Pressable
@@ -182,6 +193,12 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilyBodyMedium,
     fontSize: fontSizeXs,
     color: white,
+  },
+  privacyLink: {
+    fontFamily: fontFamilyBodyMedium,
+    fontSize: fontSizeSm,
+    color: accentBlue,
+    textDecorationLine: 'underline',
   },
 });
 

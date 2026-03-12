@@ -369,6 +369,18 @@ export default function SignupScreen() {
             </Pressable>
           </Link>
         </View>
+
+        {/* Privacy Policy link */}
+        <View style={{ alignItems: 'center', marginTop: 8 }}>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, textAlign: 'center' }}>
+            By creating an account, you agree to our{' '}
+            <Link href="/(public)/privacy" asChild>
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: accentWarm, textDecorationLine: 'underline' }}>
+                Privacy Policy
+              </Text>
+            </Link>
+          </Text>
+        </View>
       </View>
     </>
   );

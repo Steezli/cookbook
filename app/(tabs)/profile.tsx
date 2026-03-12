@@ -8,7 +8,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Pencil, X, Check } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { Pencil, X, Check, ExternalLink } from "lucide-react-native";
 import { useSession } from "@/features/auth/session";
 import { supabase } from "@/lib/supabase";
 import { getUnitPreference, setUnitPreference } from "@/features/units/api";
@@ -53,6 +54,7 @@ function getInitials(displayName: string | null): string {
 }
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { session, isLoading: sessionLoading } = useSession();
   const { breakpoint } = useBreakpoint();
 
@@ -546,6 +548,51 @@ export default function ProfileScreen() {
               </Text>
             </Pressable>
           </View>
+        </View>
+
+        {/* Legal Section */}
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeSm,
+            color: textTertiary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+          }}
+        >
+          Legal
+        </Text>
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            marginBottom: 24,
+            ...shadowSm,
+          }}
+        >
+          <Pressable
+            onPress={() => router.push("/(public)/privacy")}
+            accessibilityRole="link"
+            accessibilityLabel="Privacy Policy"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeBase,
+                color: textPrimary,
+              }}
+            >
+              Privacy Policy
+            </Text>
+            <ExternalLink size={18} color={textSecondary} />
+          </Pressable>
         </View>
 
         {/* Account Section */}

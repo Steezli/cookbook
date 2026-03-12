@@ -543,14 +543,32 @@ export default function PublicBrowseScreen() {
 
   // List footer
   const listFooter = useCallback(() => {
-    if (!isLoadingMore) return null;
     return (
-      <ActivityIndicator
-        color={accentWarm}
-        style={{ padding: 16 }}
-      />
+      <View style={{ alignItems: 'center', gap: 16, paddingVertical: 16 }}>
+        {isLoadingMore && (
+          <ActivityIndicator color={accentWarm} />
+        )}
+        {!isLoadingMore && !hasMore && recipes.length > 0 && (
+          <Pressable
+            onPress={() => router.push('/(public)/privacy')}
+            accessibilityRole="link"
+            accessibilityLabel="Privacy Policy"
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: 12,
+                color: textTertiary,
+                textDecorationLine: 'underline',
+              }}
+            >
+              Privacy Policy
+            </Text>
+          </Pressable>
+        )}
+      </View>
     );
-  }, [isLoadingMore]);
+  }, [isLoadingMore, hasMore, recipes.length, router]);
 
   // Empty component
   const listEmpty = useCallback(() => {
