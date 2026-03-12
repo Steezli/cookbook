@@ -31,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: 'com.steezli.berven',
     usesAppleSignIn: true,
     infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
       NSUserTrackingUsageDescription:
         'Berven Book uses your device identifier to show you personalized ads. You can change this anytime in Settings.',
     },
