@@ -1,0 +1,9 @@
+node_modules
+dist
+.gsd
+.bg-shell
+.git
+.expo
+android
+ios
+*.md
