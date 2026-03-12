@@ -66,6 +66,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ]
       : []),
   ],
+  extra: {
+    eas: {
+      projectId: '8030bc77-54ac-49a2-956e-51badaed4fe1',
+    },
+  },
+  owner: 'steezli',
   experiments: {
     typedRoutes: true,
   },
