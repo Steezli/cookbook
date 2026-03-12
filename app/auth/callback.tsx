@@ -7,7 +7,7 @@ import { accentBlue, bgPage } from '@/lib/tokens';
 /**
  * OAuth callback handler.
  *
- * After social login (Google, Apple, Facebook), Supabase redirects to
+ * After social login (Google, Apple), Supabase redirects to
  * /auth/callback#access_token=...&refresh_token=...
  *
  * This route extracts the tokens from the URL hash fragment,

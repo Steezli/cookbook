@@ -10,7 +10,6 @@ import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
   signInWithGoogle,
   signInWithApple,
-  signInWithFacebook,
   isAppleNativeAvailable,
 } from '@/features/auth/social-auth';
 import {
@@ -62,15 +61,13 @@ export default function LoginScreen() {
     }
   }
 
-  async function handleSocialLogin(provider: 'google' | 'apple' | 'facebook') {
+  async function handleSocialLogin(provider: 'google' | 'apple') {
     setSocialLoading(provider);
     try {
       const fn =
         provider === 'google'
           ? signInWithGoogle
-          : provider === 'apple'
-            ? signInWithApple
-            : signInWithFacebook;
+          : signInWithApple;
       const { error } = await fn();
       if (error) throw error;
       const target = typeof next === 'string' && next.startsWith('/') ? next : '/(tabs)';
@@ -318,29 +315,6 @@ export default function LoginScreen() {
             </Pressable>
           )}
 
-          {/* Facebook */}
-          <Pressable
-            onPress={() => handleSocialLogin('facebook')}
-            disabled={socialLoading !== null}
-            style={({ pressed }) => ({
-              height: 48,
-              backgroundColor: '#1877F2',
-              borderRadius: radiusMd,
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 10,
-              opacity: pressed || socialLoading === 'facebook' ? 0.8 : 1,
-            })}
-          >
-            {socialLoading === 'facebook' ? (
-              <ActivityIndicator color={white} />
-            ) : (
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: 15, color: white }}>
-                Continue with Facebook
-              </Text>
-            )}
-          </Pressable>
         </View>
 
       </View>
