@@ -22,7 +22,8 @@
     "production": {
       "ios": {
         "appleId": "eli.m.nicholson@gmail.com",
-        "appleTeamId": "2BMHVS77X5"
+        "appleTeamId": "2BMHVS77X5",
+        "ascAppId": "6760448855"
       }
     }
   }
