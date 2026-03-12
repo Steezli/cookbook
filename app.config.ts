@@ -9,6 +9,10 @@ const admobInstalled = fs.existsSync(
   path.join(__dirname, 'node_modules', 'react-native-google-mobile-ads'),
 );
 
+const attInstalled = fs.existsSync(
+  path.join(__dirname, 'node_modules', 'expo-tracking-transparency'),
+);
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'Berven',
   slug: 'berven',
@@ -21,6 +25,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: 'com.steezli.berven',
     usesAppleSignIn: true,
+    infoPlist: {
+      NSUserTrackingUsageDescription:
+        'Berven Book uses your device identifier to show you personalized ads. You can change this anytime in Settings.',
+    },
   },
   android: {
     package: 'com.steezli.berven',
@@ -32,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-web-browser',
     'expo-apple-authentication',
+    ...(attInstalled ? ['expo-tracking-transparency'] : []),
     ...(admobInstalled
       ? [
           [
