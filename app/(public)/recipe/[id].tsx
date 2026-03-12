@@ -13,6 +13,7 @@ import Head from 'expo-router/head';
 import { UtensilsCrossed } from 'lucide-react-native';
 
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import { SITE_NAME, SITE_URL } from '@/lib/site-config';
 import { generateRecipeJsonLd } from '@/lib/seo/json-ld';
 import { generateRecipeMetaTags } from '@/lib/seo/meta-tags';
 import { PublicDetailNavBar } from '@/components/public/PublicNavHeader';
@@ -142,13 +143,13 @@ export default function PublicRecipeDetail() {
   function renderSeoHead() {
     if (Platform.OS !== 'web') return null;
 
-    const pageUrl = `https://berven.app/recipe/${r.id}`;
+    const pageUrl = `${SITE_URL}/recipe/${r.id}`;
     const jsonLd = generateRecipeJsonLd(r, author, heroUrl);
     const metaTags = generateRecipeMetaTags(r, heroUrl, pageUrl);
 
     return (
       <Head>
-        <title>{r.title} | Berven</title>
+        <title>{r.title} | {SITE_NAME}</title>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         {metaTags.map((tag, i) => (
           <meta

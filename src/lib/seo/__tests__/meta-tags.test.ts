@@ -9,6 +9,7 @@
  */
 
 import { generateRecipeMetaTags, type MetaTag } from '../meta-tags';
+import { SITE_NAME, SITE_URL } from '@/lib/site-config';
 import type { Recipe } from '@/features/recipes/types';
 
 // ---------------------------------------------------------------------------
@@ -40,7 +41,7 @@ const fullRecipe: Recipe = {
 };
 
 const fullImageUrl = 'https://example.supabase.co/storage/v1/object/public/photos/recipe-001/hero.jpg';
-const pageUrl = 'https://berven.app/recipe/recipe-001';
+const pageUrl = `${SITE_URL}/recipe/recipe-001`;
 
 const minimalRecipe: Recipe = {
   id: 'recipe-002',
@@ -113,10 +114,10 @@ describe('generateRecipeMetaTags — full recipe OG tags', () => {
     expect(tag!.content).toBe('article');
   });
 
-  it('includes og:site_name as Berven', () => {
+  it('includes og:site_name', () => {
     const tag = findTag(tags, 'og:site_name');
     expect(tag).toBeDefined();
-    expect(tag!.content).toBe('Berven');
+    expect(tag!.content).toBe(SITE_NAME);
   });
 });
 
@@ -200,7 +201,7 @@ describe('generateRecipeMetaTags — minimal recipe', () => {
   it('includes og:site_name', () => {
     const tag = findTag(tags, 'og:site_name');
     expect(tag).toBeDefined();
-    expect(tag!.content).toBe('Berven');
+    expect(tag!.content).toBe(SITE_NAME);
   });
 
   it('includes twitter:card', () => {

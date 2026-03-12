@@ -12,11 +12,12 @@ import {
   textSecondary,
   white,
 } from '@/lib/tokens';
+import { SITE_NAME } from '@/lib/site-config';
 
 const EFFECTIVE_DATE = 'March 11, 2026';
 const CONTACT_EMAIL = 'eli9nicholson@gmail.com';
-const APP_NAME = 'Berven';
-const ENTITY_NAME = 'Berven';
+const APP_NAME = SITE_NAME;
+const ENTITY_NAME = SITE_NAME;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

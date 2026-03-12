@@ -7,6 +7,7 @@
  */
 
 import type { Recipe } from '@/features/recipes/types';
+import { SITE_NAME } from '@/lib/site-config';
 
 /**
  * A meta tag descriptor. OG tags use `property`, Twitter tags use `name`.
@@ -45,7 +46,7 @@ export function generateRecipeMetaTags(
 
   tags.push({ property: 'og:url', content: pageUrl });
   tags.push({ property: 'og:type', content: 'article' });
-  tags.push({ property: 'og:site_name', content: 'Berven' });
+  tags.push({ property: 'og:site_name', content: SITE_NAME });
 
   // --- Twitter Card tags ---
   tags.push({ name: 'twitter:card', content: 'summary_large_image' });
