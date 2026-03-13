@@ -30,9 +30,8 @@ import {
   type RecipePhoto,
 } from "@/features/recipes/photos";
 import { CommentThread } from "@/features/comments/CommentThread";
-import { displayAmount } from "@/features/units/conversions";
-import { parseIngredient } from "@/features/units/parser";
 import { getUnitPreference } from "@/features/units/api";
+import { displayIngredient } from "@/features/units/displayIngredient";
 import type { UnitSystem } from "@/features/units/types";
 import { StarRating } from "@/features/ratings/StarRating";
 import { getUserRating, upsertRating } from "@/features/ratings/api";
@@ -252,36 +251,6 @@ export default function RecipeDetailScreen() {
     }
   }
 
-  function displayIngredient(ing: Recipe["ingredients"][0]): string {
-    // Extract ingredient name for liquid/dry classification
-    const ingredientName = ing.text;
-
-    if (
-      ing.amount !== undefined &&
-      ing.unit !== undefined &&
-      !ing.is_ambiguous
-    ) {
-      return displayAmount(
-        ing.amount ?? null,
-        ing.unit ?? null,
-        unitPreference,
-        ing.original_text || ing.text,
-        ingredientName
-      );
-    }
-    if (ing.is_ambiguous) {
-      return `${ing.text} (approx.)`;
-    }
-    // Legacy ingredient: no structured amount/unit — try to parse from text
-    if (ing.amount === undefined && ing.unit === undefined) {
-      const parsed = parseIngredient(ing.text);
-      if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
-        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text, parsed.ingredient);
-      }
-    }
-    return ing.text;
-  }
-
   function getVisibilityLabel(visibility: string): string {
     if (visibility === "private") return "Private";
     if (visibility === "family") return "Family";
@@ -434,7 +403,7 @@ export default function RecipeDetailScreen() {
                 lineHeight: 22,
               }}
             >
-              {displayIngredient(ing)}
+              {displayIngredient(ing, unitPreference)}
             </Text>
           </View>
         ))}

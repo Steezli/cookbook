@@ -1,7 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Dimensions,
+  PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -11,9 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { getRecipeById } from '@/features/recipes/api';
 import type { Recipe } from '@/features/recipes/types';
-import { displayAmount } from '@/features/units/conversions';
-import { parseIngredient } from '@/features/units/parser';
 import { getUnitPreference } from '@/features/units/api';
+import { displayIngredient } from '@/features/units/displayIngredient';
 import {
   getCookingProgress,
   getStepNavState,
@@ -47,6 +50,9 @@ import {
   white,
 } from '@/lib/tokens';
 
+const SWIPE_THRESHOLD = 50;
+const SWIPE_VELOCITY_THRESHOLD = 0.3;
+
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { breakpoint } = useBreakpoint();
@@ -60,6 +66,9 @@ export default function CookScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const [unitPreference, setUnitPreference] = useState<'imperial' | 'metric'>('imperial');
   const [showAllIngredients, setShowAllIngredients] = useState(false);
+
+  // Swipe animation
+  const translateX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     async function loadRecipe() {
@@ -81,6 +90,70 @@ export default function CookScreen() {
     getUnitPreference().then(setUnitPreference).catch(() => {});
   }, []);
 
+  const goToStep = useCallback((step: number) => {
+    if (!recipe) return;
+    const clamped = clampStep(step, recipe.steps.length);
+    if (clamped === currentStep) return;
+
+    // Animate slide direction
+    const direction = clamped > currentStep ? -1 : 1;
+    const screenWidth = Dimensions.get('window').width;
+
+    // Slide out
+    Animated.timing(translateX, {
+      toValue: direction * screenWidth,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setCurrentStep(clamped);
+      setShowAllIngredients(false);
+      // Snap to opposite side then slide in
+      translateX.setValue(-direction * screenWidth);
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [currentStep, recipe, translateX]);
+
+  // PanResponder for swipe gestures (mobile/tablet only)
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gestureState) => {
+        // Only capture horizontal swipes that exceed a threshold
+        return (
+          Math.abs(gestureState.dx) > 10 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+        );
+      },
+      onPanResponderMove: (_evt, gestureState) => {
+        translateX.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_evt, gestureState) => {
+        const { dx, vx } = gestureState;
+        const swipedLeft = dx < -SWIPE_THRESHOLD || vx < -SWIPE_VELOCITY_THRESHOLD;
+        const swipedRight = dx > SWIPE_THRESHOLD || vx > SWIPE_VELOCITY_THRESHOLD;
+
+        if (swipedLeft) {
+          // Swipe left → next step
+          goToStep(currentStep + 1);
+        } else if (swipedRight) {
+          // Swipe right → previous step
+          goToStep(currentStep - 1);
+        } else {
+          // Snap back
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
   // Loading state
   if (isLoading) {
     return (
@@ -90,7 +163,6 @@ export default function CookScreen() {
     );
   }
 
-  // Load error — differentiated from "not found"
   if (error) {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -104,7 +176,6 @@ export default function CookScreen() {
     );
   }
 
-  // No recipe found
   if (!recipe) {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -118,7 +189,6 @@ export default function CookScreen() {
     );
   }
 
-  // No steps edge case
   if (recipe.steps.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -145,24 +215,6 @@ export default function CookScreen() {
   // Get highlighted text segments for the current step
   const textSegments = highlightStepIngredients(step.text, stepIngredients);
 
-  function displayIngredient(ing: Recipe['ingredients'][0]): string {
-    // Extract ingredient name for liquid/dry classification
-    const ingredientName = ing.text;
-
-    if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
-      return displayAmount(ing.amount ?? null, ing.unit ?? null, unitPreference, ing.original_text || ing.text, ingredientName);
-    }
-    if (ing.is_ambiguous) return `${ing.text} (approx.)`;
-    // Legacy ingredient: no structured amount/unit — try to parse from text
-    if (ing.amount === undefined && ing.unit === undefined) {
-      const parsed = parseIngredient(ing.text);
-      if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
-        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text, parsed.ingredient);
-      }
-    }
-    return ing.text;
-  }
-
   // Web sidebar step list
   const Sidebar = () => (
     <View style={{ width: 200, borderRightWidth: 1, borderRightColor: borderDefault }}>
@@ -172,7 +224,7 @@ export default function CookScreen() {
           return (
             <Pressable
               key={i}
-              onPress={() => setCurrentStep(i)}
+              onPress={() => goToStep(i)}
               style={{
                 padding: 16,
                 backgroundColor: isActive ? bgCard : bgPage,
@@ -256,7 +308,7 @@ export default function CookScreen() {
         )}
       </Text>
 
-      {/* "You'll need" card — step-relevant ingredients */}
+      {/* "You'll need" card — step-relevant ingredients with conversions */}
       {stepIngredients.length > 0 && (
         <View
           style={{
@@ -297,7 +349,7 @@ export default function CookScreen() {
                   flex: 1,
                 }}
               >
-                {displayIngredient(ing)}
+                {displayIngredient(ing, unitPreference)}
               </Text>
             </View>
           ))}
@@ -370,7 +422,7 @@ export default function CookScreen() {
                     flex: 1,
                   }}
                 >
-                  {displayIngredient(ing)}
+                  {displayIngredient(ing, unitPreference)}
                 </Text>
               </View>
             );
@@ -379,6 +431,9 @@ export default function CookScreen() {
       )}
     </ScrollView>
   );
+
+  // Swipe handlers for mobile/tablet
+  const swipeProps = !isWeb ? panResponder.panHandlers : {};
 
   return (
     <View style={{ flex: 1, backgroundColor: bgPage }}>
@@ -392,12 +447,10 @@ export default function CookScreen() {
           paddingBottom: 16,
         }}
       >
-        {/* X button */}
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <X size={24} color={textPrimary} />
         </Pressable>
 
-        {/* Recipe title */}
         <Text
           numberOfLines={1}
           style={{
@@ -412,7 +465,6 @@ export default function CookScreen() {
           {recipe.title}
         </Text>
 
-        {/* Step counter */}
         <Text
           style={{
             fontFamily: fontFamilyBody,
@@ -443,12 +495,15 @@ export default function CookScreen() {
         />
       </View>
 
-      {/* Content area — responsive layout */}
+      {/* Content area — responsive layout with swipe support */}
       <View style={{ flex: 1, flexDirection: isWeb ? 'row' : 'column' }}>
         {isWeb && <Sidebar />}
-        <View style={{ flex: 1 }}>
+        <Animated.View
+          style={{ flex: 1, transform: [{ translateX }] }}
+          {...swipeProps}
+        >
           <MainContent />
-        </View>
+        </Animated.View>
       </View>
 
       {/* Bottom navigation */}
@@ -461,9 +516,8 @@ export default function CookScreen() {
           borderTopColor: borderDefault,
         }}
       >
-        {/* Previous button */}
         <Pressable
-          onPress={() => setCurrentStep(s => clampStep(s - 1, totalSteps))}
+          onPress={() => goToStep(currentStep - 1)}
           disabled={!navState.canGoPrev}
           style={{
             flexDirection: 'row',
@@ -484,13 +538,12 @@ export default function CookScreen() {
           </Text>
         </Pressable>
 
-        {/* Next / Done button */}
         <Pressable
           onPress={() => {
             if (navState.isLastStep) {
               router.back();
             } else {
-              setCurrentStep(s => clampStep(s + 1, totalSteps));
+              goToStep(currentStep + 1);
             }
           }}
           style={{
