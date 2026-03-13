@@ -1,6 +1,6 @@
 // Mobile/tablet bottom tab bar — 5 tabs matching cookbook.pen TabBar spec.
 // Uses TabTrigger from expo-router/ui with asChild for isFocused forwarding.
-// Scan button is a plain Pressable that opens the /(scan) modal overlay.
+// Scan button is a plain Pressable that navigates to the scan tab.
 
 import React from "react";
 import { Pressable, View } from "react-native";
@@ -35,9 +35,9 @@ export function MobileTabBar() {
         <TabButton icon={<BookOpen />} label="My Recipes" />
       </TabTrigger>
 
-      {/* Scan: plain Pressable opens modal overlay (not a tab route) */}
+      {/* Scan: navigates to the scan tab */}
       <Pressable
-        onPress={() => router.navigate("/scan")}
+        onPress={() => router.navigate("/scan" as any)}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         accessibilityRole="button"
         accessibilityLabel="Scan recipe"

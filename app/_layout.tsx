@@ -77,14 +77,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(public)" />
-            <Stack.Screen
-              name="scan"
-              options={{
-                headerShown: false,
-                fullScreenGestureEnabled: true,
-                animation: 'slide_from_right',
-              }}
-            />
+
           </Stack>
         </ErrorBoundary>
       </SessionProvider>
