@@ -207,3 +207,15 @@
 ### Console.log policy — keep edge functions, clean client
 - **Decision:** Remove debug console.* from client-side code (src/, app/). Edge functions (supabase/functions/) retain their logging since server-side logs are the primary diagnostic surface.
 - **Why:** Client console pollution hides real errors. Server logs are expected and useful.
+
+## M003/S05: Full App Audit & Cross-Platform Verification
+
+### Shared cross-platform alert utility over per-file inline wrappers
+- **Decision:** Extract `showAlert`/`confirmAction` into `src/lib/alert.ts` as the single source of truth, replacing 3 inline copies and 15 unguarded files.
+- **Why:** `Alert.alert` is `static alert() {}` on react-native-web 0.21 — a complete silent no-op. 41 calls across 17 files silently swallow all error feedback on web. A shared utility ensures every call site gets cross-platform behavior automatically.
+- **Trade-off:** All 17 files take a new import dependency; but the alternative (per-file wrappers or leaving calls broken) is worse.
+
+### Inline error state UI over alert-based error display for data loading failures
+- **Decision:** Home screen, recipes index, and cook mode use inline error text/state in the UI for load failures, rather than calling `showAlert`.
+- **Why:** Data loading failures happen at mount time before user interaction. An alert popup for a background load error is jarring. Inline error text with retry guidance is better UX for these cases.
+- **Trade-off:** Each screen needs its own error state variable; but these are simple `useState<string | null>` additions.
