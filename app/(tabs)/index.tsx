@@ -86,7 +86,7 @@ export default function HomeScreen() {
         setThumbnailMap(urls);
       }
     } catch (err) {
-      console.warn('HomeScreen load error:', err);
+      // Load error — user sees empty state
     } finally {
       setIsLoading(false);
     }

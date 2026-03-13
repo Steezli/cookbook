@@ -94,7 +94,7 @@ async function ensureProfile(userId: string, email: string) {
   const { error } = await supabase
     .from('profiles')
     .upsert({ user_id: userId, email: email.toLowerCase() }, { onConflict: 'user_id' });
-  if (error) console.warn('Profile ensure failed:', error.message);
+  // Profile ensure is best-effort — auth continues regardless
 }
 
 export function useSession() {

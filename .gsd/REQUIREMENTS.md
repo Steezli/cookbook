@@ -13,28 +13,6 @@
 - Validation: partial — S02 UAT
 - Notes: Auth forms (login, signup, reset-password) and collection create form wired with focus chaining in S02. RecipeForm coverage and runtime verification deferred to S05.
 
-### QA-06 — Console.log cleanup
-- Class: quality-attribute
-- Status: active
-- Description: Remove debug-leftover console.log/warn statements from production code. Keep intentional error logging in service layers where it provides diagnostic value.
-- Why it matters: 38+ files have console.* calls outside tests. Debug leftovers pollute browser console and device logs, making real errors harder to spot.
-- Source: user
-- Primary owning slice: M003/S04
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Edge functions (supabase/functions/) may keep structured logging. Client-side code should be clean.
-
-### QA-07 — Dead code removal
-- Class: quality-attribute
-- Status: active
-- Description: Remove unused files identified during investigation: ScanJobList.tsx, error-reporting-service.ts, and any others confirmed unused during audit. Extract still-used types from dead files before deletion.
-- Why it matters: Dead code increases maintenance surface, confuses navigation, and makes the codebase feel larger than it is.
-- Source: user + investigation
-- Primary owning slice: M003/S01
-- Supporting slices: M003/S04
-- Validation: unmapped
-- Notes: S01 removed 13 confirmed dead files (ScanJobList.tsx, ScanPhotoUpload.tsx ×2, ScanJobProgress.tsx, error-reporting-service.ts, ocr-service.ts, ocr.ts, confidence-scoring.ts, recipe-parser.ts, scan-upload.ts, useRealtimeSubscription.ts, recipe-parsing-service.ts, confidence-scoring-service.ts). S04 continues with a systematic sweep for any remaining dead code.
-
 ### QA-08 — Button/interaction audit
 - Class: quality-attribute
 - Status: active
@@ -106,6 +84,21 @@
 - Source: user
 - Primary Slice: M003/S03
 - Notes: DraftEditor and DraftManager fully migrated to design tokens (zero hardcoded hex colors), responsive layout via useBreakpoint, Pressable interaction pattern, responsive modal sizing. 502 tests pass. Code-level verification via `rg` audits confirms zero hex colors, zero TouchableOpacity, zero StyleSheet.create.
+
+### QA-06 — Console.log cleanup
+- Status: validated
+- Class: quality-attribute
+- Source: user
+- Primary Slice: M003/S04
+- Notes: All debug console.log/warn/error removed from client-side code (src/, app/). Zero console.log remains. Only ~15 intentional console.warn/error calls in 5 documented files (ErrorBoundary, auth callback, ads consent, ad banner, layout consent). Edge functions untouched per policy. Verified by `rg` audit, `tsc --noEmit`, and 499 passing tests.
+
+### QA-07 — Dead code removal
+- Status: validated
+- Class: quality-attribute
+- Source: user + investigation
+- Primary Slice: M003/S01
+- Supporting Slice: M003/S04
+- Notes: S01 removed 13 confirmed dead files. S04 removed 3 more (retry-recovery-service.ts, error-classification-service.ts, job-status-service.ts) and 4 unused exports from scan-service.ts. Systematic sweep complete — 16 total dead files removed. Types extracted before deletion per policy.
 
 ### QA-12 — Duplicate scan-upload.ts consolidation
 - Status: validated
@@ -226,8 +219,8 @@
 | QA-03 | primary-user-loop | validated | M003/S03 | M003/S01 | S03 UAT |
 | QA-04 | quality-attribute | active | M003/S02 | M003/S05 | partial — S02 UAT |
 | QA-05 | launchability | validated | M003/S02 | none | S02 UAT |
-| QA-06 | quality-attribute | active | M003/S04 | none | unmapped |
-| QA-07 | quality-attribute | active | M003/S01, M003/S04 | none | unmapped |
+| QA-06 | quality-attribute | validated | M003/S04 | none | S04 UAT |
+| QA-07 | quality-attribute | validated | M003/S01, M003/S04 | none | S04 UAT |
 | QA-08 | quality-attribute | active | M003/S05 | none | unmapped |
 | QA-09 | failure-visibility | active | M003/S05 | M003/S04 | unmapped |
 | QA-10 | quality-attribute | active | M003/S05 | all | unmapped |
@@ -240,7 +233,7 @@
 
 ## Coverage Summary
 
-- Active requirements: 6
-- Mapped to slices: 6
-- Validated (prior milestones + M003/S01 + M003/S02 + M003/S03): 32+
+- Active requirements: 4
+- Mapped to slices: 4
+- Validated (prior milestones + M003/S01 + M003/S02 + M003/S03 + M003/S04): 34+
 - Unmapped active requirements: 0

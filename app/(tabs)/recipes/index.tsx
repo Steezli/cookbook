@@ -97,7 +97,7 @@ export default function RecipesListScreen() {
         }
       }
     } catch (e) {
-      console.warn('RecipesListScreen load error:', e);
+      // Load error — stale data shown until next successful load
     }
   }
 
@@ -128,7 +128,7 @@ export default function RecipesListScreen() {
         setAvailableTags(tagsData);
         setFamilies(familiesData);
       } catch (e) {
-        console.warn('Failed to load filter options:', e);
+        // Filter options unavailable — user can still browse without filters
       }
     }
     void initialLoad();

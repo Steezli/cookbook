@@ -106,7 +106,6 @@ export default function DraftReviewScreen() {
               }
             } catch (err) {
               if (!cancelled) {
-                console.error('Failed to load drafts after job completion:', err);
                 setError(err instanceof Error ? err.message : 'Failed to load drafts');
                 setMode('error');
               }
@@ -135,7 +134,6 @@ export default function DraftReviewScreen() {
         }, 4000);
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to detect draft mode:', err);
           setError(err instanceof Error ? err.message : 'Failed to load drafts');
           setMode('error');
         }

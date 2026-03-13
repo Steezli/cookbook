@@ -169,7 +169,6 @@ export async function uploadScanPhotos(
         const photoUrl = urlData.publicUrl;
         return { photoUrl, storagePath, index: fileIndex };
       } catch (error) {
-        console.error(`Failed to upload photo ${fileIndex + 1}:`, error);
         failedUploads.push({
           index: fileIndex,
           name: file.name,
@@ -184,7 +183,7 @@ export async function uploadScanPhotos(
       if (result) uploadedPhotos.push(result);
     });
 
-    console.log(`Uploaded batch ${Math.floor(i / MAX_CONCURRENT) + 1}: ${batchResults.filter(r => r).length}/${batch.length} successful`);
+
   }
 
   if (uploadedPhotos.length === 0) {
@@ -198,13 +197,9 @@ export async function uploadScanPhotos(
 
   supabase.functions.invoke('process-scan-job', {
     body: { jobId: job.id }
-  }).catch((err: unknown) => {
-    console.warn('Scan processing trigger failed:', err);
+  }).catch(() => {
+    // Processing trigger is fire-and-forget — edge function handles retries
   });
-
-  if (failedUploads.length > 0) {
-    console.warn(`${failedUploads.length} photo(s) failed to upload:`, failedUploads);
-  }
 
   return { jobId: job.id, photoUrls };
 }
@@ -228,9 +223,7 @@ async function uploadScanPhotosInline(
         throw new Error(`Base64 data too small (${result.base64?.length || 0} chars)`);
       }
       images.push(result);
-      console.log(`Read photo ${i + 1}: ${Math.round(result.base64.length / 1024)}KB base64, type: ${result.mediaType}`);
     } catch (error) {
-      console.error(`Failed to read photo ${i + 1}:`, error);
       failedReads.push({
         index: i,
         name: files[i].name,
@@ -256,13 +249,9 @@ async function uploadScanPhotosInline(
         mediaType: img.mediaType,
       })),
     }
-  }).catch((err: unknown) => {
-    console.warn('Scan processing trigger failed:', err);
+  }).catch(() => {
+    // Processing trigger is fire-and-forget — edge function handles retries
   });
-
-  if (failedReads.length > 0) {
-    console.warn(`${failedReads.length} photo(s) failed to read:`, failedReads);
-  }
 
   return { jobId: job.id, photoUrls: placeholderUrls };
 }
@@ -434,7 +423,7 @@ export async function deleteScanPhoto(jobId: string): Promise<void> {
       .from("scan-photos")
       .remove(storagePaths);
 
-    if (storageError) console.warn('Failed to delete scan photos from storage:', storageError);
+    // Storage deletion is best-effort — photos will expire via lifecycle policy
   }
 
   // Delete job (cascade will delete draft)

@@ -89,7 +89,7 @@ export async function uploadScanPhotosWithValidation(
     const qualityEstimate = await estimateImageQuality(normalizedFiles[0]);
 
     if (qualityEstimate.quality === 'low') {
-      console.warn('Low quality image detected:', qualityEstimate.recommendations);
+      // Low quality is captured in qualityEstimate.recommendations — returned to caller
     }
 
     // Check job limit
@@ -121,8 +121,6 @@ export async function uploadScanPhotosWithValidation(
     };
 
   } catch (error) {
-    console.error('Multi-scan upload error:', error);
-
     return {
       success: false,
       photoUrls: [],

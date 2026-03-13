@@ -97,7 +97,6 @@ export default function ProfileScreen() {
       const pref = await getUnitPreference();
       setUnitPrefState(pref);
     } catch (e) {
-      console.error("Failed to load profile:", e);
       setError("Failed to load profile");
     } finally {
       setIsLoading(false);

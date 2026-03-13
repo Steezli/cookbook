@@ -69,7 +69,7 @@ This milestone is complete only when all are true:
 - [x] **S03: Scan UI Polish** `risk:medium` `depends:[S01]`
   > After this: web scan upload and multi-draft review UI looks web-native and polished at all breakpoints. iOS scan flow verified in simulator.
 
-- [ ] **S04: Logging & Dead Code Sweep** `risk:low` `depends:[S01]`
+- [x] **S04: Logging & Dead Code Sweep** `risk:low` `depends:[S01]`
   > After this: no debug console.* in client code, any remaining dead files found by systematic audit are removed, TypeScript and tests still clean.
 
 - [ ] **S05: Full App Audit & Cross-Platform Verification** `risk:medium` `depends:[S01,S02,S03,S04]`

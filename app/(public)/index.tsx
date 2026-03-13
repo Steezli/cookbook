@@ -424,8 +424,7 @@ export default function PublicBrowseScreen() {
         setCursor(result.nextCursor);
         setHasMore(result.hasMore);
         setError(false);
-      } catch (err) {
-        console.error('PublicBrowseScreen loadPage error:', err);
+      } catch {
         setError(true);
       } finally {
         setIsLoading(false);

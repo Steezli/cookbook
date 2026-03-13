@@ -110,7 +110,6 @@ export function DraftManager({
 
       setShowSaveDialog(false);
     } catch (err) {
-      console.error('Failed to save draft:', err);
       setError(err instanceof Error ? err.message : 'Failed to save draft');
     } finally {
       setSaving(false);
@@ -138,7 +137,6 @@ export function DraftManager({
       onConverted?.(result.recipeId);
       setShowSaveDialog(false);
     } catch (err) {
-      console.error('Failed to convert draft:', err);
       setError(err instanceof Error ? err.message : 'Failed to save recipe');
     } finally {
       setSaving(false);
@@ -156,7 +154,6 @@ export function DraftManager({
       onDiscarded?.();
       setShowDiscardDialog(false);
     } catch (err) {
-      console.error('Failed to discard draft:', err);
       setError(err instanceof Error ? err.message : 'Failed to discard draft');
     } finally {
       setSaving(false);
@@ -171,8 +168,8 @@ export function DraftManager({
         message: `Check out this recipe draft: ${draft.recipe.title || 'Untitled'}`,
         url: shareUrl,
       });
-    } catch (err) {
-      console.log('Share cancelled or failed:', err);
+    } catch {
+      // Share cancelled or failed — no action needed
     }
   }, [draft]);
 

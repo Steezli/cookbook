@@ -102,8 +102,8 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
       });
 
       setJobs(merged);
-    } catch (err) {
-      console.error('Failed to load recent scans:', err);
+    } catch {
+      // Load failed — user sees empty state
     } finally {
       setLoading(false);
     }

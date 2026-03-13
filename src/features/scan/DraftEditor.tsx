@@ -123,7 +123,6 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
         setHistoryIndex(0);
         setLastSaved(new Date());
       } catch (err) {
-        console.error('Failed to load draft:', err);
         setError(err instanceof Error ? err.message : 'Failed to load draft');
       } finally {
         setLoading(false);
@@ -156,7 +155,6 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
       onSave?.(updatedDraft);
 
     } catch (err) {
-      console.error('Failed to save draft:', err);
       setError(err instanceof Error ? err.message : 'Failed to save draft');
       setAutoSaveStatus('error');
     } finally {

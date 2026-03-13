@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { RetryRecoveryService } from "@/lib/scan/retry-recovery-service";
 
 export type ScanJob = {
   id: string;
@@ -13,18 +12,6 @@ export type ScanJob = {
   error_message?: string;
   retry_count: number;
   max_retries: number;
-};
-
-export type JobStatus = {
-  id: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  error_message?: string;
-  retry_count: number;
-  max_retries: number;
-  can_retry: boolean;
-  can_cancel: boolean;
 };
 
 /**
@@ -83,44 +70,6 @@ export async function getUserScanJobs(): Promise<ScanJob[]> {
 }
 
 /**
- * Get detailed status for a specific job
- */
-export async function getJobStatus(jobId: string): Promise<JobStatus> {
-  const { data, error } = await supabase
-    .rpc('get_job_status', { job_id: jobId });
-
-  if (error) throw error;
-  return data[0] as JobStatus;
-}
-
-/**
- * Cancel a queued job
- */
-export async function cancelScanJob(jobId: string): Promise<void> {
-  const { error } = await supabase
-    .from('scan_jobs')
-    .update({ status: 'failed', error_message: 'Cancelled by user' })
-    .eq('id', jobId)
-    .eq('status', 'queued'); // Only allow cancelling queued jobs
-
-  if (error) throw error;
-}
-
-/**
- * Retry a failed job
- */
-export async function retryScanJob(jobId: string): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error('Not authenticated');
-  const user = session.user;
-
-  const result = await RetryRecoveryService.retryJob(jobId, user.id);
-  if (!result.success) {
-    throw new Error(result.message);
-  }
-}
-
-/**
  * Get all photo URLs for a job
  */
 export async function getJobPhotos(jobId: string): Promise<string[]> {
@@ -162,13 +111,7 @@ export function subscribeToUserJobs(
         }
       }
     )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('Connected to user scan jobs');
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error('Failed to connect to user scan jobs');
-      }
-    });
+    .subscribe();
 
   return channel;
 }
@@ -196,13 +139,7 @@ export function subscribeToJob(
         }
       }
     )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log(`Connected to job ${jobId}`);
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error(`Failed to connect to job ${jobId}`);
-      }
-    });
+    .subscribe();
 
   return channel;
 }

@@ -140,7 +140,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
         const [draftResults, photos] = await Promise.all([
           scanDraftService.getDraftsByJobId(jobId, userId),
           getJobPhotos(jobId).catch((err) => {
-            console.warn('Failed to load scan photos:', err);
+            // Photos unavailable — draft list still functional
             return [] as string[];
           }),
         ]);
@@ -156,13 +156,11 @@ export function DraftListView({ jobId }: DraftListViewProps) {
 
         if (draftResults.length > 0) {
           setDrafts(draftResults);
-          console.log(`[DraftList] Loaded ${draftResults.length} drafts for job ${jobId}`);
           setLoading(false);
           return;
         }
 
         // No drafts yet — job may still be processing. Subscribe + poll.
-        console.log(`[DraftList] No drafts yet for job ${jobId}, waiting for processing...`);
 
         timeoutId = setTimeout(() => {
           unsubscribe();
@@ -180,12 +178,10 @@ export function DraftListView({ jobId }: DraftListViewProps) {
               const retryDrafts = await scanDraftService.getDraftsByJobId(jobId, userId);
               if (!cancelled) {
                 setDrafts(retryDrafts);
-                console.log(`[DraftList] Loaded ${retryDrafts.length} drafts for job ${jobId}`);
                 setLoading(false);
               }
             } catch (err) {
               if (!cancelled) {
-                console.error('[DraftList] Failed to load drafts after job completion:', err);
                 setError(err instanceof Error ? err.message : 'Failed to load drafts');
                 setLoading(false);
               }
@@ -207,7 +203,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
             if (polledDrafts.length > 0 && !cancelled) {
               unsubscribe();
               setDrafts(polledDrafts);
-              console.log(`[DraftList] Loaded ${polledDrafts.length} drafts for job ${jobId} (poll)`);
               setLoading(false);
             }
           } catch {
@@ -216,7 +211,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
         }, 4000);
       } catch (err) {
         if (!cancelled) {
-          console.error('[DraftList] Failed to load drafts:', err);
           setError(err instanceof Error ? err.message : 'Failed to load drafts');
           setLoading(false);
         }
@@ -239,8 +233,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       setDrafts(updated);
       // If the selected draft was saved, deselect and exit edit mode
       setIsEditing(false);
-    } catch (err) {
-      console.error('[DraftList] Failed to refresh drafts:', err);
+    } catch {
+      // Refresh failed — user still sees previous data
     }
   };
 
@@ -265,7 +259,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     for (let i = 0; i < unsavedDrafts.length; i++) {
       const draft = unsavedDrafts[i];
       setBatchProgress({ current: i + 1, total: unsavedDrafts.length });
-      console.log(`[DraftList] Batch save: saving draft ${i + 1} of ${unsavedDrafts.length}`);
 
       try {
         await scanDraftService.convertToRecipe(draft.id, userId, {
@@ -277,8 +270,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           servings: draft.recipe.servings,
           tags: [],
         });
-      } catch (err) {
-        console.error(`[DraftList] Batch save failed for draft ${draft.id}:`, err);
+      } catch {
         failures.push(draft.id);
       }
     }
@@ -287,8 +279,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     try {
       const updated = await scanDraftService.getDraftsByJobId(jobId, userId);
       setDrafts(updated);
-    } catch (err) {
-      console.error('[DraftList] Failed to refresh drafts after batch save:', err);
+    } catch {
+      // Refresh failed — batch status still shown from local state
     }
 
     setBatchFailures(failures);

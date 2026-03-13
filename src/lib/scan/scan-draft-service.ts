@@ -74,8 +74,6 @@ export class ScanDraftService {
    */
   async createDraft(input: ScanDraftInput): Promise<ScanDraft> {
     try {
-      console.log(`Creating scan draft for job ${input.jobId}`)
-
       const startTime = Date.now()
 
       // Prepare draft data
@@ -114,12 +112,9 @@ export class ScanDraftService {
       // Convert database record to ScanDraft format
       const scanDraft = this.mapRecordToDraft(data)
 
-      console.log(`Scan draft created successfully: ${scanDraft.id}`)
-
       return scanDraft
 
     } catch (error) {
-      console.error('Failed to create scan draft:', error)
       throw new Error(`Scan draft creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -150,7 +145,6 @@ export class ScanDraftService {
       return this.mapRecordToDraft(data)
 
     } catch (error) {
-      console.error('Failed to get scan draft:', error)
       throw new Error(`Failed to fetch scan draft: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -182,7 +176,6 @@ export class ScanDraftService {
 
       return this.mapRecordToDraft(data)
     } catch (error) {
-      console.error('Failed to get scan draft by job ID:', error)
       throw new Error(`Failed to fetch scan draft by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -206,7 +199,6 @@ export class ScanDraftService {
 
       return (data || []).map((record: any) => this.mapRecordToDraft(record))
     } catch (error) {
-      console.error('Failed to get scan drafts by job ID:', error)
       throw new Error(`Failed to fetch scan drafts by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -241,7 +233,6 @@ export class ScanDraftService {
       return (data || []).map((record: any) => this.mapRecordToDraft(record))
 
     } catch (error) {
-      console.error('Failed to get user drafts:', error)
       throw new Error(`Failed to fetch user drafts: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -268,10 +259,7 @@ export class ScanDraftService {
         throw new Error(`Failed to update draft status: ${error.message}`)
       }
 
-      console.log(`Draft ${draftId} status updated to ${status}`)
-
     } catch (error) {
-      console.error('Failed to update draft status:', error)
       throw new Error(`Failed to update draft status: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -334,10 +322,7 @@ export class ScanDraftService {
         throw new Error(`Failed to update draft recipe: ${error.message}`)
       }
 
-      console.log(`Draft ${draftId} recipe updated successfully`)
-
     } catch (error) {
-      console.error('Failed to update draft recipe:', error)
       throw new Error(`Failed to update draft recipe: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -357,10 +342,7 @@ export class ScanDraftService {
         throw new Error(`Failed to delete draft: ${error.message}`)
       }
 
-      console.log(`Draft ${draftId} deleted successfully`)
-
     } catch (error) {
-      console.error('Failed to delete draft:', error)
       throw new Error(`Failed to delete draft: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -387,7 +369,6 @@ export class ScanDraftService {
       return (data || []).map((record: any) => this.mapRecordToDraft(record))
 
     } catch (error) {
-      console.error('Failed to get drafts by status:', error)
       throw new Error(`Failed to fetch drafts by status: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -464,12 +445,9 @@ export class ScanDraftService {
       // Update draft status to indicate it was converted
       await this.updateDraftStatus(draftId, userId, 'ready')
 
-      console.log(`Draft ${draftId} converted to recipe ${data.id}`)
-
       return { recipeId: data.id }
 
     } catch (error) {
-      console.error('Failed to convert draft to recipe:', error)
       throw new Error(`Failed to convert draft to recipe: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -517,7 +495,6 @@ export class ScanDraftService {
       return stats
 
     } catch (error) {
-      console.error('Failed to get user draft stats:', error)
       throw new Error(`Failed to fetch draft stats: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }

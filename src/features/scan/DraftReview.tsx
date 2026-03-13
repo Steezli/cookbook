@@ -151,8 +151,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           return getScanPhotoUrl(photoUrl);
         });
         setPhotoUrls(urls);
-      } catch (photoErr) {
-        console.warn('Failed to load scan photos:', photoErr);
+      } catch {
+        // Photos unavailable — draft review still functional
       }
     };
 
@@ -178,9 +178,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           return getScanPhotoUrl(photoUrl);
         });
         setPhotoUrls(urls);
-      } catch (photoErr) {
-        console.warn('Failed to load scan photos:', photoErr);
-        // Don't fail the whole screen if photos fail to load
+      } catch {
+        // Photos unavailable — draft review still functional
       }
     };
 
@@ -243,7 +242,6 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
                 setLoading(false);
               }
             } catch (err) {
-              console.error('Failed to load draft after job completion:', err);
               setError(err instanceof Error ? err.message : 'Failed to load draft');
               setLoading(false);
             }
@@ -269,7 +267,6 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           }
         }, 4000);
       } catch (err) {
-        console.error('Failed to load draft:', err);
         setError(err instanceof Error ? err.message : 'Failed to load draft');
         setLoading(false);
       }
