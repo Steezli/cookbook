@@ -1,15 +1,18 @@
 # GSD State
 
-## M001: Migration — COMPLETED (2026-03-11)
+**Active Milestone:** M003 — Quality Audit & Cleanup
+**Active Slice:** S01 — Scan Code Consolidation
+**Active Task:** none
+**Phase:** Planning (S01 plan needed)
 
-## M002: Production Polish — COMPLETED (2026-03-11)
+## Recent Decisions
+- Merge `src/features/scans/` into `src/features/scan/` (singular)
+- Verify every deletion with import analysis before removing
+- Clean client console.*, keep edge function logging
+- OAuth branding fix is Google Cloud Console config, documented not coded
 
-- All 5 slices complete (S01–S05), all summaries written
-- M002-SUMMARY.md written with full success criteria verification
-- 483 tests passing, zero TypeScript errors
-- All 6 success criteria met; all definition-of-done items satisfied
-- Requirements transitioned: SCAN-MULTI, SEO-01, ADS-03, ADS-04, ADS-05 → validated
-- REQUIREMENTS.md and PROJECT.md updated
-- Committed: `feat(gsd): complete M002`
-- Remaining operational items (not code): production AdMob env vars, Google Rich Results Test, real-device UMP/ATT, real-photo multi-recipe scan
-- Next: M003 (Subscriptions — SUB-01, SUB-02, SUB-03)
+## Blockers
+- None
+
+## Next Action
+Plan S01 (Scan Code Consolidation) — decompose into tasks, write plan.md and task plans.

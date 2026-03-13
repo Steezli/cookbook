@@ -172,3 +172,17 @@
 ### Pencil design reference for new visual components
 - **Decision:** All new visual components (ErrorBoundary fallback, restyled not-found page) must reference `cookbook.pen` in Pencil for design language, color palette, and component patterns before implementation.
 - **Why:** Maintains visual consistency with the established design system rather than inventing new patterns. The app's entire UI was built from Pencil designs.
+
+## M003: Quality Audit & Cleanup
+
+### Scan directory consolidation target
+- **Decision:** Merge `src/features/scans/` into `src/features/scan/` (keep the singular name). All imports rewritten to `@/features/scan/`.
+- **Why:** Two directories for the same feature creates confusion and import inconsistency. The singular `scan/` is the original and has more consumers.
+
+### Dead code removal — verify before delete
+- **Decision:** Every file deletion must be preceded by import analysis confirming zero non-test importers. Types still in use must be extracted before the source file is removed.
+- **Why:** Aggressive deletion without verification could break the app in ways TypeScript doesn't catch (dynamic imports, string references).
+
+### Console.log policy — keep edge functions, clean client
+- **Decision:** Remove debug console.* from client-side code (src/, app/). Edge functions (supabase/functions/) retain their logging since server-side logs are the primary diagnostic surface.
+- **Why:** Client console pollution hides real errors. Server logs are expected and useful.
