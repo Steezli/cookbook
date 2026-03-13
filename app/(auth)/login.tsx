@@ -1,7 +1,8 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import type { TextInput as TextInputType } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
@@ -42,6 +43,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const passwordRef = useRef<TextInputType>(null);
 
   async function onLogin() {
     setIsSubmitting(true);
@@ -151,6 +153,8 @@ export default function LoginScreen() {
             placeholderTextColor={textTertiary}
             value={email}
             onChangeText={setEmail}
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
             style={{
               height: 48,
               backgroundColor: bgCard,
@@ -171,6 +175,7 @@ export default function LoginScreen() {
             Password
           </Text>
           <TextInput
+            ref={passwordRef}
             autoCapitalize="none"
             autoComplete="password"
             placeholder="Enter your password"

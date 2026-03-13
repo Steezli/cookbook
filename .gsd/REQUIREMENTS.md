@@ -31,20 +31,9 @@
 - Why it matters: Standard form UX — users expect Enter to advance or submit. Currently only the last field in some forms has onSubmitEditing.
 - Source: user
 - Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Applies to login, signup, forgot-password, reset-password, recipe create/edit, and any other form screens.
-
-### QA-05 — OAuth consent branding
-- Class: launchability
-- Status: active
-- Description: Google and Apple OAuth consent screens show "Berven Book" (or the configured app name) instead of the raw Supabase project URL (ugixgcbysrwabwzbsjxr.supabase.co).
-- Why it matters: Users see an ugly, untrustworthy URL during sign-up which undermines confidence in the app.
-- Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: none
-- Validation: unmapped
-- Notes: This is a Google Cloud Console / Supabase dashboard configuration change, not a code change. Document exact steps.
+- Supporting slices: M003/S05
+- Validation: partial — S02 UAT
+- Notes: Auth forms (login, signup, reset-password) and collection create form wired with focus chaining in S02. RecipeForm coverage and runtime verification deferred to S05.
 
 ### QA-06 — Console.log cleanup
 - Class: quality-attribute
@@ -118,6 +107,13 @@
 - Source: investigation
 - Primary Slice: M003/S01
 - Notes: 7 shared types extracted to `src/features/scan/types.ts`. All consumers repointed. Original service files deleted (types + dead service classes).
+
+### QA-05 — OAuth consent branding
+- Status: validated
+- Class: launchability
+- Source: user
+- Primary Slice: M003/S02
+- Notes: `docs/oauth-branding.md` created with step-by-step instructions for Google Cloud Console, Apple Developer, and Supabase Dashboard. Documentation deliverable complete; actual console configuration is a manual ops task.
 
 ### QA-12 — Duplicate scan-upload.ts consolidation
 - Status: validated
@@ -236,8 +232,8 @@
 | QA-01 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-02 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
 | QA-03 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
-| QA-04 | quality-attribute | active | M003/S02 | none | unmapped |
-| QA-05 | launchability | active | M003/S02 | none | unmapped |
+| QA-04 | quality-attribute | active | M003/S02 | M003/S05 | partial — S02 UAT |
+| QA-05 | launchability | validated | M003/S02 | none | S02 UAT |
 | QA-06 | quality-attribute | active | M003/S04 | none | unmapped |
 | QA-07 | quality-attribute | active | M003/S01, M003/S04 | none | unmapped |
 | QA-08 | quality-attribute | active | M003/S05 | none | unmapped |
@@ -252,7 +248,7 @@
 
 ## Coverage Summary
 
-- Active requirements: 9
-- Mapped to slices: 9
-- Validated (prior milestones + M003/S01): 29+
+- Active requirements: 8
+- Mapped to slices: 8
+- Validated (prior milestones + M003/S01 + M003/S02): 30+
 - Unmapped active requirements: 0

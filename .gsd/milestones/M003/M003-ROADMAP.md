@@ -63,7 +63,7 @@ This milestone is complete only when all are true:
 - [x] **S01: Scan Code Consolidation** `risk:high` `depends:[]`
   > After this: single `src/features/scan/` directory with no duplicates, dead files removed, all tests pass, TypeScript compiles clean.
 
-- [ ] **S02: Form UX & OAuth Branding** `risk:medium` `depends:[]`
+- [x] **S02: Form UX & OAuth Branding** `risk:medium` `depends:[]`
   > After this: every form submits on Enter with proper focus chaining, OAuth branding steps documented with screenshots.
 
 - [ ] **S03: Scan UI Polish** `risk:medium` `depends:[S01]`

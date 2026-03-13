@@ -1,7 +1,8 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import type { TextInput as TextInputType } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
@@ -45,6 +46,9 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const emailRef = useRef<TextInputType>(null);
+  const passwordRef = useRef<TextInputType>(null);
+  const confirmPasswordRef = useRef<TextInputType>(null);
 
   async function onSignup() {
     if (!isValidPassword(password)) {
@@ -186,6 +190,8 @@ export default function SignupScreen() {
             placeholderTextColor={textTertiary}
             value={fullName}
             onChangeText={setFullName}
+            returnKeyType="next"
+            onSubmitEditing={() => emailRef.current?.focus()}
             style={inputStyle}
           />
         </View>
@@ -194,6 +200,7 @@ export default function SignupScreen() {
         <View style={{ gap: 6 }}>
           <Text style={labelStyle}>Email</Text>
           <TextInput
+            ref={emailRef}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
@@ -201,6 +208,8 @@ export default function SignupScreen() {
             placeholderTextColor={textTertiary}
             value={email}
             onChangeText={setEmail}
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
             style={inputStyle}
           />
         </View>
@@ -209,6 +218,7 @@ export default function SignupScreen() {
         <View style={{ gap: 6 }}>
           <Text style={labelStyle}>Password</Text>
           <TextInput
+            ref={passwordRef}
             autoCapitalize="none"
             autoComplete="new-password"
             placeholder="Create a password"
@@ -216,6 +226,8 @@ export default function SignupScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            returnKeyType="next"
+            onSubmitEditing={() => confirmPasswordRef.current?.focus()}
             style={inputStyle}
           />
         </View>
@@ -224,6 +236,7 @@ export default function SignupScreen() {
         <View style={{ gap: 6 }}>
           <Text style={labelStyle}>Confirm Password</Text>
           <TextInput
+            ref={confirmPasswordRef}
             autoCapitalize="none"
             autoComplete="new-password"
             placeholder="Confirm your password"

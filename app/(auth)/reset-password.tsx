@@ -201,6 +201,8 @@ export default function ResetPasswordScreen() {
             setErrorMsg(null);
           }}
           secureTextEntry
+          returnKeyType="go"
+          onSubmitEditing={onUpdatePassword}
           style={{
             height: 48,
             backgroundColor: bgCard,

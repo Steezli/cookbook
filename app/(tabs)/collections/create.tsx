@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { TextInput as TextInputType } from 'react-native';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { createCollection } from '@/features/collections/api';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +32,7 @@ export default function CreateCollectionScreen() {
   const [description, setDescription] = useState('');
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
+  const descriptionRef = useRef<TextInputType>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -129,6 +131,8 @@ export default function CreateCollectionScreen() {
           value={name}
           onChangeText={setName}
           placeholder="e.g., Holiday Favorites"
+          returnKeyType="next"
+          onSubmitEditing={() => descriptionRef.current?.focus()}
           style={{
             borderWidth: 1,
             borderColor: borderDefault,
@@ -153,6 +157,7 @@ export default function CreateCollectionScreen() {
           Description
         </Text>
         <TextInput
+          ref={descriptionRef}
           value={description}
           onChangeText={setDescription}
           placeholder="Brief description"
