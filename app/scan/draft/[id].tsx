@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Pressable } from 'react-native';
+import { Platform, View, Text, ActivityIndicator, Pressable } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { DraftReview } from '@/features/scan/DraftReview';
@@ -64,6 +64,9 @@ export default function DraftReviewScreen() {
   const [retryCount, setRetryCount] = useState(0);
 
   const userId = session?.user?.id;
+
+  // On native, the scan Stack header handles safe area — don't double-pad
+  const containerStyle = Platform.OS !== 'web' ? { paddingTop: 0 } : undefined;
 
   useEffect(() => {
     if (!id || !userId) return;
@@ -203,7 +206,7 @@ export default function DraftReviewScreen() {
   // --- Auth loading ---
   if (authLoading) {
     return (
-      <PageContainer>
+      <PageContainer style={containerStyle}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
           <ActivityIndicator size="large" color={accentBlue} />
         </View>
@@ -215,7 +218,7 @@ export default function DraftReviewScreen() {
   if (mode === 'loading' || mode === 'processing') {
     const isProcessing = mode === 'processing';
     return (
-      <PageContainer>
+      <PageContainer style={containerStyle}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage, padding: 24 }}>
           <ActivityIndicator size="large" color={accentWarm} />
           <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary, marginTop: 16, textAlign: 'center' }}>
@@ -243,7 +246,7 @@ export default function DraftReviewScreen() {
   // --- Error ---
   if (mode === 'error') {
     return (
-      <PageContainer>
+      <PageContainer style={containerStyle}>
         <View style={{ flex: 1, padding: 24, backgroundColor: bgPage, justifyContent: 'center' }}>
           <View
             style={{
@@ -296,7 +299,7 @@ export default function DraftReviewScreen() {
   // --- Multi-draft: render DraftListView ---
   if (mode === 'multi') {
     return (
-      <PageContainer>
+      <PageContainer style={containerStyle}>
         <DraftListView jobId={id!} />
       </PageContainer>
     );
@@ -305,7 +308,7 @@ export default function DraftReviewScreen() {
   // --- Single-draft: backward-compatible flow ---
   if (isEditing) {
     return (
-      <PageContainer>
+      <PageContainer style={containerStyle}>
         <DraftEditor
           draftId={id!}
           onCancel={() => setIsEditing(false)}
@@ -315,7 +318,7 @@ export default function DraftReviewScreen() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer style={containerStyle}>
       <DraftReview
         draftId={id!}
         onEdit={() => setIsEditing(true)}

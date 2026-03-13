@@ -4,9 +4,9 @@ import {
   Text,
   ScrollView,
   Image,
+  Platform,
   Pressable,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImagePlus, X, Upload } from 'lucide-react-native';
@@ -198,7 +198,7 @@ export default function ScanUploadScreen() {
   const uploadZoneMaxWidth = isMobile ? undefined : 600;
 
   return (
-    <PageContainer>
+    <PageContainer style={Platform.OS !== 'web' ? { paddingTop: 0 } : undefined}>
       <ScrollView
         style={{ flex: 1, backgroundColor: bgPage }}
         contentContainerStyle={{
