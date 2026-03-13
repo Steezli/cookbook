@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { getRecipeById } from '@/features/recipes/api';
 import type { Recipe } from '@/features/recipes/types';
 import { displayAmount } from '@/features/units/conversions';
@@ -19,10 +19,16 @@ import {
   getStepNavState,
   clampStep,
 } from '@/features/cooking/cookingModeUtils';
+import {
+  extractStepIngredients,
+  highlightStepIngredients,
+} from '@/features/cooking/ingredientMatcher';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
   accentBlue,
+  accentWarm,
   bgCard,
+  bgCardWarm,
   bgPage,
   borderDefault,
   errorText,
@@ -33,6 +39,9 @@ import {
   fontSizeSm,
   fontSizeXl,
   fontSize2xl,
+  highlightIngredientBg,
+  highlightIngredientText,
+  radiusMd,
   textPrimary,
   textSecondary,
   white,
@@ -50,6 +59,7 @@ export default function CookScreen() {
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [unitPreference, setUnitPreference] = useState<'imperial' | 'metric'>('imperial');
+  const [showAllIngredients, setShowAllIngredients] = useState(false);
 
   useEffect(() => {
     async function loadRecipe() {
@@ -128,16 +138,26 @@ export default function CookScreen() {
   const step = recipe.steps[currentStep];
   const contentPadding = isWeb ? 40 : isTablet ? 32 : 24;
 
+  // Get matched ingredient indices for the current step
+  const stepIngredientIndices = extractStepIngredients(step.text, recipe.ingredients);
+  const stepIngredients = stepIngredientIndices.map(i => recipe.ingredients[i]);
+
+  // Get highlighted text segments for the current step
+  const textSegments = highlightStepIngredients(step.text, stepIngredients);
+
   function displayIngredient(ing: Recipe['ingredients'][0]): string {
+    // Extract ingredient name for liquid/dry classification
+    const ingredientName = ing.text;
+
     if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
-      return displayAmount(ing.amount ?? null, ing.unit ?? null, unitPreference, ing.original_text || ing.text);
+      return displayAmount(ing.amount ?? null, ing.unit ?? null, unitPreference, ing.original_text || ing.text, ingredientName);
     }
     if (ing.is_ambiguous) return `${ing.text} (approx.)`;
     // Legacy ingredient: no structured amount/unit — try to parse from text
     if (ing.amount === undefined && ing.unit === undefined) {
       const parsed = parseIngredient(ing.text);
       if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
-        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text);
+        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text, parsed.ingredient);
       }
     }
     return ing.text;
@@ -186,10 +206,10 @@ export default function CookScreen() {
       <View style={{ alignItems: isWeb ? 'flex-start' : 'center' }}>
         <View
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: accentBlue,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: accentWarm,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -206,27 +226,94 @@ export default function CookScreen() {
         </View>
       </View>
 
-      {/* Step instruction */}
+      {/* Step instruction with highlighted ingredients */}
       <Text
         style={{
           fontFamily: fontFamilyBody,
           fontSize: fontSizeXl,
           color: textPrimary,
-          lineHeight: 28,
+          lineHeight: 32,
           marginTop: 24,
           textAlign: isWeb ? 'left' : 'center',
         }}
       >
-        {step.text}
+        {textSegments.map((segment, i) =>
+          segment.highlighted ? (
+            <Text
+              key={i}
+              style={{
+                backgroundColor: highlightIngredientBg,
+                color: highlightIngredientText,
+                fontFamily: fontFamilyBodyMedium,
+                borderRadius: 4,
+              }}
+            >
+              {segment.text}
+            </Text>
+          ) : (
+            <Text key={i}>{segment.text}</Text>
+          )
+        )}
       </Text>
 
-      {/* You'll need card — full ingredient list */}
-      <View
+      {/* "You'll need" card — step-relevant ingredients */}
+      {stepIngredients.length > 0 && (
+        <View
+          style={{
+            backgroundColor: bgCardWarm,
+            borderRadius: radiusMd,
+            padding: 16,
+            marginTop: 32,
+            gap: 12,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSizeBase,
+              color: textPrimary,
+            }}
+          >
+            You'll need
+          </Text>
+          {stepIngredients.map((ing, i) => (
+            <View
+              key={i}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: accentWarm,
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textPrimary,
+                  flex: 1,
+                }}
+              >
+                {displayIngredient(ing)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Full ingredient list — expandable */}
+      <Pressable
+        onPress={() => setShowAllIngredients(!showAllIngredients)}
         style={{
-          backgroundColor: bgCard,
-          borderRadius: 16,
-          padding: 16,
-          marginTop: 32,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          marginTop: 20,
+          paddingVertical: 8,
         }}
       >
         <Text
@@ -234,39 +321,62 @@ export default function CookScreen() {
             fontFamily: fontFamilyBodyMedium,
             fontSize: fontSizeSm,
             color: textSecondary,
-            marginBottom: 12,
           }}
         >
-          Full Ingredient List
+          {showAllIngredients ? 'Hide full ingredient list' : 'View all ingredients'}
         </Text>
-        {recipe.ingredients.map((ing, i) => (
-          <View
-            key={i}
-            style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 }}
-          >
-            <Text
-              style={{
-                fontFamily: fontFamilyBody,
-                fontSize: fontSizeBase,
-                color: textPrimary,
-                marginRight: 8,
-              }}
-            >
-              •
-            </Text>
-            <Text
-              style={{
-                fontFamily: fontFamilyBody,
-                fontSize: fontSizeBase,
-                color: textPrimary,
-                flex: 1,
-              }}
-            >
-              {displayIngredient(ing)}
-            </Text>
-          </View>
-        ))}
-      </View>
+        {showAllIngredients ? (
+          <ChevronUp size={16} color={textSecondary} />
+        ) : (
+          <ChevronDown size={16} color={textSecondary} />
+        )}
+      </Pressable>
+
+      {showAllIngredients && (
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            marginTop: 4,
+          }}
+        >
+          {recipe.ingredients.map((ing, i) => {
+            const isRelevant = stepIngredientIndices.includes(i);
+            return (
+              <View
+                key={i}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  marginBottom: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: isRelevant ? accentWarm : textSecondary,
+                    marginRight: 8,
+                  }}
+                >
+                  •
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: isRelevant ? fontFamilyBodyMedium : fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: isRelevant ? textPrimary : textSecondary,
+                    flex: 1,
+                  }}
+                >
+                  {displayIngredient(ing)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 
@@ -326,7 +436,7 @@ export default function CookScreen() {
         <View
           style={{
             height: 4,
-            backgroundColor: accentBlue,
+            backgroundColor: accentWarm,
             borderRadius: 2,
             width: `${progressPercent}%` as any,
           }}

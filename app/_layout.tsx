@@ -79,7 +79,11 @@ export default function RootLayout() {
             <Stack.Screen name="(public)" />
             <Stack.Screen
               name="scan"
-              options={{ presentation: "modal", headerShown: false }}
+              options={{
+                headerShown: false,
+                fullScreenGestureEnabled: true,
+                animation: 'slide_from_right',
+              }}
             />
           </Stack>
         </ErrorBoundary>

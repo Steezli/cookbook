@@ -253,6 +253,9 @@ export default function RecipeDetailScreen() {
   }
 
   function displayIngredient(ing: Recipe["ingredients"][0]): string {
+    // Extract ingredient name for liquid/dry classification
+    const ingredientName = ing.text;
+
     if (
       ing.amount !== undefined &&
       ing.unit !== undefined &&
@@ -262,7 +265,8 @@ export default function RecipeDetailScreen() {
         ing.amount ?? null,
         ing.unit ?? null,
         unitPreference,
-        ing.original_text || ing.text
+        ing.original_text || ing.text,
+        ingredientName
       );
     }
     if (ing.is_ambiguous) {
@@ -272,7 +276,7 @@ export default function RecipeDetailScreen() {
     if (ing.amount === undefined && ing.unit === undefined) {
       const parsed = parseIngredient(ing.text);
       if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
-        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text);
+        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text, parsed.ingredient);
       }
     }
     return ing.text;
