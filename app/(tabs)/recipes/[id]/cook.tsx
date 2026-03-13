@@ -25,6 +25,7 @@ import {
   bgCard,
   bgPage,
   borderDefault,
+  errorText,
   fontFamilyBody,
   fontFamilyBodyMedium,
   fontFamilyDisplay,
@@ -46,6 +47,7 @@ export default function CookScreen() {
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [unitPreference, setUnitPreference] = useState<'imperial' | 'metric'>('imperial');
 
@@ -57,7 +59,7 @@ export default function CookScreen() {
         const data = await getRecipeById(id);
         setRecipe(data);
       } catch (e) {
-        // Error handled via recipe === null check below
+        setError('Failed to load recipe');
       } finally {
         setIsLoading(false);
       }
@@ -74,6 +76,20 @@ export default function CookScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={accentBlue} />
+      </View>
+    );
+  }
+
+  // Load error — differentiated from "not found"
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: bgPage, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: errorText, textAlign: 'center' }}>
+          {error}
+        </Text>
+        <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: accentBlue }}>Go Back</Text>
+        </Pressable>
       </View>
     );
   }

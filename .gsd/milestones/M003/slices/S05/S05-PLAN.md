@@ -52,7 +52,7 @@
   - Verify: `rg 'Alert\.alert' app/ src/` returns 0 matches; `npx tsc --noEmit` exits 0; `npx jest --ci` passes
   - Done when: zero raw `Alert.alert` calls remain in `app/` or `src/`, shared utility exists at `src/lib/alert.ts`, TypeScript compiles clean
 
-- [ ] **T02: Fix error handling gaps, RecipeForm focus chaining, and hardcoded colors** `est:30m`
+- [x] **T02: Fix error handling gaps, RecipeForm focus chaining, and hardcoded colors** `est:30m`
   - Why: Completes QA-09 (error handling audit) and QA-04 (RecipeForm focus chaining). Home screen and recipes/index silently swallow load errors; cook mode has no differentiated error state; collections/index has a hardcoded error color.
   - Files: `app/(tabs)/index.tsx`, `app/(tabs)/recipes/index.tsx`, `app/(tabs)/recipes/[id]/cook.tsx`, `app/(tabs)/collections/index.tsx`, `src/components/recipes/RecipeForm.tsx`
   - Do: (1) Home screen: add `error` state, set it in catch, show error text in UI. (2) recipes/index: add `error` state, set in catch, show feedback. (3) cook mode: add explicit error state and error UI instead of falling through to "not found" for all failures. (4) collections/index: replace `#d32f2f` with `errorText` token import. (5) RecipeForm: add `useRef` for description TextInput, wire title with `returnKeyType="next"` + `onSubmitEditing` to focus description ref. Description is multiline — no `onSubmitEditing` per S02 pattern.

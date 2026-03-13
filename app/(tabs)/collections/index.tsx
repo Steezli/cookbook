@@ -9,6 +9,7 @@ import { PageContainer } from '@/components/nav/PageContainer';
 import {
   accentBlue,
   bgCard,
+  errorText,
   fontFamilyBody,
   fontFamilyBodyMedium,
   fontFamilyDisplay,
@@ -169,7 +170,7 @@ export default function CollectionsListScreen() {
             style={{
               fontFamily: fontFamilyBody,
               fontSize: fontSizeSm,
-              color: '#d32f2f',
+              color: errorText,
               textAlign: 'center',
             }}
           >

@@ -26,6 +26,7 @@ import {
   bgCard,
   bgPage,
   borderDefault,
+  errorText,
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyBodyMedium,
@@ -49,6 +50,7 @@ export default function RecipesListScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [thumbnailByRecipeId, setThumbnailByRecipeId] = useState<Record<string, string>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -69,6 +71,7 @@ export default function RecipesListScreen() {
   async function loadRecipes() {
     loadSeqRef.current += 1;
     const seq = loadSeqRef.current;
+    setError(null);
     try {
       const data = await searchRecipes({
         query: searchQuery,
@@ -97,7 +100,9 @@ export default function RecipesListScreen() {
         }
       }
     } catch (e) {
-      // Load error — stale data shown until next successful load
+      if (seq === loadSeqRef.current) {
+        setError('Unable to load recipes. Pull down to refresh.');
+      }
     }
   }
 
@@ -452,10 +457,23 @@ export default function RecipesListScreen() {
         </View>
       )}
 
-      {/* Content: loading / empty / grid */}
+      {/* Content: loading / error / empty / grid */}
       {isLoading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={accentBlue} />
+        </View>
+      ) : error ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: errorText,
+              textAlign: 'center',
+            }}
+          >
+            {error}
+          </Text>
         </View>
       ) : recipes.length === 0 ? (
         <View

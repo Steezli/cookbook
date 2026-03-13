@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Image,
   Pressable,
   ScrollView,
   Text,
   TextInput,
+  TextInput as TextInputType,
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -83,6 +84,9 @@ export function RecipeForm({
   submitLabel,
   isSubmitting,
 }: RecipeFormProps) {
+  // Refs for focus chaining
+  const descriptionRef = useRef<TextInputType>(null);
+
   // Photo state
   const [existingPhotos, setExistingPhotos] = useState<RecipePhoto[]>(initialExistingPhotos);
   const [newPhotos, setNewPhotos] = useState<PendingPhoto[]>([]);
@@ -374,6 +378,8 @@ export function RecipeForm({
             onChangeText={setTitle}
             placeholder="e.g., Grandma's Chocolate Chip Cookies"
             placeholderTextColor={textSecondary}
+            returnKeyType="next"
+            onSubmitEditing={() => descriptionRef.current?.focus()}
           />
         </View>
 
@@ -381,6 +387,7 @@ export function RecipeForm({
         <View>
           <Text style={labelStyle}>Description</Text>
           <TextInput
+            ref={descriptionRef}
             style={[inputStyle, { height: 80, textAlignVertical: 'top' }]}
             value={description}
             onChangeText={setDescription}
