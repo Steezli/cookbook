@@ -17,13 +17,12 @@ export function MobileTabBar() {
   return (
     <View
       style={{
-        height: 84 + insets.bottom,
         backgroundColor: bgPage,
         borderTopWidth: 1,
         borderTopColor: borderSubtle,
         flexDirection: "row",
-        paddingTop: 12,
-        paddingBottom: 28 + insets.bottom,
+        paddingTop: 8,
+        paddingBottom: insets.bottom || 8,
         paddingHorizontal: 12,
         alignItems: "center",
       }}
