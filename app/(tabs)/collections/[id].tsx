@@ -2,9 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
-  Platform,
   Pressable,
   Text,
   TextInput,
@@ -17,6 +15,7 @@ import {
   removeRecipeFromCollection,
   deleteCollection,
 } from '@/features/collections/api';
+import { showAlert, confirmAction } from '@/lib/alert';
 import type { Collection } from '@/features/collections/types';
 import type { Recipe } from '@/features/recipes/types';
 import { useSession } from '@/features/auth/session';
@@ -44,27 +43,6 @@ import {
   textTertiary,
   white,
 } from '@/lib/tokens';
-
-function showAlert(title: string, message?: string) {
-  if (Platform.OS === 'web') {
-    window.alert(message ? `${title}\n\n${message}` : title);
-  } else {
-    Alert.alert(title, message);
-  }
-}
-
-function confirmAction(title: string, message: string, onConfirm: () => void) {
-  if (Platform.OS === 'web') {
-    if (window.confirm(`${title}\n\n${message}`)) {
-      onConfirm();
-    }
-  } else {
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', style: 'destructive', onPress: onConfirm },
-    ]);
-  }
-}
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

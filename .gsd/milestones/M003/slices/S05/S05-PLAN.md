@@ -45,7 +45,7 @@
 
 ## Tasks
 
-- [ ] **T01: Extract cross-platform alert utility and replace all Alert.alert calls** `est:45m`
+- [x] **T01: Extract cross-platform alert utility and replace all Alert.alert calls** `est:45m`
   - Why: `Alert.alert` is a silent no-op on react-native-web 0.21 — 41 calls across 15 unguarded files swallow all error/confirmation feedback on web. This is the highest-impact fix in the slice.
   - Files: `src/lib/alert.ts` (new), all 17 files with `Alert.alert` calls, `app/(tabs)/family/[id].tsx`, `app/(tabs)/collections/[id].tsx`, `app/(auth)/reset-password.tsx` (remove inline copies)
   - Do: Extract `showAlert`/`confirmAction` from `family/[id].tsx` into `src/lib/alert.ts`. Replace all 41 raw `Alert.alert` calls with imports from the shared utility. Remove the inline duplicates from `family/[id].tsx`, `collections/[id].tsx`, and `reset-password.tsx`. Each call site: determine if it's a simple message (→ `showAlert`) or a confirmation with callback (→ `confirmAction`). Must check `Platform.OS === 'web'` in the utility, not at call sites.

@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Pressable,
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { showAlert, confirmAction } from "@/lib/alert";
 import { useFocusEffect } from "@react-navigation/native";
 import { ChevronLeft, UtensilsCrossed } from "lucide-react-native";
 import { getRecipeById, deleteRecipe } from "@/features/recipes/api";
@@ -180,27 +180,20 @@ export default function RecipeDetailScreen() {
   async function handleDelete() {
     if (!recipe) return;
 
-    Alert.alert(
+    confirmAction(
       "Delete Recipe",
       "Are you sure you want to delete this recipe? This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteRecipe(recipe.id);
-              router.back();
-            } catch (e) {
-              Alert.alert(
-                "Error",
-                e instanceof Error ? e.message : "Failed to delete recipe"
-              );
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await deleteRecipe(recipe.id);
+          router.back();
+        } catch (e) {
+          showAlert(
+            "Error",
+            e instanceof Error ? e.message : "Failed to delete recipe"
+          );
+        }
+      },
     );
   }
 
@@ -225,7 +218,7 @@ export default function RecipeDetailScreen() {
         }
       }, 500);
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to submit rating");
+      showAlert("Error", e instanceof Error ? e.message : "Failed to submit rating");
     }
   }
 
@@ -252,7 +245,7 @@ export default function RecipeDetailScreen() {
         ]);
       }
     } catch (e) {
-      Alert.alert(
+      showAlert(
         "Error",
         e instanceof Error ? e.message : "Failed to update collection membership"
       );
@@ -391,7 +384,7 @@ export default function RecipeDetailScreen() {
                     await deleteRecipePhoto(item.id);
                     setPhotos((prev) => prev.filter((p) => p.id !== item.id));
                   } catch {
-                    Alert.alert("Error", "Failed to delete photo");
+                    showAlert("Error", "Failed to delete photo");
                   }
                 }}
               >

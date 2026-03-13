@@ -1,11 +1,12 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { TextInput as TextInputType } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
+import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
@@ -57,7 +58,7 @@ export default function LoginScreen() {
       router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Login failed';
-      Alert.alert('Login failed', msg);
+      showAlert('Login failed', msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +77,7 @@ export default function LoginScreen() {
       router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : `${provider} login failed`;
-      Alert.alert('Login failed', msg);
+      showAlert('Login failed', msg);
     } finally {
       setSocialLoading(null);
     }

@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { showAlert } from '@/lib/alert';
 import { createRecipe } from '@/features/recipes/api';
 import { uploadRecipePhoto } from '@/features/recipes/photos';
 import { RecipeForm, type PendingPhoto } from '@/components/recipes/RecipeForm';
@@ -18,7 +18,7 @@ export default function CreateRecipeScreen() {
       }
       router.replace(`/recipes/${recipe.id}` as any);
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to create recipe');
+      showAlert('Error', err.message ?? 'Failed to create recipe');
     } finally {
       setIsSubmitting(false);
     }

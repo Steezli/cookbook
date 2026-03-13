@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
 
+import { showAlert } from "@/lib/alert";
 import { isValidPassword } from "@/features/auth/password";
 import { supabase } from "@/lib/supabase";
 import {
@@ -30,15 +31,6 @@ function parseParamsFromHash(hash: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of params.entries()) out[k] = v;
   return out;
-}
-
-function showAlert(title: string, message?: string) {
-  if (Platform.OS === "web") {
-    window.alert(message ? `${title}\n\n${message}` : title);
-  } else {
-    const { Alert } = require("react-native");
-    Alert.alert(title, message);
-  }
 }
 
 export default function ResetPasswordScreen() {

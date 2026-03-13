@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ChevronDown, ChevronUp, X } from 'lucide-react-native';
+import { showAlert } from '@/lib/alert';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { deleteRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { parseIngredient } from '@/features/units/parser';
@@ -133,7 +133,7 @@ export function RecipeForm({
   async function pickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Camera roll permission is needed to add photos');
+      showAlert('Permission Required', 'Camera roll permission is needed to add photos');
       return;
     }
 
@@ -166,7 +166,7 @@ export function RecipeForm({
       await deleteRecipePhoto(photoId);
       setExistingPhotos(prev => prev.filter(p => p.id !== photoId));
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to delete photo');
+      showAlert('Error', err.message ?? 'Failed to delete photo');
     }
   }
 
@@ -245,11 +245,11 @@ export function RecipeForm({
 
   async function handleSubmit() {
     if (!title.trim()) {
-      Alert.alert('Validation', 'Title is required');
+      showAlert('Validation', 'Title is required');
       return;
     }
     if (ingredients.length === 0) {
-      Alert.alert('Validation', 'At least one ingredient is required');
+      showAlert('Validation', 'At least one ingredient is required');
       return;
     }
 

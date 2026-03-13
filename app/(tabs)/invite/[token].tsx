@@ -2,7 +2,6 @@ import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   Text,
   View,

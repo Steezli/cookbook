@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { showAlert } from "@/lib/alert";
 import { createComment, updateComment } from "./api";
 import type { CreateCommentInput, UpdateCommentInput } from "./types";
 
@@ -44,7 +45,7 @@ export function CommentInput({
       setContent("");
       onSubmit();
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to submit comment");
+      showAlert("Error", e instanceof Error ? e.message : "Failed to submit comment");
     } finally {
       setIsSubmitting(false);
     }

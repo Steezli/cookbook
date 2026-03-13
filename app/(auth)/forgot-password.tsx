@@ -1,9 +1,10 @@
 import { Link } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { BookOpen, KeyRound } from 'lucide-react-native';
 
+import { showAlert } from '@/lib/alert';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
@@ -42,7 +43,7 @@ export default function ForgotPasswordScreen() {
       if (error) {
         const status = (error as unknown as { context?: { status?: number } })?.context?.status;
         if (status === 404) {
-          Alert.alert('Email not found', 'No account exists for that email.');
+          showAlert('Email not found', 'No account exists for that email.');
           return;
         }
         throw error;
@@ -52,7 +53,7 @@ export default function ForgotPasswordScreen() {
       setIsSent(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Reset request failed';
-      Alert.alert('Reset request failed', msg);
+      showAlert('Reset request failed', msg);
     } finally {
       setIsSubmitting(false);
     }
