@@ -72,7 +72,7 @@ This milestone is complete only when all are true:
 - [x] **S04: Logging & Dead Code Sweep** `risk:low` `depends:[S01]`
   > After this: no debug console.* in client code, any remaining dead files found by systematic audit are removed, TypeScript and tests still clean.
 
-- [ ] **S05: Full App Audit & Cross-Platform Verification** `risk:medium` `depends:[S01,S02,S03,S04]`
+- [x] **S05: Full App Audit & Cross-Platform Verification** `risk:medium` `depends:[S01,S02,S03,S04]`
   > After this: every screen and flow verified on web and iOS simulator. Dead buttons, broken links, and error handling issues found and fixed. Final audit report produced.
 
 ## Boundary Map

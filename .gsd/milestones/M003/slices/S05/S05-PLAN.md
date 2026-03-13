@@ -59,7 +59,7 @@
   - Verify: `npx tsc --noEmit` exits 0; `npx jest --ci` passes; `rg 'returnKeyType' src/components/recipes/RecipeForm.tsx` shows title with "next"; `rg '#d32f2f' app/` returns 0
   - Done when: all 5 files updated, error states visible in code, RecipeForm title chains to description, no hardcoded error color in collections/index
 
-- [ ] **T03: Cross-platform verification on web and iOS simulator** `est:45m`
+- [x] **T03: Cross-platform verification on web and iOS simulator** `est:45m`
   - Why: Completes QA-08 (button/interaction audit), QA-10 (cross-platform verification). All prior tasks produced code changes — this task exercises them at runtime and produces the final audit report.
   - Files: `.gsd/milestones/M003/slices/S05/AUDIT-REPORT.md` (new)
   - Do: (1) Start dev server via `bg_shell`. (2) Web: navigate key flows with browser tools — login page renders, scan upload page renders with drag zone, collections page renders, profile page renders. Verify error alert mechanism works by checking `src/lib/alert.ts` is properly loaded. (3) iOS simulator: launch via `open -a Simulator` + Expo, verify app launches and connects to Metro. (4) Write audit report documenting: screens verified on web, screens verified on iOS, what needs real device testing (camera, real OAuth, push notifications), final state of all success criteria.
