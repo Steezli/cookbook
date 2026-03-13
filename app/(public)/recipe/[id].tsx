@@ -590,6 +590,10 @@ export default function PublicRecipeDetail() {
           {renderIngredients(20, 13)}
           {renderSteps()}
           {renderCTA()}
+          <AdSlot
+            variant={breakpoint === 'mobile' ? 'mobile' : 'leaderboard'}
+            style={{ alignSelf: 'center', marginTop: 8 }}
+          />
         </View>
       </ScrollView>
     </View>

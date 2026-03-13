@@ -6,6 +6,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { TabTrigger } from "expo-router/ui";
 import { router } from "expo-router";
+import AdSlot from "@/components/public/AdSlot";
 // router is retained for Scan (modal overlay, not a tab route)
 import {
   BookOpen,
@@ -81,6 +82,11 @@ export function WebSidebar() {
         <TabTrigger name="profile" asChild>
           <SidebarItem icon={<Settings />} label="Settings" />
         </TabTrigger>
+      </View>
+
+      {/* Ad at bottom of sidebar — per cookbook.pen Home - Web (1440px) */}
+      <View style={{ marginTop: "auto" }}>
+        <AdSlot variant="leaderboard" style={{ width: "100%", height: 90 }} />
       </View>
     </View>
   );

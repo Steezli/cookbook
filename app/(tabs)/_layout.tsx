@@ -6,6 +6,7 @@ import { useSession } from "@/features/auth/session";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { MobileTabBar } from "@/components/nav/MobileTabBar";
 import { WebSidebar } from "@/components/nav/WebSidebar";
+import AdSlot from "@/components/public/AdSlot";
 
 export default function TabsLayout() {
   const { session, isLoading } = useSession();
@@ -57,6 +58,14 @@ export default function TabsLayout() {
 
       {/* Main content area */}
       <TabSlot style={{ flex: 1 }} />
+
+      {/* Mobile/tablet: ad banner above tab bar per cookbook.pen Home design */}
+      {!isWeb ? (
+        <AdSlot
+          variant={breakpoint === "mobile" ? "mobile" : "leaderboard"}
+          style={{ alignSelf: "center", marginVertical: 4 }}
+        />
+      ) : null}
 
       {/* Mobile/tablet: bottom tab bar (5 tabs, 84px + safe area).
           Tablet shows tab bar (not sidebar) per cookbook.pen spec.
