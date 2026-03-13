@@ -27,11 +27,11 @@ export function MobileTabBar() {
         alignItems: "center",
       }}
     >
-      <TabTrigger name="index" asChild>
+      <TabTrigger name="index" reset="always" asChild>
         <TabButton icon={<Home />} label="Home" />
       </TabTrigger>
 
-      <TabTrigger name="my-recipes" asChild>
+      <TabTrigger name="my-recipes" reset="always" asChild>
         <TabButton icon={<BookOpen />} label="My Recipes" />
       </TabTrigger>
 
@@ -45,11 +45,11 @@ export function MobileTabBar() {
         <Camera color={textDisabled} size={28} />
       </Pressable>
 
-      <TabTrigger name="family" asChild>
+      <TabTrigger name="family" reset="always" asChild>
         <TabButton icon={<Heart />} label="Family" />
       </TabTrigger>
 
-      <TabTrigger name="profile" asChild>
+      <TabTrigger name="profile" reset="always" asChild>
         <TabButton icon={<User />} label="Profile" />
       </TabTrigger>
     </View>
