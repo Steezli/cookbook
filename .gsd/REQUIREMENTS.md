@@ -2,28 +2,6 @@
 
 ## Active
 
-### QA-02 — Scan UI web redesign
-- Class: primary-user-loop
-- Status: active
-- Description: Web scan experience redesigned to feel native to web rather than a ported mobile layout. Upload zone, photo preview, and progress should use web-appropriate patterns.
-- Why it matters: The web scan UI is described as "ugly af and clearly uses some design ideas from mobile" — web users deserve a first-class experience.
-- Source: user
-- Primary owning slice: M003/S03
-- Supporting slices: M003/S01
-- Validation: unmapped
-- Notes: Must reference cookbook.pen designs. Verify across all breakpoints.
-
-### QA-03 — Multi-draft UX polish
-- Class: primary-user-loop
-- Status: active
-- Description: Multi-draft list and editor UI improved for clarity, visual hierarchy, and usability. Draft selection, editing, save status, and batch operations should feel smooth.
-- Why it matters: Users find the multi-draft flow clunky — the UI itself needs work.
-- Source: user
-- Primary owning slice: M003/S03
-- Supporting slices: M003/S01
-- Validation: unmapped
-- Notes: Focus on UI quality, not navigation changes.
-
 ### QA-04 — Form Enter-key submission
 - Class: quality-attribute
 - Status: active
@@ -114,6 +92,20 @@
 - Source: user
 - Primary Slice: M003/S02
 - Notes: `docs/oauth-branding.md` created with step-by-step instructions for Google Cloud Console, Apple Developer, and Supabase Dashboard. Documentation deliverable complete; actual console configuration is a manual ops task.
+
+### QA-02 — Scan UI web redesign
+- Status: validated
+- Class: primary-user-loop
+- Source: user
+- Primary Slice: M003/S03
+- Notes: Web scan upload has HTML5 drag-and-drop zone with visual hover feedback (border/text change on drag). Verified at 390px, 768px, and 1440px breakpoints. Upload zone accepts JPEG/PNG/WebP drops and converts to ImagePickerAsset objects.
+
+### QA-03 — Multi-draft UX polish
+- Status: validated
+- Class: primary-user-loop
+- Source: user
+- Primary Slice: M003/S03
+- Notes: DraftEditor and DraftManager fully migrated to design tokens (zero hardcoded hex colors), responsive layout via useBreakpoint, Pressable interaction pattern, responsive modal sizing. 502 tests pass. Code-level verification via `rg` audits confirms zero hex colors, zero TouchableOpacity, zero StyleSheet.create.
 
 ### QA-12 — Duplicate scan-upload.ts consolidation
 - Status: validated
@@ -230,8 +222,8 @@
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
 | QA-01 | quality-attribute | validated | M003/S01 | none | S01 UAT |
-| QA-02 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
-| QA-03 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
+| QA-02 | primary-user-loop | validated | M003/S03 | M003/S01 | S03 UAT |
+| QA-03 | primary-user-loop | validated | M003/S03 | M003/S01 | S03 UAT |
 | QA-04 | quality-attribute | active | M003/S02 | M003/S05 | partial — S02 UAT |
 | QA-05 | launchability | validated | M003/S02 | none | S02 UAT |
 | QA-06 | quality-attribute | active | M003/S04 | none | unmapped |
@@ -248,7 +240,7 @@
 
 ## Coverage Summary
 
-- Active requirements: 8
-- Mapped to slices: 8
-- Validated (prior milestones + M003/S01 + M003/S02): 30+
+- Active requirements: 6
+- Mapped to slices: 6
+- Validated (prior milestones + M003/S01 + M003/S02 + M003/S03): 32+
 - Unmapped active requirements: 0

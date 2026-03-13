@@ -66,7 +66,7 @@ This milestone is complete only when all are true:
 - [x] **S02: Form UX & OAuth Branding** `risk:medium` `depends:[]`
   > After this: every form submits on Enter with proper focus chaining, OAuth branding steps documented with screenshots.
 
-- [ ] **S03: Scan UI Polish** `risk:medium` `depends:[S01]`
+- [x] **S03: Scan UI Polish** `risk:medium` `depends:[S01]`
   > After this: web scan upload and multi-draft review UI looks web-native and polished at all breakpoints. iOS scan flow verified in simulator.
 
 - [ ] **S04: Logging & Dead Code Sweep** `risk:low` `depends:[S01]`

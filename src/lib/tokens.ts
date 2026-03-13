@@ -82,6 +82,35 @@ export const fontSize2xl = 24;
 export const fontSize3xl = 30;
 
 // ---------------------------------------------------------------------------
+// Semantic state colors (error / warning feedback cards)
+// ---------------------------------------------------------------------------
+export const errorBg = '#FEF2F2';
+export const errorBorder = '#FCA5A5';
+export const errorTitle = '#991B1B';
+export const errorText = '#DC2626';
+
+export const warningBg = '#FEFCE8';
+export const warningBorder = '#FDE68A';
+export const warningTitle = '#92400E';
+export const warningText = '#A16207';
+
+// ---------------------------------------------------------------------------
+// Accent colors — extended palette
+// ---------------------------------------------------------------------------
+export const accentPurple = '#7C3AED';  // Violet-600, used for share/secondary actions
+
+// ---------------------------------------------------------------------------
+// Draft-status badge colors (no exact match in primary design tokens)
+// Used by DraftManager for status-specific badge coloring
+// ---------------------------------------------------------------------------
+export const statusReadyBg = '#DCFCE7';      // Green-100
+export const statusReadyText = '#166534';     // Green-800
+export const statusReviewBg = '#DBEAFE';      // Blue-100
+export const statusReviewText = '#1E40AF';    // Blue-800
+export const statusEnhancedBg = '#F3E8FF';    // Purple-100
+export const statusEnhancedText = '#6B21A8';  // Purple-800
+
+// ---------------------------------------------------------------------------
 // Shadow tokens — spread into style objects (do not use in StyleSheet.create
 // if shadow values are breakpoint-dependent, but these are fixed constants).
 //

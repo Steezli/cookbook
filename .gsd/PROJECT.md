@@ -10,7 +10,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Current State
 
-Two milestones complete, M003 S01–S02 done. Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating. 502 tests across 22 suites. Zero TypeScript errors. Scan codebase consolidated to single `src/features/scan/` directory. All auth forms and collection create form have Enter-key focus chaining. OAuth branding documented. Remaining technical debt: inconsistent scan UX between platforms, leftover debug logging, and button/interaction issues.
+Two milestones complete, M003 S01–S03 done. Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating. 502 tests across 22 suites. Zero TypeScript errors. Scan codebase consolidated to single `src/features/scan/` directory. All auth forms and collection create form have Enter-key focus chaining. OAuth branding documented. Web scan upload has native drag-and-drop. DraftEditor and DraftManager fully migrated to design tokens with responsive breakpoint layouts. Remaining technical debt: leftover debug logging and button/interaction issues to audit.
 
 ## Architecture / Key Patterns
 
@@ -34,4 +34,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [ ] M004: Subscriptions — Subscription gating on scan via RevenueCat, paywall UI, web checkout (SUB-01, SUB-02, SUB-03)
 
 ---
-*Last updated: 2026-03-12 after M003/S02 completion*
+*Last updated: 2026-03-12 after M003/S03 completion*

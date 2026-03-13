@@ -3,17 +3,58 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   Modal,
   ActivityIndicator,
   Share,
-  StyleSheet,
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
 import { ParsedRecipe } from '@/features/scan/types';
 import { useSession } from "@/features/auth/session";
+import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import {
+  accentBlue,
+  accentCoral,
+  accentGreen,
+  bgPage,
+  bgCard,
+  badgeGreenBg,
+  borderDefault,
+  borderSubtle,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  white,
+  errorBg,
+  errorBorder,
+  errorTitle,
+  errorText,
+  warningBg,
+  warningBorder,
+  warningTitle,
+  warningText,
+  radiusSm,
+  radiusMd,
+  radiusPill,
+  shadowMd,
+  fontFamilyDisplay,
+  fontFamilyBody,
+  fontFamilyBodyMedium,
+  fontFamilyBodyBold,
+  fontSizeXs,
+  fontSizeSm,
+  fontSizeBase,
+  fontSizeLg,
+  accentPurple,
+  statusReadyBg,
+  statusReadyText,
+  statusReviewBg,
+  statusReviewText,
+  statusEnhancedBg,
+  statusEnhancedText,
+} from '@/lib/tokens';
 
 interface DraftManagerProps {
   draft: ScanDraft;
@@ -36,6 +77,7 @@ export function DraftManager({
   onDiscarded
 }: DraftManagerProps) {
   const { session, isLoading: authLoading } = useSession();
+  const { breakpoint } = useBreakpoint();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -46,6 +88,13 @@ export function DraftManager({
     tags: []
   });
   const [error, setError] = useState<string | null>(null);
+
+  // Responsive layout values
+  const isMobile = breakpoint === 'mobile';
+  const cardPadding = isMobile ? 16 : 24;
+  const modalMaxWidth = isMobile ? '100%' as const : 560;
+  const modalPadding = isMobile ? 20 : 28;
+  const buttonMinWidth = isMobile ? '47%' as const : 150;
 
   const saveAsDraft = useCallback(async () => {
     try {
@@ -129,10 +178,10 @@ export function DraftManager({
 
   const getStatusColor = (): { bg: string; text: string } => {
     switch (draft.status) {
-      case 'ready': return { bg: '#dcfce7', text: '#166534' };
-      case 'needs_review': return { bg: '#dbeafe', text: '#1e40af' };
-      case 'enhanced': return { bg: '#f3e8ff', text: '#6b21a8' };
-      default: return { bg: '#f3f4f6', text: '#4b5563' };
+      case 'ready': return { bg: statusReadyBg, text: statusReadyText };
+      case 'needs_review': return { bg: statusReviewBg, text: statusReviewText };
+      case 'enhanced': return { bg: statusEnhancedBg, text: statusEnhancedText };
+      default: return { bg: borderSubtle, text: textSecondary };
     }
   };
 
@@ -147,18 +196,43 @@ export function DraftManager({
 
   if (authLoading) {
     return (
-      <View style={styles.card}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={{
+        backgroundColor: white,
+        borderRadius: radiusSm,
+        padding: cardPadding,
+        ...shadowMd,
+      }}>
+        <ActivityIndicator size="large" color={accentBlue} />
       </View>
     );
   }
 
   if (!session) {
     return (
-      <View style={styles.card}>
-        <View style={styles.warningCard}>
-          <Text style={styles.warningTitle}>Authentication Required</Text>
-          <Text style={styles.warningText}>Please log in to manage drafts</Text>
+      <View style={{
+        backgroundColor: white,
+        borderRadius: radiusSm,
+        padding: cardPadding,
+        ...shadowMd,
+      }}>
+        <View style={{
+          backgroundColor: warningBg,
+          borderWidth: 1,
+          borderColor: warningBorder,
+          borderRadius: 8,
+          padding: 16,
+        }}>
+          <Text style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeBase,
+            color: warningTitle,
+            marginBottom: 6,
+          }}>Authentication Required</Text>
+          <Text style={{
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeSm,
+            color: warningText,
+          }}>Please log in to manage drafts</Text>
         </View>
       </View>
     );
@@ -167,22 +241,45 @@ export function DraftManager({
   const statusColor = getStatusColor();
 
   return (
-    <View style={styles.card}>
-      <View style={styles.headerSection}>
+    <View style={{
+      backgroundColor: white,
+      borderRadius: radiusSm,
+      padding: cardPadding,
+      ...shadowMd,
+    }}>
+      <View style={{ marginBottom: 16 }}>
         <View>
-          <Text style={styles.heading}>Draft Management</Text>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: statusColor.bg },
-              ]}
-            >
-              <Text style={[styles.statusBadgeText, { color: statusColor.text }]}>
+          <Text style={{
+            fontFamily: fontFamilyDisplay,
+            fontSize: fontSizeLg,
+            color: textPrimary,
+            marginBottom: 8,
+          }}>Draft Management</Text>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}>
+            <View style={{
+              paddingHorizontal: 12,
+              paddingVertical: 4,
+              borderRadius: radiusPill,
+              backgroundColor: statusColor.bg,
+            }}>
+              <Text style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: 13,
+                color: statusColor.text,
+              }}>
                 {getStatusText()}
               </Text>
             </View>
-            <Text style={styles.createdText}>
+            <Text style={{
+              fontFamily: fontFamilyBody,
+              fontSize: 13,
+              color: textSecondary,
+            }}>
               Created: {new Date(draft.createdAt).toLocaleDateString()}
             </Text>
           </View>
@@ -190,48 +287,121 @@ export function DraftManager({
       </View>
 
       {/* Action Buttons */}
-      <View style={styles.buttonGrid}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.saveButton]}
+      <View style={{
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 16,
+      }}>
+        <Pressable
+          style={({ pressed }) => ({
+            flex: isMobile ? undefined : 1,
+            minWidth: buttonMinWidth,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            alignItems: 'center' as const,
+            backgroundColor: accentBlue,
+            opacity: pressed ? 0.7 : 1,
+          })}
           onPress={() => setShowSaveDialog(true)}
         >
-          <Text style={styles.actionButtonText}>Save as Recipe</Text>
-        </TouchableOpacity>
+          <Text style={{
+            fontFamily: fontFamilyBodyBold,
+            color: white,
+            fontSize: fontSizeBase - 1,
+          }}>Save as Recipe</Text>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.draftButton,
-            draft.status === 'needs_review' && styles.actionButtonDisabled,
-          ]}
+        <Pressable
+          style={({ pressed }) => ({
+            flex: isMobile ? undefined : 1,
+            minWidth: buttonMinWidth,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            alignItems: 'center' as const,
+            backgroundColor: textSecondary,
+            opacity: (pressed ? 0.7 : 1) * (draft.status === 'needs_review' ? 0.5 : 1),
+          })}
           onPress={saveAsDraft}
           disabled={draft.status === 'needs_review'}
         >
-          <Text style={styles.actionButtonText}>Save as Draft</Text>
-        </TouchableOpacity>
+          <Text style={{
+            fontFamily: fontFamilyBodyBold,
+            color: white,
+            fontSize: fontSizeBase - 1,
+          }}>Save as Draft</Text>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.shareButton]}
+        <Pressable
+          style={({ pressed }) => ({
+            flex: isMobile ? undefined : 1,
+            minWidth: buttonMinWidth,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            alignItems: 'center' as const,
+            backgroundColor: accentPurple,
+            opacity: pressed ? 0.7 : 1,
+          })}
           onPress={shareDraft}
         >
-          <Text style={styles.actionButtonText}>Share Draft</Text>
-        </TouchableOpacity>
+          <Text style={{
+            fontFamily: fontFamilyBodyBold,
+            color: white,
+            fontSize: fontSizeBase - 1,
+          }}>Share Draft</Text>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.discardButton]}
+        <Pressable
+          style={({ pressed }) => ({
+            flex: isMobile ? undefined : 1,
+            minWidth: buttonMinWidth,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 8,
+            alignItems: 'center' as const,
+            backgroundColor: accentCoral,
+            opacity: pressed ? 0.7 : 1,
+          })}
           onPress={() => setShowDiscardDialog(true)}
         >
-          <Text style={styles.actionButtonText}>Discard Draft</Text>
-        </TouchableOpacity>
+          <Text style={{
+            fontFamily: fontFamilyBodyBold,
+            color: white,
+            fontSize: fontSizeBase - 1,
+          }}>Discard Draft</Text>
+        </Pressable>
       </View>
 
       {/* Error Display */}
       {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={() => setError(null)}>
-            <Text style={styles.errorDismiss}>Dismiss</Text>
-          </TouchableOpacity>
+        <View style={{
+          backgroundColor: errorBg,
+          borderWidth: 1,
+          borderColor: errorBorder,
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 16,
+        }}>
+          <Text style={{
+            fontFamily: fontFamilyBody,
+            fontSize: fontSizeSm,
+            color: errorTitle,
+          }}>{error}</Text>
+          <Pressable
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            onPress={() => setError(null)}
+          >
+            <Text style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeXs,
+              color: errorText,
+              textDecorationLine: 'underline',
+              marginTop: 6,
+            }}>Dismiss</Text>
+          </Pressable>
         </View>
       )}
 
@@ -242,28 +412,75 @@ export function DraftManager({
         animationType="fade"
         onRequestClose={() => setShowSaveDialog(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Save as Recipe</Text>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 16,
+        }}>
+          <View style={{
+            backgroundColor: white,
+            borderRadius: 8,
+            maxWidth: modalMaxWidth,
+            width: '100%',
+            padding: modalPadding,
+          }}>
+            <Text style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+              marginBottom: 16,
+            }}>Save as Recipe</Text>
 
-            <View style={styles.modalForm}>
-              <View style={styles.formField}>
-                <Text style={styles.label}>Recipe Title *</Text>
+            <View style={{ gap: 14 }}>
+              <View style={{ gap: 6 }}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeSm,
+                  color: textPrimary,
+                }}>Recipe Title *</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeBase - 1,
+                    color: textPrimary,
+                    backgroundColor: white,
+                  }}
                   value={conversionOptions.title}
                   onChangeText={(text) =>
                     setConversionOptions((prev) => ({ ...prev, title: text }))
                   }
                   placeholder="Enter recipe title"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={textTertiary}
                 />
               </View>
 
-              <View style={styles.formField}>
-                <Text style={styles.label}>Description</Text>
+              <View style={{ gap: 6 }}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeSm,
+                  color: textPrimary,
+                }}>Description</Text>
                 <TextInput
-                  style={[styles.textInput, styles.multilineInput]}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeBase - 1,
+                    color: textPrimary,
+                    backgroundColor: white,
+                    minHeight: 80,
+                    textAlignVertical: 'top',
+                  }}
                   value={conversionOptions.description || ''}
                   onChangeText={(text) =>
                     setConversionOptions((prev) => ({
@@ -275,14 +492,28 @@ export function DraftManager({
                   numberOfLines={3}
                   textAlignVertical="top"
                   placeholder="Optional description"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={textTertiary}
                 />
               </View>
 
-              <View style={styles.formField}>
-                <Text style={styles.label}>Category</Text>
+              <View style={{ gap: 6 }}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeSm,
+                  color: textPrimary,
+                }}>Category</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeBase - 1,
+                    color: textPrimary,
+                    backgroundColor: white,
+                  }}
                   value={conversionOptions.category || ''}
                   onChangeText={(text) =>
                     setConversionOptions((prev) => ({
@@ -291,14 +522,28 @@ export function DraftManager({
                     }))
                   }
                   placeholder="e.g., Main dish, Dessert"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={textTertiary}
                 />
               </View>
 
-              <View style={styles.formField}>
-                <Text style={styles.label}>Tags (comma separated)</Text>
+              <View style={{ gap: 6 }}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeSm,
+                  color: textPrimary,
+                }}>Tags (comma separated)</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeBase - 1,
+                    color: textPrimary,
+                    backgroundColor: white,
+                  }}
                   value={conversionOptions.tags?.join(', ') || ''}
                   onChangeText={(text) =>
                     setConversionOptions((prev) => ({
@@ -310,31 +555,52 @@ export function DraftManager({
                     }))
                   }
                   placeholder="e.g., easy, vegetarian, quick"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={textTertiary}
                 />
               </View>
             </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalButtonSecondary}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              gap: 10,
+              marginTop: 20,
+            }}>
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: borderSubtle,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  opacity: pressed ? 0.7 : 1,
+                })}
                 onPress={() => setShowSaveDialog(false)}
               >
-                <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalButtonPrimary,
-                  (saving || !conversionOptions.title.trim()) &&
-                    styles.actionButtonDisabled,
-                ]}
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  color: textPrimary,
+                  fontSize: fontSizeSm,
+                }}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: accentBlue,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  opacity: (pressed ? 0.7 : 1) * ((saving || !conversionOptions.title.trim()) ? 0.5 : 1),
+                })}
                 onPress={saveAsRecipe}
                 disabled={saving || !conversionOptions.title.trim()}
               >
-                <Text style={styles.modalButtonPrimaryText}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyBold,
+                  color: white,
+                  fontSize: fontSizeSm,
+                }}>
                   {saving ? 'Saving...' : 'Save Recipe'}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -347,59 +613,130 @@ export function DraftManager({
         animationType="fade"
         onRequestClose={() => setShowDiscardDialog(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Discard Draft?</Text>
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 16,
+        }}>
+          <View style={{
+            backgroundColor: white,
+            borderRadius: 8,
+            maxWidth: modalMaxWidth,
+            width: '100%',
+            padding: modalPadding,
+          }}>
+            <Text style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+              marginBottom: 16,
+            }}>Discard Draft?</Text>
 
-            <View style={styles.discardBody}>
-              <Text style={styles.discardMessage}>
+            <View style={{ marginBottom: 8 }}>
+              <Text style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeBase - 1,
+                color: textSecondary,
+                marginBottom: 12,
+              }}>
                 Discard this draft? This can't be undone.
               </Text>
 
-              <View style={styles.discardWarningCard}>
-                <Text style={styles.discardWarningTitle}>
+              <View style={{
+                backgroundColor: warningBg,
+                borderWidth: 1,
+                borderColor: warningBorder,
+                borderRadius: 8,
+                padding: 14,
+              }}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeSm,
+                  color: warningTitle,
+                  marginBottom: 8,
+                }}>
                   Draft to be discarded:
                 </Text>
-                <View style={styles.discardDetails}>
-                  <Text style={styles.discardDetailText}>
-                    <Text style={styles.bold}>Title:</Text>{' '}
+                <View style={{ gap: 4 }}>
+                  <Text style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: warningText,
+                  }}>
+                    <Text style={{ fontFamily: fontFamilyBodyBold }}>Title:</Text>{' '}
                     {draft.recipe.title || 'Untitled'}
                   </Text>
-                  <Text style={styles.discardDetailText}>
-                    <Text style={styles.bold}>Ingredients:</Text>{' '}
+                  <Text style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: warningText,
+                  }}>
+                    <Text style={{ fontFamily: fontFamilyBodyBold }}>Ingredients:</Text>{' '}
                     {draft.recipe.ingredients?.length || 0}
                   </Text>
-                  <Text style={styles.discardDetailText}>
-                    <Text style={styles.bold}>Instructions:</Text>{' '}
+                  <Text style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: warningText,
+                  }}>
+                    <Text style={{ fontFamily: fontFamilyBodyBold }}>Instructions:</Text>{' '}
                     {draft.recipe.instructions?.length || 0}
                   </Text>
-                  <Text style={styles.discardDetailText}>
-                    <Text style={styles.bold}>Created:</Text>{' '}
+                  <Text style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: warningText,
+                  }}>
+                    <Text style={{ fontFamily: fontFamilyBodyBold }}>Created:</Text>{' '}
                     {new Date(draft.createdAt).toLocaleString()}
                   </Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalButtonSecondary}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              gap: 10,
+              marginTop: 20,
+            }}>
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: borderSubtle,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  opacity: pressed ? 0.7 : 1,
+                })}
                 onPress={() => setShowDiscardDialog(false)}
               >
-                <Text style={styles.modalButtonSecondaryText}>Keep Draft</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalButtonDanger,
-                  saving && styles.actionButtonDisabled,
-                ]}
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  color: textPrimary,
+                  fontSize: fontSizeSm,
+                }}>Keep Draft</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: accentCoral,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  opacity: (pressed ? 0.7 : 1) * (saving ? 0.5 : 1),
+                })}
                 onPress={discardDraft}
                 disabled={saving}
               >
-                <Text style={styles.modalButtonPrimaryText}>
+                <Text style={{
+                  fontFamily: fontFamilyBodyBold,
+                  color: white,
+                  fontSize: fontSizeSm,
+                }}>
                   {saving ? 'Discarding...' : 'Discard Draft'}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -407,227 +744,3 @@ export function DraftManager({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  headerSection: {
-    marginBottom: 16,
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  statusBadgeText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  createdText: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  buttonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
-  },
-  actionButton: {
-    flex: 1,
-    minWidth: 150,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  actionButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButton: {
-    backgroundColor: '#3b82f6',
-  },
-  draftButton: {
-    backgroundColor: '#4b5563',
-  },
-  shareButton: {
-    backgroundColor: '#7c3aed',
-  },
-  discardButton: {
-    backgroundColor: '#ef4444',
-  },
-  errorContainer: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#991b1b',
-  },
-  errorDismiss: {
-    fontSize: 12,
-    color: '#dc2626',
-    textDecorationLine: 'underline',
-    marginTop: 6,
-  },
-  warningCard: {
-    backgroundColor: '#fefce8',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: 8,
-    padding: 16,
-  },
-  warningTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#92400e',
-    marginBottom: 6,
-  },
-  warningText: {
-    fontSize: 14,
-    color: '#a16207',
-  },
-
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    maxWidth: 448,
-    width: '100%',
-    padding: 24,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  modalForm: {
-    gap: 14,
-  },
-  formField: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#111827',
-    backgroundColor: '#ffffff',
-  },
-  multilineInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 20,
-  },
-  modalButtonSecondary: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  modalButtonSecondaryText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  modalButtonPrimary: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  modalButtonPrimaryText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalButtonDanger: {
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-
-  // Discard dialog styles
-  discardBody: {
-    marginBottom: 8,
-  },
-  discardMessage: {
-    fontSize: 15,
-    color: '#4b5563',
-    marginBottom: 12,
-  },
-  discardWarningCard: {
-    backgroundColor: '#fefce8',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: 8,
-    padding: 14,
-  },
-  discardWarningTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#92400e',
-    marginBottom: 8,
-  },
-  discardDetails: {
-    gap: 4,
-  },
-  discardDetailText: {
-    fontSize: 14,
-    color: '#a16207',
-  },
-  bold: {
-    fontWeight: '600',
-  },
-});

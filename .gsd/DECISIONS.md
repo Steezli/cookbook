@@ -173,6 +173,18 @@
 - **Decision:** All new visual components (ErrorBoundary fallback, restyled not-found page) must reference `cookbook.pen` in Pencil for design language, color palette, and component patterns before implementation.
 - **Why:** Maintains visual consistency with the established design system rather than inventing new patterns. The app's entire UI was built from Pencil designs.
 
+## M003/S03: Scan UI Polish
+
+### Raw HTML div for web drag-and-drop
+- **Decision:** Use a raw `<div>` element with Platform.OS === 'web' conditional rendering for the drag-and-drop file zone, not react-native-web's `<View>`
+- **Why:** react-native-web 0.21 does not forward HTML5 drag events (onDragOver, onDragLeave, onDrop) on `<View>` components. A raw `<div>` is the only reliable approach without upgrading or patching.
+- **Trade-off:** Breaks the "pure React Native" pattern in one spot; contained to a single Platform.OS branch and invisible on native
+
+### Token migration removes StyleSheet.create from DraftEditor/DraftManager
+- **Decision:** Remove `StyleSheet.create` entirely from DraftEditor and DraftManager, using inline style objects computed from tokens and breakpoints
+- **Why:** Per project STATE.md constraint, dimension-sensitive styles must be computed inside components from `useBreakpoint()`, not cached in StyleSheet.create. Since these files need extensive breakpoint responsiveness, there's no benefit to keeping a partial StyleSheet.create for the non-responsive subset — cleaner to go fully inline.
+- **Trade-off:** Slightly more inline style objects; mitigated by tokens providing named constants that read clearly
+
 ## M003: Quality Audit & Cleanup
 
 ### Scan directory consolidation target
@@ -182,6 +194,15 @@
 ### Dead code removal — verify before delete
 - **Decision:** Every file deletion must be preceded by import analysis confirming zero non-test importers. Types still in use must be extracted before the source file is removed.
 - **Why:** Aggressive deletion without verification could break the app in ways TypeScript doesn't catch (dynamic imports, string references).
+
+### Semantic state color tokens in tokens.ts
+- **Decision:** Added error/warning feedback colors (errorBg, errorBorder, errorTitle, errorText, warningBg, warningBorder, warningTitle, warningText) to `src/lib/tokens.ts` as shared design tokens rather than keeping them as hardcoded hex values in individual components.
+- **Why:** These colors are reused across DraftEditor.tsx and DraftManager.tsx (and potentially other scan components). Centralizing them enables consistent feedback styling and eliminates hex color duplication.
+
+### Draft-status badge color tokens in tokens.ts
+- **Decision:** Added draft-status badge colors (statusReadyBg/Text, statusReviewBg/Text, statusEnhancedBg/Text) and accentPurple to `tokens.ts` as shared exports rather than local constants in DraftManager.tsx
+- **Why:** The verification requirement of zero hardcoded hex colors in DraftManager.tsx required all color values to come from token imports. Making them shared tokens enables consistent status badge styling across any future components that display draft status.
+- **Trade-off:** Adds 7 more token exports to an already-growing tokens.ts; acceptable since they're semantically distinct and potentially reusable
 
 ### Console.log policy — keep edge functions, clean client
 - **Decision:** Remove debug console.* from client-side code (src/, app/). Edge functions (supabase/functions/) retain their logging since server-side logs are the primary diagnostic surface.

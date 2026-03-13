@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,57 @@ export default function ScanUploadScreen() {
   const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<ScanUploadResult | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(f => ACCEPTED_IMAGE_TYPES.includes(f.type));
+
+    if (imageFiles.length === 0) return;
+
+    const assets: ImagePicker.ImagePickerAsset[] = imageFiles.map(file => ({
+      uri: URL.createObjectURL(file),
+      width: 0,
+      height: 0,
+      fileName: file.name,
+      mimeType: file.type,
+      fileSize: file.size,
+      type: 'image' as const,
+    }));
+
+    setSelectedImages(prev => [...prev, ...assets]);
+    setUploadResult(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+    }
+  }, []);
 
   const handleCameraCapture = useCallback(async () => {
     try {
@@ -193,53 +244,137 @@ export default function ScanUploadScreen() {
             maxWidth: uploadZoneMaxWidth,
           }}
         >
-          {/* Upload Area */}
-          <View
-            style={{
-              borderWidth: 2,
-              borderColor: borderDefault,
-              borderStyle: 'dashed',
-              borderRadius: radiusMd,
-              padding: isMobile ? 24 : 32,
-              alignItems: 'center',
-              backgroundColor: bgCard,
-              marginBottom: 20,
-            }}
-          >
-            <Upload size={40} color={textTertiary} style={{ marginBottom: 12 }} />
-            <Text
+          {/* Upload Area — wrapped with raw <div> on web for HTML5 drag-and-drop */}
+          {isWeb ? (
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
               style={{
-                fontFamily: fontFamilyBodyMedium,
-                fontSize: fontSizeLg,
-                color: textPrimary,
-                marginBottom: 4,
+                borderWidth: 2,
+                borderColor: isDragging ? accentBlue : borderDefault,
+                borderStyle: 'dashed',
+                borderRadius: radiusMd,
+                padding: isMobile ? 24 : 32,
+                display: 'flex',
+                flexDirection: 'column' as const,
+                alignItems: 'center',
+                backgroundColor: isDragging ? `${accentBlue}0D` : bgCard,
+                marginBottom: 20,
+                transition: 'border-color 0.15s ease, background-color 0.15s ease',
+                cursor: isDragging ? 'copy' : undefined,
               }}
             >
-              Upload Recipe Photos
-            </Text>
-            <Text
+              <Upload size={40} color={isDragging ? accentBlue : textTertiary} style={{ marginBottom: 12 }} />
+              <Text
+                style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeLg,
+                  color: isDragging ? accentBlue : textPrimary,
+                  marginBottom: 4,
+                }}
+              >
+                {isDragging ? 'Drop photos here' : 'Upload Recipe Photos'}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  textAlign: 'center',
+                  marginBottom: 20,
+                }}
+              >
+                {isDragging ? 'Release to add photos' : 'Drag & drop or choose files — JPEG, PNG, or WebP up to 10MB each'}
+              </Text>
+
+              {/* Upload Option Buttons */}
+              <View
+                style={{
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: 12,
+                  width: '100%',
+                  alignItems: 'center',
+                }}
+              >
+                {/* Library button */}
+                <Pressable
+                  onPress={handleLibrarySelect}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: pressed ? '#E8E0D8' : white,
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    borderRadius: radiusSm,
+                    width: isMobile ? '100%' : undefined,
+                    minWidth: isMobile ? undefined : 180,
+                  })}
+                >
+                  <ImagePlus size={20} color={textPrimary} />
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeBase,
+                      color: textPrimary,
+                    }}
+                  >
+                    Choose Photo
+                  </Text>
+                </Pressable>
+              </View>
+            </div>
+          ) : (
+            <View
               style={{
-                fontFamily: fontFamilyBody,
-                fontSize: fontSizeSm,
-                color: textSecondary,
-                textAlign: 'center',
+                borderWidth: 2,
+                borderColor: borderDefault,
+                borderStyle: 'dashed',
+                borderRadius: radiusMd,
+                padding: isMobile ? 24 : 32,
+                alignItems: 'center',
+                backgroundColor: bgCard,
                 marginBottom: 20,
               }}
             >
-              JPEG, PNG, or WebP up to 10MB each
-            </Text>
+              <Upload size={40} color={textTertiary} style={{ marginBottom: 12 }} />
+              <Text
+                style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  fontSize: fontSizeLg,
+                  color: textPrimary,
+                  marginBottom: 4,
+                }}
+              >
+                Upload Recipe Photos
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  textAlign: 'center',
+                  marginBottom: 20,
+                }}
+              >
+                JPEG, PNG, or WebP up to 10MB each
+              </Text>
 
-            {/* Upload Option Buttons */}
-            <View
-              style={{
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: 12,
-                width: '100%',
-                alignItems: 'center',
-              }}
-            >
-              {/* Camera button - hidden on web */}
-              {!isWeb && (
+              {/* Upload Option Buttons */}
+              <View
+                style={{
+                  flexDirection: 'column',
+                  gap: 12,
+                  width: '100%',
+                  alignItems: 'center',
+                }}
+              >
+                {/* Camera button */}
                 <Pressable
                   onPress={handleCameraCapture}
                   style={({ pressed }) => ({
@@ -251,8 +386,7 @@ export default function ScanUploadScreen() {
                     paddingVertical: 12,
                     paddingHorizontal: 20,
                     borderRadius: radiusSm,
-                    width: isMobile ? '100%' : undefined,
-                    minWidth: isMobile ? undefined : 180,
+                    width: '100%',
                   })}
                 >
                   <Camera size={20} color={white} />
@@ -266,39 +400,38 @@ export default function ScanUploadScreen() {
                     Take Photo
                   </Text>
                 </Pressable>
-              )}
 
-              {/* Library button */}
-              <Pressable
-                onPress={handleLibrarySelect}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  backgroundColor: pressed ? '#E8E0D8' : white,
-                  borderWidth: 1,
-                  borderColor: borderDefault,
-                  paddingVertical: 12,
-                  paddingHorizontal: 20,
-                  borderRadius: radiusSm,
-                  width: isMobile ? '100%' : undefined,
-                  minWidth: isMobile ? undefined : 180,
-                })}
-              >
-                <ImagePlus size={20} color={textPrimary} />
-                <Text
-                  style={{
-                    fontFamily: fontFamilyBodyMedium,
-                    fontSize: fontSizeBase,
-                    color: textPrimary,
-                  }}
+                {/* Library button */}
+                <Pressable
+                  onPress={handleLibrarySelect}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: pressed ? '#E8E0D8' : white,
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    borderRadius: radiusSm,
+                    width: '100%',
+                  })}
                 >
-                  {isWeb ? 'Choose Photo' : 'Choose from Library'}
-                </Text>
-              </Pressable>
+                  <ImagePlus size={20} color={textPrimary} />
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeBase,
+                      color: textPrimary,
+                    }}
+                  >
+                    Choose from Library
+                  </Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Selected Photos Preview */}
           {selectedImages.length > 0 && (

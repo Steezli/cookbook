@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
@@ -16,6 +15,41 @@ import { ParsedRecipe, ParsedIngredient } from '@/features/scan/types';
 import { DraftReview } from './DraftReview';
 import { DraftManager } from './DraftManager';
 import { useSession } from "@/features/auth/session";
+import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
+import {
+  accentBlue,
+  accentCoral,
+  bgPage,
+  bgCard,
+  borderDefault,
+  borderSubtle,
+  textPrimary,
+  textSecondary,
+  textTertiary,
+  white,
+  errorBg,
+  errorBorder,
+  errorTitle as errorTitleColor,
+  errorText as errorTextColor,
+  warningBg,
+  warningBorder,
+  warningTitle as warningTitleColor,
+  warningText as warningTextColor,
+  fontFamilyDisplay,
+  fontFamilyBody,
+  fontFamilyBodyMedium,
+  fontFamilyBodyBold,
+  fontSizeXs,
+  fontSizeSm,
+  fontSizeBase,
+  fontSizeLg,
+  fontSizeXl,
+  fontSize2xl,
+  radiusSm,
+  radiusMd,
+  shadowSm,
+  shadowMd,
+} from '@/lib/tokens';
 
 interface DraftEditorProps {
   /** Pass a ScanDraft directly to skip internal fetch (multi-draft path) */
@@ -35,6 +69,10 @@ interface EditHistory {
 
 export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onConverted: onConvertedProp }: DraftEditorProps) {
   const { session, isLoading: authLoading } = useSession();
+  const { breakpoint } = useBreakpoint();
+  const isMobile = breakpoint === 'mobile';
+  const isWeb = breakpoint === 'web';
+
   const [draft, setDraft] = useState<ScanDraft | null>(draftProp ?? null);
   const [recipe, setRecipe] = useState<ParsedRecipe | null>(draftProp?.recipe ?? null);
   const [loading, setLoading] = useState(!draftProp);
@@ -46,6 +84,11 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
   const [historyIndex, setHistoryIndex] = useState(draftProp ? 0 : -1);
   const [lastSaved, setLastSaved] = useState<Date | null>(draftProp ? new Date() : null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+
+  // Responsive values
+  const contentPadding = isMobile ? 16 : isWeb ? 32 : 24;
+  const cardPadding = isMobile ? 16 : isWeb ? 24 : 20;
+  const metadataGap = isMobile ? 12 : 16;
 
   // When draft prop changes (multi-draft path), sync into local state
   useEffect(() => {
@@ -239,18 +282,47 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
 
   if (authLoading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={{
+        flex: 1,
+        backgroundColor: bgCard,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: contentPadding,
+      }}>
+        <ActivityIndicator size="large" color={accentBlue} />
       </View>
     );
   }
 
   if (!session) {
     return (
-      <View style={styles.centerContainer}>
-        <View style={styles.warningCard}>
-          <Text style={styles.warningTitle}>Authentication Required</Text>
-          <Text style={styles.warningText}>Please log in to edit drafts</Text>
+      <View style={{
+        flex: 1,
+        backgroundColor: bgCard,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: contentPadding,
+      }}>
+        <View style={{
+          backgroundColor: warningBg,
+          borderWidth: 1,
+          borderColor: warningBorder,
+          borderRadius: radiusSm,
+          padding: 20,
+          width: '100%',
+          maxWidth: 400,
+        }}>
+          <Text style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyBodyMedium,
+            color: warningTitleColor,
+            marginBottom: 8,
+          }}>Authentication Required</Text>
+          <Text style={{
+            fontSize: fontSizeBase,
+            fontFamily: fontFamilyBody,
+            color: warningTextColor,
+          }}>Please log in to edit drafts</Text>
         </View>
       </View>
     );
@@ -258,18 +330,47 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={{
+        flex: 1,
+        backgroundColor: bgCard,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: contentPadding,
+      }}>
+        <ActivityIndicator size="large" color={accentBlue} />
       </View>
     );
   }
 
   if (error || !draft || !recipe) {
     return (
-      <View style={styles.centerContainer}>
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Error Loading Draft</Text>
-          <Text style={styles.errorText}>{error || 'Draft not found'}</Text>
+      <View style={{
+        flex: 1,
+        backgroundColor: bgCard,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: contentPadding,
+      }}>
+        <View style={{
+          backgroundColor: errorBg,
+          borderWidth: 1,
+          borderColor: errorBorder,
+          borderRadius: radiusSm,
+          padding: 20,
+          width: '100%',
+          maxWidth: 400,
+        }}>
+          <Text style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyBodyMedium,
+            color: errorTitleColor,
+            marginBottom: 8,
+          }}>Error Loading Draft</Text>
+          <Text style={{
+            fontSize: fontSizeBase,
+            fontFamily: fontFamilyBody,
+            color: errorTextColor,
+          }}>{error || 'Draft not found'}</Text>
         </View>
       </View>
     );
@@ -277,21 +378,51 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex1}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        style={{ flex: 1, backgroundColor: bgCard }}
+        contentContainerStyle={{
+          padding: contentPadding,
+          ...(isWeb ? { maxWidth: 800, alignSelf: 'center' as const, width: '100%' } : {}),
+        }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header with Actions */}
-        <View style={styles.card}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.heading}>Edit Recipe Draft</Text>
-              <View style={styles.autoSaveRow}>
-                <Text style={styles.autoSaveText}>
+        <View style={{
+          backgroundColor: white,
+          borderRadius: radiusSm,
+          padding: cardPadding,
+          marginBottom: 16,
+          ...shadowMd,
+        }}>
+          <View style={{
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'stretch' : 'flex-start',
+            gap: isMobile ? 12 : 0,
+          }}>
+            <View style={{
+              flex: isMobile ? undefined : 1,
+              marginRight: isMobile ? 0 : 12,
+            }}>
+              <Text style={{
+                fontSize: fontSize2xl - 2,
+                fontFamily: fontFamilyDisplay,
+                color: textPrimary,
+                marginBottom: 4,
+              }}>Edit Recipe Draft</Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+              }}>
+                <Text style={{
+                  fontSize: fontSizeSm - 1,
+                  fontFamily: fontFamilyBody,
+                  color: textSecondary,
+                }}>
                   Auto-save:{' '}
                   {autoSaveStatus === 'saved'
                     ? 'Saved'
@@ -300,30 +431,56 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                     : 'Error'}
                 </Text>
                 {lastSaved && (
-                  <Text style={styles.lastSavedText}>
+                  <Text style={{
+                    fontSize: fontSizeSm - 1,
+                    fontFamily: fontFamilyBody,
+                    color: textSecondary,
+                  }}>
                     Last saved: {lastSaved.toLocaleTimeString()}
                   </Text>
                 )}
               </View>
             </View>
 
-            <View style={styles.headerActions}>
+            <View style={{
+              flexDirection: 'row',
+              gap: 8,
+              ...(isMobile ? { justifyContent: 'flex-end' } : {}),
+            }}>
               <Pressable
-                style={({ pressed }) => [styles.buttonSecondary, { opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [{
+                  backgroundColor: bgCard,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                }, { opacity: pressed ? 0.7 : 1 }]}
                 onPress={onCancel}
                 accessibilityRole="button"
                 accessibilityLabel="Cancel editing"
               >
-                <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                <Text style={{
+                  color: textPrimary,
+                  fontSize: fontSizeSm,
+                  fontFamily: fontFamilyBodyMedium,
+                }}>Cancel</Text>
               </Pressable>
               <Pressable
-                style={({ pressed }) => [styles.buttonPrimary, saving && styles.buttonDisabled, { opacity: pressed ? 0.7 : 1 }]}
+                style={({ pressed }) => [{
+                  backgroundColor: accentBlue,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                }, saving && { opacity: 0.5 }, { opacity: pressed ? 0.7 : 1 }]}
                 disabled={saving}
                 onPress={() => saveChanges(recipe)}
                 accessibilityRole="button"
                 accessibilityLabel={saving ? 'Saving recipe' : 'Save recipe now'}
               >
-                <Text style={styles.buttonPrimaryText}>
+                <Text style={{
+                  color: white,
+                  fontSize: fontSizeSm,
+                  fontFamily: fontFamilyBodyBold,
+                }}>
                   {saving ? 'Saving...' : 'Save Now'}
                 </Text>
               </Pressable>
@@ -332,27 +489,78 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
         </View>
 
         {/* Recipe Title */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Recipe Title</Text>
+        <View style={{
+          backgroundColor: white,
+          borderRadius: radiusSm,
+          padding: cardPadding,
+          marginBottom: 16,
+          ...shadowMd,
+        }}>
+          <Text style={{
+            fontSize: fontSizeSm,
+            fontFamily: fontFamilyBodyMedium,
+            color: textPrimary,
+            marginBottom: 6,
+          }}>Recipe Title</Text>
           <TextInput
-            style={styles.textInput}
+            style={{
+              borderWidth: 1,
+              borderColor: borderDefault,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: fontSizeBase - 1,
+              fontFamily: fontFamilyBody,
+              color: textPrimary,
+              backgroundColor: white,
+            }}
             value={recipe.title || ''}
             onChangeText={(text) => updateRecipe({ title: text })}
             placeholder="Enter recipe title"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={textTertiary}
             accessibilityLabel="Recipe title"
           />
         </View>
 
         {/* Recipe Metadata */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeading}>Recipe Details</Text>
+        <View style={{
+          backgroundColor: white,
+          borderRadius: radiusSm,
+          padding: cardPadding,
+          marginBottom: 16,
+          ...shadowMd,
+        }}>
+          <Text style={{
+            fontSize: fontSizeLg,
+            fontFamily: fontFamilyBodyBold,
+            color: textPrimary,
+            marginBottom: 12,
+          }}>Recipe Details</Text>
 
-          <View style={styles.metadataGrid}>
-            <View style={styles.metadataHalf}>
-              <Text style={styles.label}>Servings</Text>
+          <View style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: metadataGap,
+          }}>
+            <View style={{ width: '48%' }}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyMedium,
+                color: textPrimary,
+                marginBottom: 6,
+              }}>Servings</Text>
               <TextInput
-                style={styles.textInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: fontSizeBase - 1,
+                  fontFamily: fontFamilyBody,
+                  color: textPrimary,
+                  backgroundColor: white,
+                }}
                 value={recipe.servings != null ? String(recipe.servings) : ''}
                 onChangeText={(text) =>
                   updateRecipe({
@@ -361,25 +569,55 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                 }
                 keyboardType="numeric"
                 placeholder="4"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={textTertiary}
               />
             </View>
 
-            <View style={styles.metadataHalf}>
-              <Text style={styles.label}>Category</Text>
+            <View style={{ width: '48%' }}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyMedium,
+                color: textPrimary,
+                marginBottom: 6,
+              }}>Category</Text>
               <TextInput
-                style={styles.textInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: fontSizeBase - 1,
+                  fontFamily: fontFamilyBody,
+                  color: textPrimary,
+                  backgroundColor: white,
+                }}
                 value={recipe.category || ''}
                 onChangeText={(text) => updateRecipe({ category: text })}
                 placeholder="Main dish, Dessert, etc."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={textTertiary}
               />
             </View>
 
-            <View style={styles.metadataHalf}>
-              <Text style={styles.label}>Prep Time (minutes)</Text>
+            <View style={{ width: '48%' }}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyMedium,
+                color: textPrimary,
+                marginBottom: 6,
+              }}>Prep Time (minutes)</Text>
               <TextInput
-                style={styles.textInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: fontSizeBase - 1,
+                  fontFamily: fontFamilyBody,
+                  color: textPrimary,
+                  backgroundColor: white,
+                }}
                 value={
                   recipe.prepTimeMinutes != null
                     ? String(recipe.prepTimeMinutes)
@@ -394,14 +632,29 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                 }
                 keyboardType="numeric"
                 placeholder="15"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={textTertiary}
               />
             </View>
 
-            <View style={styles.metadataHalf}>
-              <Text style={styles.label}>Cook Time (minutes)</Text>
+            <View style={{ width: '48%' }}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBodyMedium,
+                color: textPrimary,
+                marginBottom: 6,
+              }}>Cook Time (minutes)</Text>
               <TextInput
-                style={styles.textInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: fontSizeBase - 1,
+                  fontFamily: fontFamilyBody,
+                  color: textPrimary,
+                  backgroundColor: white,
+                }}
                 value={
                   recipe.cookTimeMinutes != null
                     ? String(recipe.cookTimeMinutes)
@@ -416,50 +669,100 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                 }
                 keyboardType="numeric"
                 placeholder="30"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={textTertiary}
               />
             </View>
           </View>
 
-          <View style={styles.cuisineContainer}>
-            <Text style={styles.label}>Cuisine</Text>
+          <View style={{ marginTop: 12 }}>
+            <Text style={{
+              fontSize: fontSizeSm,
+              fontFamily: fontFamilyBodyMedium,
+              color: textPrimary,
+              marginBottom: 6,
+            }}>Cuisine</Text>
             <TextInput
-              style={styles.textInput}
+              style={{
+                borderWidth: 1,
+                borderColor: borderDefault,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                fontSize: fontSizeBase - 1,
+                fontFamily: fontFamilyBody,
+                color: textPrimary,
+                backgroundColor: white,
+              }}
               value={recipe.cuisine || ''}
               onChangeText={(text) => updateRecipe({ cuisine: text })}
               placeholder="Italian, Mexican, etc."
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={textTertiary}
             />
           </View>
         </View>
 
         {/* Ingredients */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>
+        <View style={{
+          backgroundColor: white,
+          borderRadius: radiusSm,
+          padding: cardPadding,
+          marginBottom: 16,
+          ...shadowMd,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 4,
+          }}>
+            <Text style={{
+              fontSize: fontSizeLg,
+              fontFamily: fontFamilyBodyBold,
+              color: textPrimary,
+              marginBottom: 12,
+            }}>
               Ingredients ({recipe.ingredients?.length || 0})
             </Text>
           </View>
 
-          <View style={styles.listContainer}>
+          <View style={{ gap: 12 }}>
             {recipe.ingredients?.map((ingredient, index) => (
-              <View key={index} style={styles.itemCard}>
-                <View style={styles.itemHeaderRow}>
-                  <View style={styles.itemControls}>
+              <View key={index} style={{
+                borderWidth: 1,
+                borderColor: borderDefault,
+                borderRadius: 8,
+                padding: 12,
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 10,
+                }}>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}>
                     <Pressable
                       onPress={() =>
                         moveIngredient(index, Math.max(0, index - 1))
                       }
                       disabled={index === 0}
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        index === 0 && styles.controlButtonDisabled,
+                      style={({ pressed }) => [{
+                        padding: 4,
+                      },
+                        index === 0 && { opacity: 0.3 },
                         { opacity: pressed ? 0.7 : 1 },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Move ingredient ${index + 1} up`}
                     >
-                      <Text style={styles.controlButtonText}>↑</Text>
+                      <Text style={{
+                        fontSize: fontSizeBase,
+                        fontFamily: fontFamilyBody,
+                        color: textSecondary,
+                      }}>↑</Text>
                     </Pressable>
                     <Pressable
                       onPress={() =>
@@ -469,117 +772,229 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                         )
                       }
                       disabled={index === recipe.ingredients!.length - 1}
-                      style={({ pressed }) => [
-                        styles.controlButton,
+                      style={({ pressed }) => [{
+                        padding: 4,
+                      },
                         index === recipe.ingredients!.length - 1 &&
-                          styles.controlButtonDisabled,
+                          { opacity: 0.3 },
                         { opacity: pressed ? 0.7 : 1 },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Move ingredient ${index + 1} down`}
                     >
-                      <Text style={styles.controlButtonText}>↓</Text>
+                      <Text style={{
+                        fontSize: fontSizeBase,
+                        fontFamily: fontFamilyBody,
+                        color: textSecondary,
+                      }}>↓</Text>
                     </Pressable>
-                    <Text style={styles.itemNumber}>#{index + 1}</Text>
+                    <Text style={{
+                      fontSize: fontSizeSm - 1,
+                      fontFamily: fontFamilyBodyMedium,
+                      color: textPrimary,
+                      marginLeft: 4,
+                    }}>#{index + 1}</Text>
                   </View>
                   <Pressable
                     onPress={() => removeIngredient(index)}
-                    style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.7 : 1 }]}
+                    style={({ pressed }) => [{ padding: 4 }, { opacity: pressed ? 0.7 : 1 }]}
                     accessibilityRole="button"
                     accessibilityLabel={`Remove ingredient ${index + 1}`}
                   >
-                    <Text style={styles.deleteButtonText}>✕</Text>
+                    <Text style={{
+                      fontSize: fontSizeBase,
+                      fontFamily: fontFamilyBody,
+                      color: accentCoral,
+                    }}>✕</Text>
                   </Pressable>
                 </View>
 
-                <View style={styles.ingredientRow}>
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 8,
+                }}>
                   <TextInput
-                    style={[styles.ingredientInput, styles.ingredientAmount]}
+                    style={{
+                      flex: 1,
+                      borderWidth: 1,
+                      borderColor: borderDefault,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
+                      fontSize: fontSizeSm,
+                      fontFamily: fontFamilyBody,
+                      color: textPrimary,
+                      backgroundColor: white,
+                    }}
                     value={ingredient.amount || ''}
                     onChangeText={(text) =>
                       updateIngredient(index, { amount: text })
                     }
                     placeholder="Amt"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={textTertiary}
                   />
                   <TextInput
-                    style={[styles.ingredientInput, styles.ingredientUnit]}
+                    style={{
+                      flex: 1,
+                      borderWidth: 1,
+                      borderColor: borderDefault,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
+                      fontSize: fontSizeSm,
+                      fontFamily: fontFamilyBody,
+                      color: textPrimary,
+                      backgroundColor: white,
+                    }}
                     value={ingredient.unit || ''}
                     onChangeText={(text) =>
                       updateIngredient(index, { unit: text })
                     }
                     placeholder="Unit"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={textTertiary}
                   />
                   <TextInput
-                    style={[styles.ingredientInput, styles.ingredientName]}
+                    style={{
+                      flex: 2,
+                      borderWidth: 1,
+                      borderColor: borderDefault,
+                      borderRadius: 6,
+                      paddingHorizontal: 8,
+                      paddingVertical: 8,
+                      fontSize: fontSizeSm,
+                      fontFamily: fontFamilyBody,
+                      color: textPrimary,
+                      backgroundColor: white,
+                    }}
                     value={ingredient.name || ''}
                     onChangeText={(text) =>
                       updateIngredient(index, { name: text })
                     }
                     placeholder="Ingredient name"
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={textTertiary}
                   />
                 </View>
 
                 {ingredient.preparation ? (
-                  <View style={styles.preparationContainer}>
+                  <View style={{ marginTop: 8 }}>
                     <TextInput
-                      style={styles.ingredientInput}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: borderDefault,
+                        borderRadius: 6,
+                        paddingHorizontal: 8,
+                        paddingVertical: 8,
+                        fontSize: fontSizeSm,
+                        fontFamily: fontFamilyBody,
+                        color: textPrimary,
+                        backgroundColor: white,
+                      }}
                       value={ingredient.preparation || ''}
                       onChangeText={(text) =>
                         updateIngredient(index, { preparation: text })
                       }
                       placeholder="Preparation notes (chopped, diced, etc.)"
-                      placeholderTextColor="#9ca3af"
+                      placeholderTextColor={textTertiary}
                     />
                   </View>
                 ) : null}
               </View>
             )) || (
-              <Text style={styles.emptyText}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBody,
+                color: textTertiary,
+                textAlign: 'center',
+                paddingVertical: 16,
+              }}>
                 No ingredients yet. Tap "Add Ingredient" to start.
               </Text>
             )}
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.addButton, { opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [{
+              backgroundColor: accentBlue,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 8,
+              alignItems: 'center' as const,
+              marginTop: 12,
+            }, { opacity: pressed ? 0.7 : 1 }]}
             onPress={addIngredient}
             accessibilityRole="button"
             accessibilityLabel="Add ingredient"
           >
-            <Text style={styles.addButtonText}>+ Add Ingredient</Text>
+            <Text style={{
+              color: white,
+              fontSize: fontSizeSm,
+              fontFamily: fontFamilyBodyBold,
+            }}>+ Add Ingredient</Text>
           </Pressable>
         </View>
 
         {/* Instructions */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>
+        <View style={{
+          backgroundColor: white,
+          borderRadius: radiusSm,
+          padding: cardPadding,
+          marginBottom: 16,
+          ...shadowMd,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 4,
+          }}>
+            <Text style={{
+              fontSize: fontSizeLg,
+              fontFamily: fontFamilyBodyBold,
+              color: textPrimary,
+              marginBottom: 12,
+            }}>
               Instructions ({recipe.instructions?.length || 0})
             </Text>
           </View>
 
-          <View style={styles.listContainer}>
+          <View style={{ gap: 12 }}>
             {recipe.instructions?.map((instruction, index) => (
-              <View key={index} style={styles.itemCard}>
-                <View style={styles.itemHeaderRow}>
-                  <View style={styles.itemControls}>
+              <View key={index} style={{
+                borderWidth: 1,
+                borderColor: borderDefault,
+                borderRadius: 8,
+                padding: 12,
+              }}>
+                <View style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 10,
+                }}>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}>
                     <Pressable
                       onPress={() =>
                         moveInstruction(index, Math.max(0, index - 1))
                       }
                       disabled={index === 0}
-                      style={({ pressed }) => [
-                        styles.controlButton,
-                        index === 0 && styles.controlButtonDisabled,
+                      style={({ pressed }) => [{
+                        padding: 4,
+                      },
+                        index === 0 && { opacity: 0.3 },
                         { opacity: pressed ? 0.7 : 1 },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Move step ${index + 1} up`}
                     >
-                      <Text style={styles.controlButtonText}>↑</Text>
+                      <Text style={{
+                        fontSize: fontSizeBase,
+                        fontFamily: fontFamilyBody,
+                        color: textSecondary,
+                      }}>↑</Text>
                     </Pressable>
                     <Pressable
                       onPress={() =>
@@ -592,59 +1007,102 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
                         )
                       }
                       disabled={index === recipe.instructions!.length - 1}
-                      style={({ pressed }) => [
-                        styles.controlButton,
+                      style={({ pressed }) => [{
+                        padding: 4,
+                      },
                         index === recipe.instructions!.length - 1 &&
-                          styles.controlButtonDisabled,
+                          { opacity: 0.3 },
                         { opacity: pressed ? 0.7 : 1 },
                       ]}
                       accessibilityRole="button"
                       accessibilityLabel={`Move step ${index + 1} down`}
                     >
-                      <Text style={styles.controlButtonText}>↓</Text>
+                      <Text style={{
+                        fontSize: fontSizeBase,
+                        fontFamily: fontFamilyBody,
+                        color: textSecondary,
+                      }}>↓</Text>
                     </Pressable>
-                    <Text style={styles.itemNumber}>Step {index + 1}</Text>
+                    <Text style={{
+                      fontSize: fontSizeSm - 1,
+                      fontFamily: fontFamilyBodyMedium,
+                      color: textPrimary,
+                      marginLeft: 4,
+                    }}>Step {index + 1}</Text>
                   </View>
                   <Pressable
                     onPress={() => removeInstruction(index)}
-                    style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.7 : 1 }]}
+                    style={({ pressed }) => [{ padding: 4 }, { opacity: pressed ? 0.7 : 1 }]}
                     accessibilityRole="button"
                     accessibilityLabel={`Remove step ${index + 1}`}
                   >
-                    <Text style={styles.deleteButtonText}>✕</Text>
+                    <Text style={{
+                      fontSize: fontSizeBase,
+                      fontFamily: fontFamilyBody,
+                      color: accentCoral,
+                    }}>✕</Text>
                   </Pressable>
                 </View>
 
                 <TextInput
-                  style={[styles.textInput, styles.multilineInput]}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontSize: fontSizeBase - 1,
+                    fontFamily: fontFamilyBody,
+                    color: textPrimary,
+                    backgroundColor: white,
+                    minHeight: 80,
+                    textAlignVertical: 'top',
+                  }}
                   value={instruction}
                   onChangeText={(text) => updateInstruction(index, text)}
                   multiline
                   numberOfLines={3}
                   textAlignVertical="top"
                   placeholder="Enter instruction step..."
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={textTertiary}
                 />
               </View>
             )) || (
-              <Text style={styles.emptyText}>
+              <Text style={{
+                fontSize: fontSizeSm,
+                fontFamily: fontFamilyBody,
+                color: textTertiary,
+                textAlign: 'center',
+                paddingVertical: 16,
+              }}>
                 No instructions yet. Tap "Add Step" to start.
               </Text>
             )}
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.addButton, { opacity: pressed ? 0.7 : 1 }]}
+            style={({ pressed }) => [{
+              backgroundColor: accentBlue,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 8,
+              alignItems: 'center' as const,
+              marginTop: 12,
+            }, { opacity: pressed ? 0.7 : 1 }]}
             onPress={addInstruction}
             accessibilityRole="button"
             accessibilityLabel="Add instruction step"
           >
-            <Text style={styles.addButtonText}>+ Add Step</Text>
+            <Text style={{
+              color: white,
+              fontSize: fontSizeSm,
+              fontFamily: fontFamilyBodyBold,
+            }}>+ Add Step</Text>
           </Pressable>
         </View>
 
         {/* Draft Management */}
-        <View style={styles.draftManagerContainer}>
+        <View style={{ marginBottom: 16 }}>
           <DraftManager
             draft={draft}
             onDraftUpdated={setDraft}
@@ -655,13 +1113,37 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
 
         {/* Notes */}
         {recipe.notes && recipe.notes.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.sectionHeading}>Notes</Text>
-            <View style={styles.notesList}>
+          <View style={{
+            backgroundColor: white,
+            borderRadius: radiusSm,
+            padding: cardPadding,
+            marginBottom: 16,
+            ...shadowMd,
+          }}>
+            <Text style={{
+              fontSize: fontSizeLg,
+              fontFamily: fontFamilyBodyBold,
+              color: textPrimary,
+              marginBottom: 12,
+            }}>Notes</Text>
+            <View style={{ gap: 8 }}>
               {recipe.notes.map((note, index) => (
-                <View key={index} style={styles.noteRow}>
-                  <Text style={styles.noteBullet}>&#8226;</Text>
-                  <Text style={styles.noteText}>{note}</Text>
+                <View key={index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: 8,
+                }}>
+                  <Text style={{
+                    fontSize: fontSizeSm,
+                    fontFamily: fontFamilyBody,
+                    color: textTertiary,
+                  }}>&#8226;</Text>
+                  <Text style={{
+                    fontSize: fontSizeSm,
+                    fontFamily: fontFamilyBody,
+                    color: textPrimary,
+                    flex: 1,
+                  }}>{note}</Text>
                 </View>
               ))}
             </View>
@@ -671,280 +1153,3 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex1: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  centerContainer: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  sectionHeading: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 6,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#111827',
-    backgroundColor: '#ffffff',
-  },
-  multilineInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  autoSaveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  autoSaveText: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  lastSavedText: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  buttonPrimary: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  buttonPrimaryText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  buttonSecondary: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  buttonSecondaryText: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  metadataGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  metadataHalf: {
-    width: '48%',
-  },
-  cuisineContainer: {
-    marginTop: 12,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  listContainer: {
-    gap: 12,
-  },
-  itemCard: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 12,
-  },
-  itemHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  itemControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  controlButton: {
-    padding: 4,
-  },
-  controlButtonDisabled: {
-    opacity: 0.3,
-  },
-  controlButtonText: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  itemNumber: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#374151',
-    marginLeft: 4,
-  },
-  deleteButton: {
-    padding: 4,
-  },
-  deleteButtonText: {
-    fontSize: 16,
-    color: '#ef4444',
-  },
-  ingredientRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  ingredientInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#111827',
-    backgroundColor: '#ffffff',
-  },
-  ingredientAmount: {
-    flex: 1,
-  },
-  ingredientUnit: {
-    flex: 1,
-  },
-  ingredientName: {
-    flex: 2,
-  },
-  preparationContainer: {
-    marginTop: 8,
-  },
-  addButton: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  addButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  draftManagerContainer: {
-    marginBottom: 16,
-  },
-  notesList: {
-    gap: 8,
-  },
-  noteRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  noteBullet: {
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  noteText: {
-    fontSize: 14,
-    color: '#111827',
-    flex: 1,
-  },
-  warningCard: {
-    backgroundColor: '#fefce8',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  warningTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#92400e',
-    marginBottom: 8,
-  },
-  warningText: {
-    fontSize: 15,
-    color: '#a16207',
-  },
-  errorCard: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#991b1b',
-    marginBottom: 8,
-  },
-  errorText: {
-    fontSize: 15,
-    color: '#dc2626',
-  },
-});
