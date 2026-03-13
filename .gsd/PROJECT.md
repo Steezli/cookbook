@@ -10,7 +10,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Current State
 
-Two milestones complete. Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating. 502 tests across 22 suites. Zero TypeScript errors. Codebase has accumulated technical debt: duplicated scan directories, dead code, inconsistent scan UX between platforms, leftover debug logging, and button/interaction issues.
+Two milestones complete, M003 S01 done. Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating. 502 tests across 22 suites. Zero TypeScript errors. Scan codebase consolidated to single `src/features/scan/` directory with shared types in `types.ts` and 13 dead files removed. Remaining technical debt: inconsistent scan UX between platforms, leftover debug logging, form Enter-key behavior, and button/interaction issues.
 
 ## Architecture / Key Patterns
 

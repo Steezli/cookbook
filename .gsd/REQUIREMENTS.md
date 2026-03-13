@@ -2,17 +2,6 @@
 
 ## Active
 
-### QA-01 — Scan flow code consolidation
-- Class: quality-attribute
-- Status: active
-- Description: Merge `src/features/scan/` and `src/features/scans/` into a single `src/features/scan/` directory. Remove duplicate files, fix all imports, ensure no broken references.
-- Why it matters: Two directories for the same feature causes confusion, import inconsistency, and maintenance burden. Duplicate `scan-upload.ts` files exist.
-- Source: user + investigation
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Must not break any existing functionality. TypeScript must compile clean after consolidation.
-
 ### QA-02 — Scan UI web redesign
 - Class: primary-user-loop
 - Status: active
@@ -77,7 +66,7 @@
 - Primary owning slice: M003/S01
 - Supporting slices: M003/S04
 - Validation: unmapped
-- Notes: Identified candidates: ScanJobList.tsx, error-reporting-service.ts, possibly ScanPhotoUpload.tsx (both copies), ScanJobProgress.tsx. Must verify each file is truly unreferenced before deletion.
+- Notes: S01 removed 13 confirmed dead files (ScanJobList.tsx, ScanPhotoUpload.tsx ×2, ScanJobProgress.tsx, error-reporting-service.ts, ocr-service.ts, ocr.ts, confidence-scoring.ts, recipe-parser.ts, scan-upload.ts, useRealtimeSubscription.ts, recipe-parsing-service.ts, confidence-scoring-service.ts). S04 continues with a systematic sweep for any remaining dead code.
 
 ### QA-08 — Button/interaction audit
 - Class: quality-attribute
@@ -112,29 +101,30 @@
 - Validation: unmapped
 - Notes: Web tested via localhost, iOS tested via Expo simulator using mac-tools.
 
-### QA-11 — Type export cleanup
-- Class: quality-attribute
-- Status: active
-- Description: Shared types (ParsedRecipe, FieldConfidence, ParsedIngredient) currently exported from `src/lib/ai/recipe-parsing-service.ts` must be extracted to standalone type files before the service file can be evaluated for removal.
-- Why it matters: Types are used by 3 components but live in a service file that may be dead code. Clean separation prevents deletion accidents.
-- Source: investigation
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Move types to `src/features/scan/types.ts` or similar during consolidation.
 
-### QA-12 — Duplicate scan-upload.ts consolidation
-- Class: quality-attribute
-- Status: active
-- Description: Two `scan-upload.ts` files exist (`src/features/scan/scan-upload.ts` and `src/features/scans/scan-upload.ts`) with different implementations. Consolidate into one canonical version.
-- Why it matters: Duplicate files with different implementations for the same concern is a maintenance and correctness hazard.
-- Source: investigation
-- Primary owning slice: M003/S01
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Determine which version is actually used, merge any unique functionality, delete the duplicate.
 
 ## Validated
+
+### QA-01 — Scan flow code consolidation
+- Status: validated
+- Class: quality-attribute
+- Source: user + investigation
+- Primary Slice: M003/S01
+- Notes: `src/features/scans/` merged into `src/features/scan/`. All imports rewritten. `npx tsc --noEmit` exits 0, 502 tests pass. Zero stale `@/features/scans/` references remain.
+
+### QA-11 — Type export cleanup
+- Status: validated
+- Class: quality-attribute
+- Source: investigation
+- Primary Slice: M003/S01
+- Notes: 7 shared types extracted to `src/features/scan/types.ts`. All consumers repointed. Original service files deleted (types + dead service classes).
+
+### QA-12 — Duplicate scan-upload.ts consolidation
+- Status: validated
+- Class: quality-attribute
+- Source: investigation
+- Primary Slice: M003/S01
+- Notes: Dead duplicate `src/features/scans/scan-upload.ts` removed. Single canonical `src/features/scan/scan-upload.ts` remains.
 
 ### ADS-01 — Ad banner component (320x50 mobile, 728x90 web) with platform branching (AdMob native, placeholder web)
 - Status: validated
@@ -243,7 +233,7 @@
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| QA-01 | quality-attribute | active | M003/S01 | none | unmapped |
+| QA-01 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-02 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
 | QA-03 | primary-user-loop | active | M003/S03 | M003/S01 | unmapped |
 | QA-04 | quality-attribute | active | M003/S02 | none | unmapped |
@@ -253,8 +243,8 @@
 | QA-08 | quality-attribute | active | M003/S05 | none | unmapped |
 | QA-09 | failure-visibility | active | M003/S05 | M003/S04 | unmapped |
 | QA-10 | quality-attribute | active | M003/S05 | all | unmapped |
-| QA-11 | quality-attribute | active | M003/S01 | none | unmapped |
-| QA-12 | quality-attribute | active | M003/S01 | none | unmapped |
+| QA-11 | quality-attribute | validated | M003/S01 | none | S01 UAT |
+| QA-12 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | SUB-01 | core-capability | deferred | M004 | none | unmapped |
 | SUB-02 | core-capability | deferred | M004 | none | unmapped |
 | SUB-03 | core-capability | deferred | M004 | none | unmapped |
@@ -262,7 +252,7 @@
 
 ## Coverage Summary
 
-- Active requirements: 12
-- Mapped to slices: 12
-- Validated (prior milestones): 26+
+- Active requirements: 9
+- Mapped to slices: 9
+- Validated (prior milestones + M003/S01): 29+
 - Unmapped active requirements: 0

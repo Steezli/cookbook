@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { ParsedRecipe, FieldConfidence } from '../ai/recipe-parsing-service'
-import { OverallConfidence } from '../ai/confidence-scoring-service'
+import { ParsedRecipe, FieldConfidence, OverallConfidence } from '@/features/scan/types'
 
 export interface ScanDraftInput {
   jobId: string

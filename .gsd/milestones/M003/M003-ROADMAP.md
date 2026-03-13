@@ -60,7 +60,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Scan Code Consolidation** `risk:high` `depends:[]`
+- [x] **S01: Scan Code Consolidation** `risk:high` `depends:[]`
   > After this: single `src/features/scan/` directory with no duplicates, dead files removed, all tests pass, TypeScript compiles clean.
 
 - [ ] **S02: Form UX & OAuth Branding** `risk:medium` `depends:[]`
