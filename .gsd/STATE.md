@@ -28,7 +28,7 @@
 - [x] Scan processing UX redesign — status pipeline, no false timeouts
 - [x] Fix inline:// photo URL crash on iOS
 - [x] Multi-draft carousel → arrow/dot navigation (no nested scroll conflicts)
-- [x] Web multi-draft layout fix — fixed-width sidebar, proper flex detail panel
+- [x] Web multi-draft layout — matches Pencil design (centered form, no sidebar split)
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
