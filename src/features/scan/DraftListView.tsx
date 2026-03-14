@@ -412,41 +412,111 @@ export function DraftListView({ jobId }: DraftListViewProps) {
 
   // --- Tablet / Web Layout (sidebar + detail) ---
   return (
-    <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row' }}>
+    <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row', overflow: 'hidden' as any }}>
       {/* Left sidebar — progress, draft list */}
       <ScrollView
-        style={{ width: '30%', borderRightWidth: 1, borderRightColor: borderSubtle }}
+        style={{
+          width: 300,
+          minWidth: 260,
+          maxWidth: 340,
+          flexShrink: 0,
+          borderRightWidth: 1,
+          borderRightColor: borderSubtle,
+          backgroundColor: bgCard,
+        }}
         contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
       >
         <Text style={{ fontFamily: fontFamilyDisplay, fontSize: fontSizeLg, color: textPrimary }}>
-          {drafts.length} Draft{drafts.length !== 1 ? 's' : ''} Found
+          {drafts.length} Recipe{drafts.length !== 1 ? 's' : ''} Found
         </Text>
-        <ProgressSection />
-        <View style={{ gap: 10 }}>
+
+        {/* Inline progress (no ProgressSection — avoid double margin) */}
+        {(() => {
+          const progressPercent = progress.total > 0 ? (progress.saved / progress.total) * 100 : 0;
+          return (
+            <View style={{ backgroundColor: white, borderRadius: radiusMd, padding: 14, ...shadowSm }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textPrimary }}>
+                  {progress.allSaved ? 'All saved!' : `${progress.saved}/${progress.total} saved`}
+                </Text>
+                {progress.allSaved && (
+                  <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓</Text>
+                )}
+              </View>
+              <View style={{ height: 6, backgroundColor: borderDefault, borderRadius: 3, overflow: 'hidden' }}>
+                <View style={{ height: '100%', width: `${progressPercent}%` as any, backgroundColor: progress.allSaved ? accentGreen : accentBlue, borderRadius: 3 }} />
+              </View>
+              {showSaveAll && !progress.allSaved && (
+                <Pressable
+                  onPress={handleSaveAll}
+                  disabled={batchSaving}
+                  style={({ pressed }) => ({
+                    backgroundColor: batchSaving ? borderDefault : pressed ? '#16A34A' : accentGreen,
+                    paddingVertical: 8, paddingHorizontal: 14, borderRadius: radiusSm, alignItems: 'center' as const, marginTop: 10, opacity: batchSaving ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>
+                    {batchSaving && batchProgress ? `Saving ${batchProgress.current}/${batchProgress.total}...` : 'Save All'}
+                  </Text>
+                </Pressable>
+              )}
+              {batchFailures.length > 0 && (
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: accentCoral, marginTop: 6 }}>
+                  {batchFailures.length} failed
+                </Text>
+              )}
+              {progress.allSaved && (
+                <Pressable
+                  onPress={() => router.replace('/scan')}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? '#16A34A' : accentGreen,
+                    paddingVertical: 8, paddingHorizontal: 14, borderRadius: radiusSm, alignItems: 'center' as const, marginTop: 10,
+                  })}
+                >
+                  <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>Back to Scans</Text>
+                </Pressable>
+              )}
+            </View>
+          );
+        })()}
+
+        {/* Draft cards */}
+        <View style={{ gap: 8 }}>
           {drafts.map((draft, index) => {
             const displayStatus = getDraftDisplayStatus(draft);
             const statusStyle = getStatusStyle(displayStatus);
+            const confidenceColor = getConfidenceColor(draft.overallConfidence.score);
             const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
             const isSelected = currentIndex === index;
+            const ingredientCount = draft.recipe.ingredients?.length ?? 0;
             return (
               <Pressable
                 key={draft.id}
                 onPress={() => { setCurrentIndex(index); setIsEditing(false); }}
                 style={({ pressed }) => ({
-                  backgroundColor: isSelected ? white : bgCard,
+                  backgroundColor: isSelected ? white : bgPage,
                   borderWidth: isSelected ? 2 : 1,
                   borderColor: isSelected ? accentBlue : borderDefault,
-                  borderRadius: radiusMd,
-                  padding: 14,
-                  ...shadowSm,
+                  borderRadius: radiusSm,
+                  padding: 12,
                   opacity: pressed ? 0.85 : 1,
                 })}
               >
-                <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: textPrimary, marginBottom: 6 }}>
+                <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: textPrimary, marginBottom: 4 }}>
                   {title}
                 </Text>
-                <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill, alignSelf: 'flex-start' }}>
-                  <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusStyle.text }}>{statusStyle.label}</Text>
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginBottom: 6 }}>
+                  {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                    <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusStyle.text }}>{statusStyle.label}</Text>
+                  </View>
+                  <View style={{ backgroundColor: confidenceColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                    <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confidenceColor.text }}>
+                      {Math.round(draft.overallConfidence.score * 100)}%
+                    </Text>
+                  </View>
                 </View>
               </Pressable>
             );
@@ -454,8 +524,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
         </View>
       </ScrollView>
 
-      {/* Right panel */}
-      <View style={{ flex: 1 }}>
+      {/* Right panel — detail */}
+      <View style={{ flex: 1, minWidth: 0 }}>
         {currentDraft ? (
           isEditing ? (
             <DraftEditor draft={currentDraft} onCancel={() => setIsEditing(false)} onConverted={handleDraftConverted} />
@@ -463,7 +533,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
             <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => refreshDrafts()} />
           )
         ) : (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: bgCard, borderRadius: radiusMd }}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
             <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textTertiary, textAlign: 'center' }}>
               Select a draft to review
             </Text>
