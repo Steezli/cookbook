@@ -1,12 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { Recipe, CreateRecipeInput, UpdateRecipeInput, RecipeIngredient } from "./types";
-import { searchRecipes } from "./search";
 import { parseIngredient } from "@/features/units/parser";
-
-// Remove or mark as deprecated
-export async function getRecipes(): Promise<Recipe[]> {
-  return searchRecipes();
-}
 
 export async function getRecipeById(id: string): Promise<Recipe | null> {
   const { data, error } = await supabase

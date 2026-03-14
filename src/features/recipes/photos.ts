@@ -43,30 +43,26 @@ export async function getRecipePhotos(recipeId: string): Promise<RecipePhoto[]> 
 }
 
 /**
- * Fetch the first photo per recipe in a single query.
+ * Fetch the first photo per recipe via a single RPC call.
  *
- * Intended for list views (thumbnails) to avoid N+1 queries.
+ * Uses Postgres DISTINCT ON to return exactly one row per recipe_id
+ * (ordered by sort_order, then created_at), so the database does the
+ * deduplication instead of transferring all photos to the client.
  */
 export async function getFirstRecipePhotos(
   recipeIds: string[]
 ): Promise<Record<string, RecipePhoto>> {
   if (recipeIds.length === 0) return {};
 
-  const { data, error } = await supabase
-    .from("recipe_photos")
-    .select("recipe_id, storage_path, sort_order, created_at, id")
-    .in("recipe_id", recipeIds)
-    .order("recipe_id", { ascending: true })
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: true });
+  const { data, error } = await supabase.rpc("get_first_recipe_photos", {
+    recipe_ids: recipeIds,
+  });
 
   if (error) throw error;
 
   const firstByRecipeId: Record<string, RecipePhoto> = {};
   for (const row of (data as RecipePhoto[]) || []) {
-    if (!firstByRecipeId[row.recipe_id]) {
-      firstByRecipeId[row.recipe_id] = row;
-    }
+    firstByRecipeId[row.recipe_id] = row;
   }
 
   return firstByRecipeId;

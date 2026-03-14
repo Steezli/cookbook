@@ -16,7 +16,9 @@
     "build:web": "expo export --platform web",
     "build:ios": "eas build --platform ios --profile production",
     "ship:ios": "eas build --platform ios --profile production --auto-submit",
-    "start:prod": "node server.js"
+    "start:prod": "node server.js",
+    "sync:scan-parser": "./scripts/sync-scan-parser.sh",
+    "sync:scan-parser:check": "./scripts/sync-scan-parser.sh --check"
   },
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",

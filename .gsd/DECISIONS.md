@@ -281,3 +281,20 @@
 - **Decision:** Created a `reorder_recipe_photos` Postgres RPC function (`security invoker`, `search_path = ''`) replacing N individual updates via `Promise.all`.
 - **Why:** Individual updates are not transactional — a mid-batch failure leaves photos in inconsistent sort order. The RPC runs all updates in a single transaction. `security invoker` preserves RLS enforcement.
 - **Trade-off:** Adds a migration dependency; the RPC must be deployed before the client code is used.
+
+## M005/S02: Performance & Code Deduplication
+
+### DISTINCT ON via RPC for first-photo-per-recipe
+- **Decision:** Created a `get_first_recipe_photos` Postgres RPC using `DISTINCT ON (recipe_id)` ordered by `sort_order, created_at` instead of fetching all photos and deduplicating client-side.
+- **Why:** Supabase JS client doesn't support `DISTINCT ON` natively. The RPC returns exactly one row per recipe at the database level, eliminating over-fetching proportional to the number of extra photos per recipe.
+- **Trade-off:** Adds an RPC dependency (migration must be deployed). Establishes the RPC pattern as the standard approach for any future query needing `DISTINCT ON`.
+
+### Marker-based sync with content hash for cross-runtime code deduplication
+- **Decision:** Created `scripts/sync-scan-parser.sh` that copies parser functions from `src/lib/scan/multi-recipe-parser.ts` into the edge function between `BEGIN SYNCED`/`END SYNCED` markers, stripping `export` keywords and stamping a SHA-256 content hash for drift detection.
+- **Why:** The Deno edge function can't import from `src/`. Previous approach was manual copy-paste of ~150 lines, which drifted. The sync script makes deduplication automated and verifiable. `--check` mode enables CI enforcement.
+- **Trade-off:** Marker-based approach is fragile if markers are manually edited. Mitigated by the hash-based check that catches any tampering.
+
+### Client-side comment pagination over RPC results
+- **Decision:** Pagination for comments is applied in the API layer (JavaScript) after the RPC returns the full recursive comment tree, rather than modifying the Postgres RPC itself.
+- **Why:** The existing RPC handles access control, recursive CTE for nested threads, and path-based hierarchy. Modifying it for server-side pagination would be a significant change with limited benefit at current scale. Client-side slicing is simpler and preserves thread integrity.
+- **Trade-off:** Full comment tree is always fetched from Postgres. If comment volumes grow large, the RPC should be refactored for server-side pagination.

@@ -5,6 +5,7 @@ import { useSession } from "@/features/auth/session";
 import { supabase } from "@/lib/supabase";
 import { getRecipeComments, deleteComment } from "./api";
 import type { Comment } from "./types";
+import type { CommentPage } from "./api";
 import { CommentInput } from "./CommentInput";
 
 type CommentThreadProps = {
@@ -23,21 +24,43 @@ export function CommentThread({
   const { session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalTopLevel, setTotalTopLevel] = useState(0);
   const [showReplyFormFor, setShowReplyFormFor] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [userFamilyRole, setUserFamilyRole] = useState<"admin" | "member" | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const userId = session?.user.id;
 
   async function loadComments() {
     setIsLoading(true);
     try {
-      const data = await getRecipeComments(recipeId);
-      setComments(data);
+      const page = await getRecipeComments(recipeId);
+      setComments(page.comments);
+      setHasMore(page.hasMore);
+      setTotalTopLevel(page.total);
     } catch (e) {
       showAlert("Error", e instanceof Error ? e.message : "Failed to load comments");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function loadMoreComments() {
+    if (!hasMore || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const page = await getRecipeComments(recipeId, { offset: comments.filter(c => c.parent_comment_id === null).length });
+      // Merge: append new comments, avoid duplicates by id
+      const existingIds = new Set(comments.map(c => c.id));
+      const newComments = page.comments.filter(c => !existingIds.has(c.id));
+      setComments(prev => [...prev, ...newComments]);
+      setHasMore(page.hasMore);
+    } catch (e) {
+      showAlert("Error", e instanceof Error ? e.message : "Failed to load more comments");
+    } finally {
+      setIsLoadingMore(false);
     }
   }
 
@@ -219,7 +242,24 @@ export function CommentThread({
       {topLevelComments.length === 0 ? (
         <Text style={styles.noComments}>No comments yet. Be the first to comment!</Text>
       ) : (
-        topLevelComments.map((comment) => renderComment(comment, 0, grouped))
+        <>
+          {topLevelComments.map((comment) => renderComment(comment, 0, grouped))}
+          {hasMore && (
+            <Pressable
+              style={styles.loadMoreButton}
+              onPress={() => void loadMoreComments()}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? (
+                <ActivityIndicator size="small" />
+              ) : (
+                <Text style={styles.loadMoreText}>
+                  Load more comments ({totalTopLevel - topLevelComments.length} remaining)
+                </Text>
+              )}
+            </Pressable>
+          )}
+        </>
       )}
 
       <CommentInput
@@ -293,5 +333,17 @@ const styles = StyleSheet.create({
   },
   replyForm: {
     marginTop: 8
+  },
+  loadMoreButton: {
+    alignItems: "center",
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0"
+  },
+  loadMoreText: {
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "500"
   }
 });

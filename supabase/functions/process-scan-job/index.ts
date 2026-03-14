@@ -17,102 +17,50 @@ interface InlineImage {
   mediaType: string
 }
 
+// --- BEGIN SYNCED FROM src/lib/scan/multi-recipe-parser.ts ---
+// DO NOT EDIT this section by hand.
+// Source of truth: src/lib/scan/multi-recipe-parser.ts
+// Regenerate with: npm run sync:scan-parser
+// @synced-hash: 0c57b262cd60
+// --- END SYNC HEADER ---
+
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface Ingredient {
+  name: string;
+  amount: string;
+  unit: string;
+  preparation?: string;
+}
+
 interface ScanResult {
-  rawText: string
-  confidence: number
-  sourceImageIndex?: number
+  rawText: string;
+  confidence: number;
+  sourceImageIndex?: number;
   extracted: {
-    title?: string
-    ingredients?: { name: string; amount: string; unit: string; preparation?: string }[]
-    instructions?: string[]
-    prepTimeMinutes?: number
-    cookTimeMinutes?: number
-    servings?: number
-  }
+    title?: string;
+    ingredients?: Ingredient[];
+    instructions?: string[];
+    prepTimeMinutes?: number;
+    cookTimeMinutes?: number;
+    servings?: number;
+  };
 }
 
 // ---------------------------------------------------------------------------
-// Inlined prompt builder (mirrors src/lib/scan/multi-recipe-parser.ts)
-// Edge functions run on Deno and can't import from src/.
+// Parsing
 // ---------------------------------------------------------------------------
 
-const RECIPE_JSON_SCHEMA = `{
-  "recipes": [
-    {
-      "rawText": "the complete text you read from the image for this recipe, preserving original formatting",
-      "confidence": 0.0 to 1.0,
-      "sourceImageIndex": 1,
-      "title": "recipe title",
-      "ingredients": [
-        { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
-      ],
-      "instructions": ["step 1 text", "step 2 text"],
-      "prepTimeMinutes": number or null,
-      "cookTimeMinutes": number or null,
-      "servings": number or null
-    }
-  ]
-}`
-
-const COMMON_INSTRUCTIONS = `Important:
-- For ingredients, always separate amount, unit, and name. E.g. "2 cups flour" → amount: "2", unit: "cups", name: "flour"
-- If a fraction like "1/2" or "1 1/2" appears, keep it as a string: "1/2" or "1 1/2"
-- If prep/cook time or servings aren't mentioned, use null
-- Include ALL ingredients and ALL instructions, don't summarize
-- confidence should reflect how legible the image was and how complete the extraction is
-- sourceImageIndex is the 1-based index of the image this recipe was found in
-- Return at most 5 recipes per response. If you detect more than 5, return the 5 most complete ones.
-- Do NOT return the same recipe twice. Each recipe in the array must be a distinct recipe with its own title.
-- Always wrap your response in the { "recipes": [...] } format, even for a single recipe.`
-
-/**
- * Build the Claude prompt for recipe scanning. Handles single and multi-image
- * inputs, always requests the array-wrapped JSON format for consistent parsing.
- */
-function buildClaudePrompt(imageCount: number): string {
-  if (imageCount <= 1) {
-    return `This is a photo of a recipe. Read ALL the text visible in the image. If the photo contains more than one recipe (e.g. two recipes on one page), return each one separately as a distinct entry in the recipes array. Set sourceImageIndex to 1 for all recipes.
-
-Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
-
-${RECIPE_JSON_SCHEMA}
-
-${COMMON_INSTRUCTIONS}`
-  }
-
-  return `You are looking at ${imageCount} separate photos of recipe pages. The images are labeled Image 1 through Image ${imageCount} in the order they were provided.
-
-IMPORTANT — treat each image independently:
-- Each image is a SEPARATE page that may contain one or more recipes.
-- Do NOT combine content across images unless text explicitly continues from one image to the next (e.g. "continued on next page").
-- A single image may contain multiple recipes — return each as a separate entry.
-- Set sourceImageIndex to the 1-based image number where each recipe was found.
-- Every distinct recipe across all images should appear exactly once in your response.
-
-Read ALL the text from every image. Return each distinct recipe as its own entry in the recipes array.
-
-Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
-
-${RECIPE_JSON_SCHEMA}
-
-${COMMON_INSTRUCTIONS}`
-}
-
-// ---------------------------------------------------------------------------
-// Inlined multi-recipe parser (mirrors src/lib/scan/multi-recipe-parser.ts)
-// ---------------------------------------------------------------------------
-
-/**
- * Parse a single recipe object into a typed ScanResult.
- * Applies safe defaults for missing/malformed fields.
- */
 function parseSingleRecipe(parsed: any): ScanResult {
   if (!parsed || typeof parsed !== 'object') {
     return {
       rawText: '',
       confidence: 0.7,
       extracted: {},
-    }
+    };
   }
 
   return {
@@ -136,99 +84,150 @@ function parseSingleRecipe(parsed: any): ScanResult {
         typeof parsed.cookTimeMinutes === 'number' ? parsed.cookTimeMinutes : undefined,
       servings: typeof parsed.servings === 'number' ? parsed.servings : undefined,
     },
-  }
+  };
 }
 
-/**
- * Parse Claude's JSON response into an array of ScanResult objects.
- *
- * Supports two response shapes:
- *  1. Array format — { recipes: [{ rawText, title, … }, …] }
- *  2. Legacy single-object format — { rawText, title, … } (no wrapper)
- *
- * Returns an empty array when the input is null, undefined, or structurally
- * unparseable.
- */
 function parseMultiScanResult(parsed: any): ScanResult[] {
   if (!parsed || typeof parsed !== 'object') {
-    return []
+    return [];
   }
 
   // Array format — { recipes: [...] }
   if (Array.isArray(parsed.recipes)) {
     if (parsed.recipes.length === 0) {
-      return []
+      return [];
     }
-    return parsed.recipes.map((r: any) => parseSingleRecipe(r))
+    return parsed.recipes.map((r: any) => parseSingleRecipe(r));
   }
 
   // Legacy single-object format — { rawText, title, … }
+  // Detect by checking for at least one expected top-level key.
   if (
     parsed.rawText !== undefined ||
     parsed.title !== undefined ||
     parsed.ingredients !== undefined
   ) {
-    return [parseSingleRecipe(parsed)]
+    return [parseSingleRecipe(parsed)];
   }
 
-  return []
+  // Unrecognised shape — return empty rather than crash.
+  return [];
 }
 
 // ---------------------------------------------------------------------------
 // Deduplication
 // ---------------------------------------------------------------------------
 
-/**
- * Normalize a title for fuzzy comparison: lowercase, strip punctuation and
- * extra whitespace.
- */
 function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, ' ')
-    .trim()
+    .trim();
 }
 
-/**
- * Remove likely-duplicate recipes from a result set. Two recipes are
- * considered duplicates when their normalized titles match exactly.
- * When duplicates are found, the one with higher confidence wins.
- */
 function deduplicateResults(
   results: ScanResult[]
 ): { deduplicated: ScanResult[]; removedCount: number } {
   if (results.length <= 1) {
-    return { deduplicated: results, removedCount: 0 }
+    return { deduplicated: results, removedCount: 0 };
   }
 
-  const seen = new Map<string, ScanResult>()
+  const seen = new Map<string, ScanResult>();
 
   for (const r of results) {
-    const title = r.extracted.title || ''
-    const key = normalizeTitle(title)
+    const title = r.extracted.title || '';
+    const key = normalizeTitle(title);
 
+    // Skip untitled recipes — can't deduplicate without a title
     if (!key) {
-      seen.set(`__untitled_${seen.size}`, r)
-      continue
+      // Still include untitled recipes; they just can't be deduped
+      seen.set(`__untitled_${seen.size}`, r);
+      continue;
     }
 
-    const existing = seen.get(key)
+    const existing = seen.get(key);
     if (existing) {
+      // Keep the one with higher confidence
       if (r.confidence > existing.confidence) {
-        seen.set(key, r)
+        seen.set(key, r);
       }
+      // else: keep existing, discard r
     } else {
-      seen.set(key, r)
+      seen.set(key, r);
     }
   }
 
-  const deduplicated = Array.from(seen.values())
+  const deduplicated = Array.from(seen.values());
   return {
     deduplicated,
     removedCount: results.length - deduplicated.length,
-  }
+  };
 }
+
+// ---------------------------------------------------------------------------
+// Prompt building
+// ---------------------------------------------------------------------------
+
+const RECIPE_JSON_SCHEMA = `{
+  "recipes": [
+    {
+      "rawText": "the complete text you read from the image for this recipe, preserving original formatting",
+      "confidence": 0.0 to 1.0,
+      "sourceImageIndex": 1,
+      "title": "recipe title",
+      "ingredients": [
+        { "name": "ingredient name", "amount": "quantity", "unit": "unit of measure", "preparation": "prep notes if any" }
+      ],
+      "instructions": ["step 1 text", "step 2 text"],
+      "prepTimeMinutes": number or null,
+      "cookTimeMinutes": number or null,
+      "servings": number or null
+    }
+  ]
+}`;
+
+const COMMON_INSTRUCTIONS = `Important:
+- For ingredients, always separate amount, unit, and name. E.g. "2 cups flour" → amount: "2", unit: "cups", name: "flour"
+- If a fraction like "1/2" or "1 1/2" appears, keep it as a string: "1/2" or "1 1/2"
+- If prep/cook time or servings aren't mentioned, use null
+- Include ALL ingredients and ALL instructions, don't summarize
+- confidence should reflect how legible the image was and how complete the extraction is
+- sourceImageIndex is the 1-based index of the image this recipe was found in
+- Return at most 5 recipes per response. If you detect more than 5, return the 5 most complete ones.
+- Do NOT return the same recipe twice. Each recipe in the array must be a distinct recipe with its own title.
+- Always wrap your response in the { "recipes": [...] } format, even for a single recipe.`;
+
+function buildScanPrompt(imageCount: number): string {
+  if (imageCount <= 1) {
+    return `This is a photo of a recipe. Read ALL the text visible in the image. If the photo contains more than one recipe (e.g. two recipes on one page), return each one separately as a distinct entry in the recipes array. Set sourceImageIndex to 1 for all recipes.
+
+Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
+
+${RECIPE_JSON_SCHEMA}
+
+${COMMON_INSTRUCTIONS}`;
+  }
+
+  return `You are looking at ${imageCount} separate photos of recipe pages. The images are labeled Image 1 through Image ${imageCount} in the order they were provided.
+
+IMPORTANT — treat each image independently:
+- Each image is a SEPARATE page that may contain one or more recipes.
+- Do NOT combine content across images unless text explicitly continues from one image to the next (e.g. "continued on next page").
+- A single image may contain multiple recipes — return each as a separate entry.
+- Set sourceImageIndex to the 1-based image number where each recipe was found.
+- Every distinct recipe across all images should appear exactly once in your response.
+
+Read ALL the text from every image. Return each distinct recipe as its own entry in the recipes array.
+
+Extract the structured recipe data. Return ONLY valid JSON with this exact schema — no markdown, no code fences, no explanation:
+
+${RECIPE_JSON_SCHEMA}
+
+${COMMON_INSTRUCTIONS}`;
+}
+
+// --- END SYNCED FROM src/lib/scan/multi-recipe-parser.ts ---
 
 // ---------------------------------------------------------------------------
 // Edge function handler
@@ -511,7 +510,7 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult[]> {
     })
   )
 
-  const prompt = buildClaudePrompt(imageUrls.length)
+  const prompt = buildScanPrompt(imageUrls.length)
 
   const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -581,7 +580,7 @@ async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResul
     }
   })
 
-  const prompt = buildClaudePrompt(images.length)
+  const prompt = buildScanPrompt(images.length)
 
   const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

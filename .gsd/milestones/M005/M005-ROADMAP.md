@@ -57,7 +57,7 @@ This milestone is complete only when all are true:
 - [x] **S01: Security & Data Integrity Fixes** `risk:high` `depends:[]`
   > After this: Search is injection-safe, retry logic is correct, backfill doesn't mutate, CORS is tightened, password validation is stronger
 
-- [ ] **S02: Performance & Code Deduplication** `risk:medium` `depends:[]`
+- [x] **S02: Performance & Code Deduplication** `risk:medium` `depends:[]`
   > After this: Photo queries are efficient, tags query is optimized, comments are paginated, parser logic is single-source, deprecated code removed
 
 - [ ] **S03: Type Safety & Error Handling** `risk:medium` `depends:[S01]`

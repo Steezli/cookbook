@@ -1,16 +1,62 @@
 import { supabase } from "@/lib/supabase";
 import type { Comment, CreateCommentInput, UpdateCommentInput } from "./types";
 
-export async function getRecipeComments(recipeId: string): Promise<Comment[]> {
-  // Call the RPC function to get threaded comments
-  const { data: comments, error: rpcError } = await supabase
+export type CommentPage = {
+  comments: Comment[];
+  hasMore: boolean;
+  total: number;
+};
+
+export type GetCommentsOptions = {
+  limit?: number;
+  offset?: number;
+};
+
+const DEFAULT_COMMENT_LIMIT = 50;
+
+/**
+ * Fetch threaded comments for a recipe with pagination.
+ *
+ * Pagination applies to **top-level** comments (depth 0).
+ * All replies to those top-level comments are always included so
+ * threads remain complete.  `total` reports the full count of
+ * top-level comments so callers can render "load more" affordances.
+ */
+export async function getRecipeComments(
+  recipeId: string,
+  options: GetCommentsOptions = {}
+): Promise<CommentPage> {
+  const limit = options.limit ?? DEFAULT_COMMENT_LIMIT;
+  const offset = options.offset ?? 0;
+
+  // Call the RPC function to get all threaded comments
+  const { data: allComments, error: rpcError } = await supabase
     .rpc('get_recipe_comments', { p_recipe_id: recipeId });
 
   if (rpcError) throw rpcError;
-  if (!comments || comments.length === 0) return [];
+  if (!allComments || allComments.length === 0) {
+    return { comments: [], hasMore: false, total: 0 };
+  }
+
+  // Separate top-level comments from replies
+  const topLevel = allComments.filter((c: Comment) => c.parent_comment_id === null);
+  const total = topLevel.length;
+
+  // Paginate top-level comments
+  const paginatedTopLevel = topLevel.slice(offset, offset + limit);
+  const topLevelIds = new Set(paginatedTopLevel.map((c: Comment) => c.id));
+
+  // Include all descendants of the paginated top-level comments
+  // Comments are ordered by path, so we can filter by path prefix
+  const paginatedComments = allComments.filter((c: Comment) => {
+    if (topLevelIds.has(c.id)) return true;
+    // Check if this comment's path starts with any top-level comment id
+    const rootId = c.path?.split('/')[0];
+    return rootId ? topLevelIds.has(rootId) : false;
+  });
 
   // Extract unique user_ids to fetch author information
-  const userIds = Array.from(new Set(comments.map((c: Comment) => c.user_id)));
+  const userIds = Array.from(new Set(paginatedComments.map((c: Comment) => c.user_id)));
 
   // Fetch author information from profiles
   const { data: profiles, error: profilesError } = await supabase
@@ -26,7 +72,7 @@ export async function getRecipeComments(recipeId: string): Promise<Comment[]> {
   );
 
   // Merge author information into comments
-  return comments.map((comment: Comment) => {
+  const comments = paginatedComments.map((comment: Comment) => {
     const profile = profileMap.get(comment.user_id);
     return {
       ...comment,
@@ -34,6 +80,12 @@ export async function getRecipeComments(recipeId: string): Promise<Comment[]> {
       author_email: profile?.email
     };
   });
+
+  return {
+    comments,
+    hasMore: offset + limit < total,
+    total,
+  };
 }
 
 export async function createComment(input: CreateCommentInput): Promise<Comment> {

@@ -67,14 +67,16 @@ export async function searchRecipes(filters: SearchFilters = {}): Promise<Recipe
 }
 
 /**
- * Get all unique tags from accessible recipes
- * 
- * Used for tag autocomplete
+ * Get all unique tags from accessible recipes.
+ *
+ * Filters out recipes with empty/null tag arrays at the DB level
+ * (`.neq('tags', '{}')`) so we transfer fewer rows.
  */
 export async function getAvailableTags(): Promise<string[]> {
   const { data, error } = await supabase
     .from("recipes")
-    .select("tags");
+    .select("tags")
+    .neq("tags", "{}");
 
   if (error) throw error;
 

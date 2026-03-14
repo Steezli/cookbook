@@ -21,7 +21,7 @@ import AdSlot from '@/components/public/AdSlot';
 import { getRecipeById } from '@/features/recipes/api';
 import { getPublicRecipeAuthor } from '@/features/recipes/public';
 import type { PublicAuthor } from '@/features/recipes/public';
-import { getRecipePhotos, getPhotoUrl } from '@/features/recipes/photos';
+import { getRecipePhotos, getThumbnailUrl } from '@/features/recipes/photos';
 import type { Recipe, RecipeIngredient } from '@/features/recipes/types';
 import { displayIngredient } from '@/features/units/displayIngredient';
 import { getUnitPreference } from '@/features/units/api';
@@ -85,7 +85,7 @@ export default function PublicRecipeDetail() {
         setRecipe(recipeData);
         setAuthor(authorData);
         if (photos.length > 0) {
-          setHeroUrl(getPhotoUrl(photos[0].storage_path));
+          setHeroUrl(getThumbnailUrl(photos[0].storage_path, 800));
         }
         setIsLoading(false);
       })

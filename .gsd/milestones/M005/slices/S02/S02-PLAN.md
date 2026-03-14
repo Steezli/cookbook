@@ -40,21 +40,23 @@
 
 ## Tasks
 
-- [ ] **T01: Optimize photo and tag queries** `est:25m`
+- [x] **T01: Optimize photo and tag queries** `est:25m`
   - Why: getFirstRecipePhotos fetches all photos then filters client-side; getAvailableTags loads all recipes
   - Files: `src/features/recipes/photos.ts`, `src/features/recipes/search.ts`
   - Do: getFirstRecipePhotos: restructure query to fetch only first photo per recipe. getAvailableTags: add `.neq('tags', '{}')` filter. Add width parameter to public recipe hero image URL.
   - Verify: `npx tsc --noEmit`, query returns correct subset
   - Done when: photo query returns at most N rows for N recipes
 
-- [ ] **T02: Add comment pagination and remove deprecated code** `est:20m`
+- [x] **T02: Add comment pagination and remove deprecated code** `est:20m`
   - Why: Comments load all at once with no limit; getRecipes() is deprecated but still exported
   - Files: `src/features/comments/api.ts`, `src/features/recipes/api.ts`, `src/features/recipes/search.ts`
   - Do: Add limit/offset params to getRecipeComments (default 50). Remove getRecipes() export and any callers. Clean up any remaining references.
   - Verify: `npx tsc --noEmit`, grep shows no getRecipes usage
   - Done when: comments paginated, deprecated function removed
 
-- [ ] **T03: Deduplicate parser logic between client and edge function** `est:30m`
+- [x] **T03: Deduplicate parser logic between client and edge function** `est:30m`
+
+## Slice Complete ✅
   - Why: ~150 lines duplicated between src/lib/scan/multi-recipe-parser.ts and edge function
   - Files: `src/lib/scan/multi-recipe-parser.ts`, `supabase/functions/process-scan-job/index.ts`, new: `scripts/sync-scan-parser.sh`
   - Do: Keep src/lib/scan/multi-recipe-parser.ts as source of truth. Create a sync script that copies the relevant functions into the edge function with a "DO NOT EDIT — synced from src/" header. Run the sync and verify edge function still has identical logic. Add sync script to package.json.
