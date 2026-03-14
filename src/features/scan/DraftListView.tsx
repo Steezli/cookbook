@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  FlatList,
-  Dimensions,
   Pressable,
   ActivityIndicator,
-  type ViewToken,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
@@ -109,7 +106,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [batchFailures, setBatchFailures] = useState<string[]>([]);
 
-  const flatListRef = useRef<FlatList<ScanDraft>>(null);
   const userId = session?.user?.id;
 
   // Load drafts and photos on mount
@@ -252,21 +248,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < drafts.length - 1;
 
-  // --- Swipe support (hooks must be before early returns) ---
-  const scrollToIndex = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(index, drafts.length - 1));
-    flatListRef.current?.scrollToIndex({ index: clamped, animated: true });
-  }, [drafts.length]);
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      setCurrentIndex(viewableItems[0].index);
-      setIsEditing(false);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
-
   // --- Loading ---
   if (loading) {
     return (
@@ -343,28 +324,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     );
   };
 
-  // Render a single draft detail page (full-width for paging)
-  const renderDraftPage = ({ item: draft }: { item: ScanDraft }) => {
-    const screenWidth = Dimensions.get('window').width;
-    return (
-      <View style={{ width: screenWidth, flex: 1 }}>
-        {isEditing && draft.id === currentDraft?.id ? (
-          <DraftEditor
-            draft={draft}
-            onCancel={() => setIsEditing(false)}
-            onConverted={handleDraftConverted}
-          />
-        ) : (
-          <DraftReview
-            draft={draft}
-            onEdit={() => setIsEditing(true)}
-            onDraftSaved={() => refreshDrafts()}
-          />
-        )}
-      </View>
-    );
-  };
-
   // --- Mobile Layout ---
   if (isMobile) {
     return (
@@ -389,7 +348,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           <View style={{ marginTop: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8 }}>
               <Pressable
-                onPress={() => scrollToIndex(currentIndex - 1)}
+                onPress={() => { setCurrentIndex(i => Math.max(0, i - 1)); setIsEditing(false); }}
                 disabled={!canGoPrev}
                 style={{ opacity: canGoPrev ? 1 : 0.25, padding: 8 }}
                 hitSlop={8}
@@ -402,7 +361,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
               </Text>
 
               <Pressable
-                onPress={() => scrollToIndex(currentIndex + 1)}
+                onPress={() => { setCurrentIndex(i => Math.min(drafts.length - 1, i + 1)); setIsEditing(false); }}
                 disabled={!canGoNext}
                 style={{ opacity: canGoNext ? 1 : 0.25, padding: 8 }}
                 hitSlop={8}
@@ -414,7 +373,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
             {/* Dot indicators */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
               {drafts.map((_, i) => (
-                <Pressable key={i} onPress={() => { scrollToIndex(i); }}>
+                <Pressable key={i} onPress={() => { setCurrentIndex(i); setIsEditing(false); }}>
                   <View
                     style={{
                       width: i === currentIndex ? 20 : 8,
@@ -429,24 +388,24 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           </View>
         )}
 
-        {/* Swipeable draft details */}
-        <FlatList
-          ref={flatListRef}
-          data={drafts}
-          renderItem={renderDraftPage}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          getItemLayout={(_, index) => ({
-            length: Dimensions.get('window').width,
-            offset: Dimensions.get('window').width * index,
-            index,
-          })}
-          style={{ flex: 1, marginTop: 12 }}
-        />
+        {/* Draft detail */}
+        <View style={{ flex: 1, marginTop: 12 }}>
+          {currentDraft && (
+            isEditing ? (
+              <DraftEditor
+                draft={currentDraft}
+                onCancel={() => setIsEditing(false)}
+                onConverted={handleDraftConverted}
+              />
+            ) : (
+              <DraftReview
+                draft={currentDraft}
+                onEdit={() => setIsEditing(true)}
+                onDraftSaved={() => refreshDrafts()}
+              />
+            )
+          )}
+        </View>
       </View>
     );
   }
