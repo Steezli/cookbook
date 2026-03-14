@@ -1,8 +1,6 @@
 import React from "react";
 import { Platform, View } from "react-native";
 import { Stack } from "expo-router";
-import AdSlot from "@/components/public/AdSlot";
-import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import {
   bgPage,
   fontFamilyDisplay,
@@ -10,8 +8,6 @@ import {
 } from "@/lib/tokens";
 
 export default function ScanLayout() {
-  const { breakpoint } = useBreakpoint();
-
   return (
     <View style={{ flex: 1, backgroundColor: bgPage }}>
       <Stack
@@ -27,10 +23,6 @@ export default function ScanLayout() {
           headerShadowVisible: false,
           ...(Platform.OS === "web" ? { headerShown: false } : {}),
         }}
-      />
-      <AdSlot
-        variant={breakpoint === "mobile" ? "mobile" : "leaderboard"}
-        style={{ alignSelf: "center", marginVertical: 8 }}
       />
     </View>
   );
