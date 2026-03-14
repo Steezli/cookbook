@@ -409,73 +409,11 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     );
   }
 
-  // --- Tablet / Web Layout — same arrow/dot nav, centered content (matches Pencil design) ---
+  // --- Tablet / Web Layout — two-panel: recipe content (primary) + context sidebar ---
   return (
-    <View style={{ flex: 1, backgroundColor: bgPage }}>
-      {/* Header + Progress */}
-      <View style={{ paddingTop: 24, gap: 12, alignItems: 'center' }}>
-        <Text
-          style={{
-            fontFamily: fontFamilyDisplay,
-            fontSize: fontSize2xl,
-            color: textPrimary,
-            textAlign: 'center',
-          }}
-        >
-          {drafts.length} Recipe{drafts.length !== 1 ? 's' : ''} Found
-        </Text>
-        <View style={{ width: '100%', maxWidth: 600 }}>
-          <ProgressSection />
-        </View>
-      </View>
-
-      {/* Draft navigation */}
-      {drafts.length > 1 && (
-        <View style={{ marginTop: 16, alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 600, paddingHorizontal: 16, marginBottom: 8 }}>
-            <Pressable
-              onPress={() => { setCurrentIndex(i => Math.max(0, i - 1)); setIsEditing(false); }}
-              disabled={!canGoPrev}
-              style={{ opacity: canGoPrev ? 1 : 0.25, padding: 8 }}
-              hitSlop={8}
-            >
-              <ChevronLeft size={24} color={accentBlue} />
-            </Pressable>
-
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textSecondary }}>
-              Recipe {currentIndex + 1} of {drafts.length}
-            </Text>
-
-            <Pressable
-              onPress={() => { setCurrentIndex(i => Math.min(drafts.length - 1, i + 1)); setIsEditing(false); }}
-              disabled={!canGoNext}
-              style={{ opacity: canGoNext ? 1 : 0.25, padding: 8 }}
-              hitSlop={8}
-            >
-              <ChevronRight size={24} color={accentBlue} />
-            </Pressable>
-          </View>
-
-          {/* Dot indicators */}
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
-            {drafts.map((_, i) => (
-              <Pressable key={i} onPress={() => { setCurrentIndex(i); setIsEditing(false); }}>
-                <View
-                  style={{
-                    width: i === currentIndex ? 20 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: i === currentIndex ? accentBlue : borderDefault,
-                  }}
-                />
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Draft detail */}
-      <View style={{ flex: 1, marginTop: 12 }}>
+    <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row' }}>
+      {/* LEFT PANEL — Primary: recipe content (scrollable) */}
+      <View style={{ flex: 1, minWidth: 0 }}>
         {currentDraft && (
           isEditing ? (
             <DraftEditor
@@ -492,6 +430,101 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           )
         )}
       </View>
+
+      {/* RIGHT PANEL — Context sidebar: nav, photos, progress, actions */}
+      <ScrollView
+        style={{
+          width: 320,
+          maxWidth: 320,
+          flexShrink: 0,
+          borderLeftWidth: 1,
+          borderLeftColor: borderSubtle,
+          backgroundColor: bgCard,
+        }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
+      >
+        {/* Title + count */}
+        <Text style={{ fontFamily: fontFamilyDisplay, fontSize: fontSizeXl, color: textPrimary }}>
+          {drafts.length} Recipe{drafts.length !== 1 ? 's' : ''} Found
+        </Text>
+
+        {/* Progress */}
+        <ProgressSection />
+
+        {/* Draft list cards */}
+        {drafts.length > 1 && (
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
+              Drafts
+            </Text>
+            {drafts.map((draft, index) => {
+              const displayStatus = getDraftDisplayStatus(draft);
+              const statusStyle = getStatusStyle(displayStatus);
+              const confidenceColor = getConfidenceColor(draft.overallConfidence.score);
+              const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
+              const isSelected = currentIndex === index;
+              const ingredientCount = draft.recipe.ingredients?.length ?? 0;
+              return (
+                <Pressable
+                  key={draft.id}
+                  onPress={() => { setCurrentIndex(index); setIsEditing(false); }}
+                  style={({ pressed }) => ({
+                    backgroundColor: isSelected ? white : 'transparent',
+                    borderWidth: isSelected ? 2 : 1,
+                    borderColor: isSelected ? accentBlue : borderDefault,
+                    borderRadius: radiusSm,
+                    padding: 12,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: textPrimary, marginBottom: 4 }}>
+                    {title}
+                  </Text>
+                  <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginBottom: 6 }}>
+                    {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusStyle.text }}>{statusStyle.label}</Text>
+                    </View>
+                    <View style={{ backgroundColor: confidenceColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confidenceColor.text }}>
+                        {Math.round(draft.overallConfidence.score * 100)}%
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Source photos */}
+        {photoUrls.length > 0 && (
+          <View style={{ gap: 8 }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
+              Source Photos
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {photoUrls.map((url, index) => (
+                <View
+                  key={index}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: radiusSm / 2,
+                    overflow: 'hidden',
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                  }}
+                >
+                  <View style={{ width: '100%', height: '100%', backgroundColor: noPhotoBg }} />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }

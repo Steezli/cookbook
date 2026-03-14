@@ -705,27 +705,24 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     );
   }
 
-  // --- Tablet / Web Layout — vertical column matching Pencil design (600px centered form) ---
+  // --- Tablet / Web Layout — scrollable form filling left panel ---
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: bgPage }}
       contentContainerStyle={{
-        alignItems: 'center',
-        paddingVertical: 24,
-        paddingHorizontal: 16,
+        padding: 24,
         paddingBottom: 40,
+        maxWidth: 720,
       }}
     >
-      <View style={{ width: '100%', maxWidth: 600 }}>
-        {/* Photo area — compact within the centered form */}
-        <View style={{ marginBottom: 20 }}>
-          <PhotoSection height={220} />
-        </View>
-
-        {/* Draft fields below */}
-        <DraftFields />
+      {/* Compact photo area */}
+      <View style={{ marginBottom: 20 }}>
+        <PhotoSection height={200} />
       </View>
+
+      {/* Draft fields */}
+      <DraftFields />
     </ScrollView>
   );
 }
