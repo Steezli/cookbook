@@ -88,6 +88,9 @@ export function RecipeForm({
   // Refs for focus chaining
   const descriptionRef = useRef<TextInputType>(null);
 
+  // Tracks whether user has attempted to submit — warnings show only after first attempt
+  const [attempted, setAttempted] = useState(false);
+
   // Photo state
   const [existingPhotos, setExistingPhotos] = useState<RecipePhoto[]>(initialExistingPhotos);
   const [newPhotos, setNewPhotos] = useState<PendingPhoto[]>([]);
@@ -249,16 +252,9 @@ export function RecipeForm({
   // -------------------------------------------------------------------------
 
   async function handleSubmit() {
-    if (!title.trim()) {
-      showAlert('Validation', 'Title is required');
-      return;
-    }
-    if (ingredients.length < 2) {
-      showAlert('Validation', 'At least 2 ingredients are required');
-      return;
-    }
-    if (steps.length < 1) {
-      showAlert('Validation', 'At least 1 step is required');
+    setAttempted(true);
+
+    if (!title.trim() || ingredients.length < 2 || steps.length < 1) {
       return;
     }
 
@@ -292,7 +288,13 @@ export function RecipeForm({
     await onSubmit(input, newPhotos);
   }
 
-  const isDisabled = isSubmitting || !title.trim() || ingredients.length < 2 || steps.length < 1;
+  // Validation state
+  const titleMissing = !title.trim();
+  const ingredientsTooFew = ingredients.length < 2;
+  const stepsMissing = steps.length < 1;
+  const hasErrors = titleMissing || ingredientsTooFew || stepsMissing;
+  const isDisabled = isSubmitting || hasErrors;
+
   const allPhotos = [
     ...existingPhotos.map(p => ({ id: p.id, uri: null as null, storagePath: p.storage_path })),
   ];
@@ -386,6 +388,9 @@ export function RecipeForm({
             returnKeyType="next"
             onSubmitEditing={() => descriptionRef.current?.focus()}
           />
+          {attempted && titleMissing && (
+            <Text style={fieldWarningStyle}>Please enter a recipe title</Text>
+          )}
         </View>
 
         {/* Section 3: Description */}
@@ -485,6 +490,13 @@ export function RecipeForm({
               </View>
             </View>
           ))}
+          {attempted && ingredientsTooFew && (
+            <Text style={fieldWarningStyle}>
+              {ingredients.length === 0
+                ? 'Add at least 2 ingredients'
+                : `Add ${2 - ingredients.length} more ingredient`}
+            </Text>
+          )}
         </View>
 
         {/* Section 5: Steps */}
@@ -545,6 +557,9 @@ export function RecipeForm({
               </View>
             </View>
           ))}
+          {attempted && stepsMissing && (
+            <Text style={fieldWarningStyle}>Add at least 1 step</Text>
+          )}
         </View>
 
         {/* Section 6: Metadata */}
@@ -680,6 +695,41 @@ export function RecipeForm({
           )}
         </View>
 
+        {/* Validation summary */}
+        {attempted && hasErrors && (
+          <View
+            style={{
+              backgroundColor: '#FEF2F2',
+              borderWidth: 1,
+              borderColor: '#FCA5A5',
+              borderRadius: radiusMd,
+              padding: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeSm,
+                color: errorText,
+                marginBottom: 4,
+              }}
+            >
+              Please fix the following before saving:
+            </Text>
+            {titleMissing && (
+              <Text style={summaryItemStyle}>• Recipe title is required</Text>
+            )}
+            {ingredientsTooFew && (
+              <Text style={summaryItemStyle}>
+                • At least 2 ingredients are required{ingredients.length === 1 ? ' (have 1)' : ''}
+              </Text>
+            )}
+            {stepsMissing && (
+              <Text style={summaryItemStyle}>• At least 1 step is required</Text>
+            )}
+          </View>
+        )}
+
         {/* Submit */}
         <Pressable
           onPress={handleSubmit}
@@ -715,6 +765,20 @@ export function RecipeForm({
 const requiredStyle = {
   color: errorText,
   fontFamily: fontFamilyBody,
+} as const;
+
+const fieldWarningStyle = {
+  fontFamily: fontFamilyBody,
+  fontSize: fontSizeSm,
+  color: errorText,
+  marginTop: 6,
+} as const;
+
+const summaryItemStyle = {
+  fontFamily: fontFamilyBody,
+  fontSize: fontSizeSm,
+  color: errorText,
+  marginTop: 2,
 } as const;
 
 const labelStyle = {

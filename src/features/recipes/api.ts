@@ -19,6 +19,10 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
 }
 
 export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
+  if (!input.title?.trim()) throw new Error("Title is required");
+  if (!input.ingredients || input.ingredients.length < 2) throw new Error("At least 2 ingredients are required");
+  if (!input.steps || input.steps.length < 1) throw new Error("At least 1 step is required");
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -49,6 +53,10 @@ export async function updateRecipe(
   id: string,
   input: UpdateRecipeInput
 ): Promise<Recipe> {
+  if (input.title !== undefined && !input.title.trim()) throw new Error("Title is required");
+  if (input.ingredients !== undefined && input.ingredients.length < 2) throw new Error("At least 2 ingredients are required");
+  if (input.steps !== undefined && input.steps.length < 1) throw new Error("At least 1 step is required");
+
   const { data, error } = await supabase
     .from("recipes")
     .update(input)
