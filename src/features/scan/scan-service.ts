@@ -70,6 +70,21 @@ export async function getUserScanJobs(): Promise<ScanJob[]> {
 }
 
 /**
+ * Get a single scan job by ID
+ */
+export async function getJobById(jobId: string): Promise<ScanJob> {
+  const { data, error } = await supabase
+    .from('scan_jobs')
+    .select('*')
+    .eq('id', jobId)
+    .single();
+
+  if (error) throw error;
+  if (!data) throw new Error('Scan job not found');
+  return data as ScanJob;
+}
+
+/**
  * Get all photo URLs for a job
  */
 export async function getJobPhotos(jobId: string): Promise<string[]> {

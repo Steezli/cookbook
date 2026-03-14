@@ -1,27 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { Platform, View, Text, ActivityIndicator, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Image,
+  Platform,
+  ScrollView,
+  View,
+  Text,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { DraftReview } from '@/features/scan/DraftReview';
 import { DraftEditor } from '@/features/scan/DraftEditor';
 import { DraftListView } from '@/features/scan/DraftListView';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
-import { subscribeToJob, getJobPhotos } from '@/features/scan/scan-service';
+import {
+  getJobById,
+  getJobPhotos,
+  subscribeToJob,
+  type ScanJob,
+} from '@/features/scan/scan-service';
 import { useSession } from '@/features/auth/session';
+import { Check, Clock, Loader, AlertTriangle, FileText } from 'lucide-react-native';
 import {
   accentBlue,
+  accentGreen,
   accentWarm,
+  bgCard,
+  bgCardWarm,
   bgPage,
+  borderDefault,
   errorBg,
   errorBorder,
   errorText,
   errorTitle,
   fontFamilyBody,
   fontFamilyBodyMedium,
+  fontFamilyDisplay,
   fontSizeBase,
   fontSizeSm,
   fontSizeXs,
   fontSizeLg,
+  fontSize2xl,
   radiusMd,
   radiusSm,
   textPrimary,
@@ -30,60 +50,67 @@ import {
   white,
 } from '@/lib/tokens';
 
-type ScreenMode = 'loading' | 'processing' | 'single' | 'multi' | 'error';
+type ScreenMode = 'processing' | 'single' | 'multi' | 'error';
 
-/**
- * Calculate a reasonable timeout based on image count.
- * Base: 60s for 1 image. Each additional image adds 30s.
- * Minimum: 60s. Cap: 180s (3 minutes).
- */
-function getTimeoutMs(imageCount: number): number {
-  const base = 60_000;
-  const perImage = 30_000;
-  const additional = Math.max(0, imageCount - 1) * perImage;
-  return Math.min(base + additional, 180_000);
-}
+type JobPhase = 'uploading' | 'queued' | 'processing' | 'completed' | 'failed';
 
-/**
- * Friendly time estimate string for the user.
- */
-function getTimeEstimate(imageCount: number): string {
-  if (imageCount <= 1) return 'This usually takes 10–30 seconds';
-  if (imageCount <= 3) return `Processing ${imageCount} photos — this may take up to a minute`;
-  return `Processing ${imageCount} photos — this may take 1–2 minutes`;
+const PHASE_LABELS: Record<JobPhase, string> = {
+  uploading: 'Uploading photos...',
+  queued: 'Waiting in queue...',
+  processing: 'Reading your recipes...',
+  completed: 'Done!',
+  failed: 'Processing failed',
+};
+
+function formatElapsed(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
 }
 
 export default function DraftReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session, isLoading: authLoading } = useSession();
-  const [mode, setMode] = useState<ScreenMode>('loading');
+  const [mode, setMode] = useState<ScreenMode>('processing');
   const [singleDraft, setSingleDraft] = useState<ScanDraft | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imageCount, setImageCount] = useState(1);
+
+  // Processing state
+  const [phase, setPhase] = useState<JobPhase>('uploading');
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [draftsFound, setDraftsFound] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
 
   const userId = session?.user?.id;
 
-  // On native, the scan Stack header handles safe area — don't double-pad
   const containerStyle = Platform.OS !== 'web' ? { paddingTop: 0 } : undefined;
 
+  // Elapsed time ticker
+  useEffect(() => {
+    if (mode !== 'processing') return;
+
+    const interval = setInterval(() => {
+      setElapsed(e => e + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [mode]);
+
+  // Main processing effect
   useEffect(() => {
     if (!id || !userId) return;
 
     let channel: ReturnType<typeof subscribeToJob> | null = null;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let pollIntervalId: ReturnType<typeof setInterval> | null = null;
     let cancelled = false;
 
-    const unsubscribe = () => {
+    const cleanup = () => {
       if (channel) {
         channel.unsubscribe();
         channel = null;
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
       }
       if (pollIntervalId) {
         clearInterval(pollIntervalId);
@@ -94,6 +121,7 @@ export default function DraftReviewScreen() {
     const resolveDrafts = async (drafts: ScanDraft[]) => {
       if (cancelled) return false;
       if (drafts.length === 0) return false;
+      setDraftsFound(drafts.length);
       if (drafts.length === 1) {
         setSingleDraft(drafts[0]);
         setMode('single');
@@ -103,99 +131,124 @@ export default function DraftReviewScreen() {
       return true;
     };
 
-    const detect = async () => {
+    const start = async () => {
       try {
-        setMode('loading');
+        setMode('processing');
         setError(null);
+        setElapsed(0);
+        setDraftsFound(0);
+        setPhase('uploading');
 
-        // Fetch image count for dynamic timeout and UX
-        let photoCount = 1;
+        // 1. Fetch job to get current status
+        let job: ScanJob;
         try {
-          const photos = await getJobPhotos(id);
-          photoCount = photos.length;
-          setImageCount(photoCount);
+          job = await getJobById(id);
+          setPhase(job.status as JobPhase);
         } catch {
-          // Non-critical — fall back to default
+          setPhase('queued');
+          job = { status: 'queued' } as ScanJob;
         }
 
+        // 2. Fetch photo URLs for thumbnails
+        try {
+          const photos = await getJobPhotos(id);
+          if (!cancelled) setPhotoUrls(photos);
+        } catch {
+          // Non-critical
+        }
+
+        // 3. Check for existing drafts (job may already be done)
         const drafts = await scanDraftService.getDraftsByJobId(id, userId);
-
         if (cancelled) return;
-
         const resolved = await resolveDrafts(drafts);
         if (resolved) return;
 
-        // No drafts yet — subscribe and poll for job completion
-        setMode('processing');
+        // 4. If job already failed, show error
+        if (job.status === 'failed') {
+          setError(job.error_message || 'Scan processing failed');
+          setPhase('failed');
+          setMode('error');
+          return;
+        }
 
-        const timeoutMs = getTimeoutMs(photoCount);
-
-        timeoutId = setTimeout(() => {
-          unsubscribe();
-          if (!cancelled) {
-            setError(
-              photoCount > 1
-                ? `Processing ${photoCount} photos is taking longer than expected. The scan may still complete — you can wait or try again.`
-                : 'Processing is taking longer than expected. Please try again.'
-            );
-            setMode('error');
-          }
-        }, timeoutMs);
-
-        channel = subscribeToJob(id, async (job) => {
+        // 5. Subscribe for real-time updates
+        channel = subscribeToJob(id, async (updatedJob) => {
           if (cancelled) return;
-          if (job.status === 'completed') {
-            unsubscribe();
+          setPhase(updatedJob.status as JobPhase);
+
+          if (updatedJob.status === 'completed') {
+            // Give DB a moment to propagate drafts, then fetch
+            await new Promise(r => setTimeout(r, 1000));
             try {
-              const retryDrafts = await scanDraftService.getDraftsByJobId(id, userId);
+              const newDrafts = await scanDraftService.getDraftsByJobId(id, userId);
               if (!cancelled) {
-                const retryResolved = await resolveDrafts(retryDrafts);
-                if (!retryResolved) {
-                  setError('Draft not found after processing completed. Please try again.');
-                  setMode('error');
+                cleanup();
+                const ok = await resolveDrafts(newDrafts);
+                if (!ok) {
+                  // Drafts not yet visible — keep polling
+                  setPhase('completed');
                 }
               }
             } catch (err) {
               if (!cancelled) {
-                setError(err instanceof Error ? err.message : 'Failed to load drafts');
+                setError(err instanceof Error ? err.message : 'Failed to load results');
                 setMode('error');
               }
             }
-          } else if (job.status === 'failed') {
-            unsubscribe();
+          } else if (updatedJob.status === 'failed') {
+            cleanup();
             if (!cancelled) {
-              setError('Scan processing failed. Please try again.');
+              setError(updatedJob.error_message || 'Scan processing failed');
               setMode('error');
             }
           }
         });
 
-        // Polling fallback every 5 seconds (slightly less aggressive than before)
+        // 6. Poll for drafts every 4 seconds as fallback
+        //    (realtime channel may miss events, and drafts may appear
+        //     slightly after the job status changes to completed)
         pollIntervalId = setInterval(async () => {
           if (cancelled) return;
           try {
+            // Also refresh job status in case realtime missed it
+            try {
+              const freshJob = await getJobById(id);
+              if (!cancelled) setPhase(freshJob.status as JobPhase);
+
+              if (freshJob.status === 'failed') {
+                cleanup();
+                if (!cancelled) {
+                  setError(freshJob.error_message || 'Scan processing failed');
+                  setMode('error');
+                }
+                return;
+              }
+            } catch {
+              // Non-critical
+            }
+
             const polledDrafts = await scanDraftService.getDraftsByJobId(id, userId);
             if (polledDrafts.length > 0 && !cancelled) {
-              unsubscribe();
+              cleanup();
               await resolveDrafts(polledDrafts);
             }
           } catch {
             // Ignore polling errors
           }
-        }, 5000);
+        }, 4000);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load drafts');
+          setError(err instanceof Error ? err.message : 'Something went wrong');
           setMode('error');
         }
       }
     };
 
-    detect();
+    start();
 
     return () => {
       cancelled = true;
-      unsubscribe();
+      cleanup();
     };
   }, [id, userId, retryCount]);
 
@@ -214,31 +267,169 @@ export default function DraftReviewScreen() {
     );
   }
 
-  // --- Loading / Processing ---
-  if (mode === 'loading' || mode === 'processing') {
-    const isProcessing = mode === 'processing';
+  // --- Processing / waiting for results ---
+  if (mode === 'processing') {
+    const isActive = phase === 'processing' || phase === 'queued' || phase === 'uploading';
+    const isDone = phase === 'completed';
+    const imageCount = photoUrls.length || 1;
+
     return (
       <PageContainer style={containerStyle}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage, padding: 24 }}>
-          <ActivityIndicator size="large" color={accentWarm} />
-          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary, marginTop: 16, textAlign: 'center' }}>
-            {isProcessing
-              ? imageCount > 1
-                ? `Processing ${imageCount} photos...`
-                : 'Processing your scan...'
-              : 'Loading drafts...'}
+        <ScrollView
+          contentContainerStyle={{ padding: 24, flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <Text
+            style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSize2xl,
+              color: textPrimary,
+              textAlign: 'center',
+              marginBottom: 8,
+            }}
+          >
+            Scanning {imageCount > 1 ? `${imageCount} Photos` : 'Your Recipe'}
           </Text>
-          {isProcessing && (
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 8, textAlign: 'center' }}>
-              {getTimeEstimate(imageCount)}
-            </Text>
+
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeSm,
+              color: textSecondary,
+              textAlign: 'center',
+              marginBottom: 32,
+            }}
+          >
+            {imageCount > 1
+              ? 'We\'re reading each photo and extracting any recipes found'
+              : 'We\'re reading the photo and extracting the recipe'}
+          </Text>
+
+          {/* Photo thumbnails */}
+          {photoUrls.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                gap: 12,
+                paddingBottom: 24,
+                justifyContent: photoUrls.length <= 3 ? 'center' : undefined,
+                flexGrow: photoUrls.length <= 3 ? 1 : undefined,
+              }}
+            >
+              {photoUrls.map((url, i) => (
+                <View key={i} style={{ alignItems: 'center', gap: 6 }}>
+                  <Image
+                    source={{ uri: url }}
+                    style={{
+                      width: 80,
+                      height: 100,
+                      borderRadius: radiusSm,
+                      borderWidth: 1,
+                      borderColor: borderDefault,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBody,
+                      fontSize: fontSizeXs,
+                      color: textTertiary,
+                    }}
+                  >
+                    Photo {i + 1}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
           )}
-          {isProcessing && imageCount > 1 && (
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginTop: 6, textAlign: 'center' }}>
-              Multi-photo scans take longer — hang tight!
+
+          {/* Status steps */}
+          <View
+            style={{
+              backgroundColor: bgCard,
+              borderRadius: radiusMd,
+              padding: 20,
+              gap: 16,
+            }}
+          >
+            <StatusStep
+              label="Photos uploaded"
+              done={phase !== 'uploading'}
+              active={phase === 'uploading'}
+            />
+            <StatusStep
+              label="In processing queue"
+              done={phase === 'processing' || phase === 'completed'}
+              active={phase === 'queued'}
+            />
+            <StatusStep
+              label={imageCount > 1
+                ? `Reading ${imageCount} photos for recipes`
+                : 'Reading photo and extracting recipe'}
+              done={phase === 'completed'}
+              active={phase === 'processing'}
+            />
+            <StatusStep
+              label={draftsFound > 0
+                ? `Found ${draftsFound} recipe${draftsFound !== 1 ? 's' : ''}!`
+                : 'Preparing your results'}
+              done={draftsFound > 0}
+              active={isDone && draftsFound === 0}
+            />
+          </View>
+
+          {/* Elapsed time */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              marginTop: 24,
+            }}
+          >
+            <Clock size={14} color={textTertiary} />
+            <Text
+              style={{
+                fontFamily: fontFamilyBody,
+                fontSize: fontSizeXs,
+                color: textTertiary,
+              }}
+            >
+              {formatElapsed(elapsed)} elapsed
             </Text>
+          </View>
+
+          {/* Helpful context */}
+          {isActive && elapsed >= 15 && (
+            <View
+              style={{
+                backgroundColor: bgCardWarm,
+                borderRadius: radiusMd,
+                padding: 16,
+                marginTop: 20,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  textAlign: 'center',
+                  lineHeight: 20,
+                }}
+              >
+                {elapsed < 45
+                  ? 'This is normal — AI recipe reading takes a moment, especially with multiple photos.'
+                  : elapsed < 90
+                  ? 'Still working! Multi-photo scans can take up to a couple of minutes.'
+                  : 'Taking longer than usual. The scan is still processing — you can wait here or check back from the scanner page.'}
+              </Text>
+            </View>
           )}
-        </View>
+        </ScrollView>
       </PageContainer>
     );
   }
@@ -257,14 +448,16 @@ export default function DraftReviewScreen() {
               padding: 24,
             }}
           >
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: errorTitle, marginBottom: 8 }}>
-              Processing Delayed
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <AlertTriangle size={20} color={errorTitle} />
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: errorTitle }}>
+                Scan Failed
+              </Text>
+            </View>
             <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: errorText, lineHeight: 22 }}>
               {error || 'An unexpected error occurred'}
             </Text>
 
-            {/* Retry button */}
             <Pressable
               onPress={handleRetry}
               style={({ pressed }) => ({
@@ -277,11 +470,10 @@ export default function DraftReviewScreen() {
               })}
             >
               <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: white }}>
-                Check Again
+                Try Again
               </Text>
             </Pressable>
 
-            {/* Back to scanner button */}
             <Pressable
               onPress={() => router.back()}
               style={{ marginTop: 12, alignItems: 'center' as const, paddingVertical: 8 }}
@@ -296,7 +488,7 @@ export default function DraftReviewScreen() {
     );
   }
 
-  // --- Multi-draft: render DraftListView ---
+  // --- Multi-draft ---
   if (mode === 'multi') {
     return (
       <PageContainer style={containerStyle}>
@@ -305,7 +497,7 @@ export default function DraftReviewScreen() {
     );
   }
 
-  // --- Single-draft: backward-compatible flow ---
+  // --- Single-draft ---
   if (isEditing) {
     return (
       <PageContainer style={containerStyle}>
@@ -324,5 +516,63 @@ export default function DraftReviewScreen() {
         onEdit={() => setIsEditing(true)}
       />
     </PageContainer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// StatusStep — a single row in the processing pipeline
+// ---------------------------------------------------------------------------
+
+function StatusStep({
+  label,
+  done,
+  active,
+}: {
+  label: string;
+  done: boolean;
+  active: boolean;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      {/* Icon */}
+      <View
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          backgroundColor: done ? accentGreen : active ? accentWarm : borderDefault,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {done ? (
+          <Check size={16} color={white} />
+        ) : active ? (
+          <ActivityIndicator size="small" color={white} />
+        ) : (
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: white,
+              opacity: 0.5,
+            }}
+          />
+        )}
+      </View>
+
+      {/* Label */}
+      <Text
+        style={{
+          fontFamily: done || active ? fontFamilyBodyMedium : fontFamilyBody,
+          fontSize: fontSizeBase,
+          color: done ? accentGreen : active ? textPrimary : textTertiary,
+          flex: 1,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }
