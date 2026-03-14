@@ -77,11 +77,16 @@ async function readFileAsBase64(uri: string): Promise<{ base64: string; mediaTyp
 
 /**
  * Detect image media type from magic bytes.
+ * HEIC files are reported as image/jpeg since Claude's API only accepts
+ * jpeg/png/gif/webp. iOS typically converts HEIC to JPEG when quality < 1
+ * is set on the image picker, so the raw bytes should already be JPEG.
  */
 function detectMediaType(bytes: Uint8Array): string {
   if (bytes[0] === 0x89 && bytes[1] === 0x50) return 'image/png';
   if (bytes[0] === 0x47 && bytes[1] === 0x49) return 'image/gif';
   if (bytes[0] === 0x52 && bytes[1] === 0x49) return 'image/webp';
+  // HEIC magic: bytes 4-7 are 'ftyp' — treat as jpeg for Claude compatibility
+  // (iOS picker with quality < 1 converts to JPEG anyway, but just in case)
   return 'image/jpeg';
 }
 
@@ -197,8 +202,10 @@ export async function uploadScanPhotos(
 
   supabase.functions.invoke('process-scan-job', {
     body: { jobId: job.id }
-  }).catch(() => {
-    // Processing trigger is fire-and-forget — edge function handles retries
+  }).catch(async (err) => {
+    // Web path has real Storage URLs — queue worker can retry these.
+    // Log but don't fail the job since the queue worker will pick it up.
+    console.warn('[scan-photos] Edge function invocation failed (web path):', err);
   });
 
   return { jobId: job.id, photoUrls };
@@ -241,6 +248,9 @@ async function uploadScanPhotosInline(
   const job = await createMultiPhotoScanJob(placeholderUrls);
 
   // Send images inline to the edge function (it will save to Storage server-side)
+  // If invocation fails, mark job as failed so the user sees an error instead of
+  // waiting forever. Jobs with inline:// placeholder URLs can't be retried by the
+  // queue worker since it doesn't have the image data.
   supabase.functions.invoke('process-scan-job', {
     body: {
       jobId: job.id,
@@ -249,8 +259,18 @@ async function uploadScanPhotosInline(
         mediaType: img.mediaType,
       })),
     }
-  }).catch(() => {
-    // Processing trigger is fire-and-forget — edge function handles retries
+  }).catch(async (err) => {
+    console.warn('[scan-photos] Edge function invocation failed:', err);
+    try {
+      await supabase
+        .from('scan_jobs')
+        .update({
+          status: 'failed',
+          error_message: 'Failed to start processing. Please try again.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', job.id);
+    } catch { /* best effort */ }
   });
 
   return { jobId: job.id, photoUrls: placeholderUrls };
