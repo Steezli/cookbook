@@ -28,16 +28,16 @@
 - [x] Scan processing UX redesign — status pipeline, no false timeouts
 - [x] Fix inline:// photo URL crash on iOS
 - [x] Multi-draft carousel → arrow/dot navigation (no nested scroll conflicts)
-- [x] Web multi-draft layout — matches Pencil design (centered form, arrow/dot nav)
-- [x] Web DraftReview — vertical column layout (600px centered form, not side-by-side)
+- [x] Web multi-draft layout — two-panel: recipe content (left) + context sidebar (right)
+- [x] Web DraftReview — scrollable form filling left panel (maxWidth 720px)
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
 - Tests: 540 passing, 23 suites
-- Branch: gsd/M004/QOL-bug-fixes (17 commits ahead of main)
+- Branch: gsd/M004/QOL-bug-fixes (19 commits ahead of main)
 
 ## Blockers
 - None
 
 ## Next Action
-Web scan UX redesigned per Pencil designs. Waiting for user direction.
+Web scan UX redesigned as proper two-panel layout. Waiting for user review/direction.
