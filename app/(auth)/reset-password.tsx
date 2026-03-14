@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
 
 import { showAlert } from "@/lib/alert";
-import { isValidPassword } from "@/features/auth/password";
+import { validatePassword } from "@/features/auth/password";
 import { supabase } from "@/lib/supabase";
 import {
   accentGreen,
@@ -81,8 +81,9 @@ export default function ResetPasswordScreen() {
   async function onUpdatePassword() {
     setErrorMsg(null);
 
-    if (!isValidPassword(password)) {
-      setErrorMsg("Use at least 8 characters and include a number or symbol.");
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
+      setErrorMsg(passwordCheck.errors.join(". ") + ".");
       return;
     }
 

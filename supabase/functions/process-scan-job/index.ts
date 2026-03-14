@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders, handleCors } from "../_shared/cors.ts"
 
 interface ScanJob {
   id: string
@@ -404,29 +400,37 @@ serve(async (req) => {
       console.error('Scan processing failed:', processError)
 
       const errorMessage = processError instanceof Error ? processError.message : 'Unknown error'
+      const newRetryCount = job.retry_count + 1
+      const canRetry = newRetryCount < job.max_retries
 
-      await supabase
-        .from('scan_jobs')
-        .update({
-          status: 'failed',
-          error_message: errorMessage,
-          updated_at: new Date().toISOString(),
-          retry_count: job.retry_count + 1,
-        })
-        .eq('id', jobId)
-
-      if (job.retry_count < job.max_retries) {
+      if (canRetry) {
+        // Re-queue for retry: single atomic update preserving the original error message
+        console.log(`Re-queuing job ${jobId} for retry (attempt ${newRetryCount}/${job.max_retries}): ${errorMessage}`)
         await supabase
           .from('scan_jobs')
           .update({
             status: 'queued',
-            error_message: `Retrying...`,
+            error_message: errorMessage,
+            updated_at: new Date().toISOString(),
+            retry_count: newRetryCount,
+          })
+          .eq('id', jobId)
+      } else {
+        // Max retries reached — mark as permanently failed
+        console.error(`Job ${jobId} failed permanently after ${newRetryCount} attempt(s): ${errorMessage}`)
+        await supabase
+          .from('scan_jobs')
+          .update({
+            status: 'failed',
+            error_message: errorMessage,
+            updated_at: new Date().toISOString(),
+            retry_count: newRetryCount,
           })
           .eq('id', jobId)
       }
 
       return new Response(
-        JSON.stringify({ success: false, error: errorMessage, jobId }),
+        JSON.stringify({ success: false, error: errorMessage, jobId, retryCount: newRetryCount, willRetry: canRetry }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500,

@@ -171,22 +171,19 @@ export async function deleteRecipePhoto(photoId: string): Promise<void> {
 }
 
 /**
- * Reorder photos
+ * Reorder photos atomically via a single RPC call.
+ *
+ * All sort_order updates happen inside one database transaction,
+ * so either all succeed or none do — no partial reorder states.
  */
 export async function reorderRecipePhotos(
   updates: { id: string; sort_order: number }[]
 ): Promise<void> {
-  const promises = updates.map(({ id, sort_order }) =>
-    supabase
-      .from("recipe_photos")
-      .update({ sort_order })
-      .eq("id", id)
-  );
+  if (updates.length === 0) return;
 
-  const results = await Promise.all(promises);
-  const errors = results.filter(r => r.error);
-  
-  if (errors.length > 0) {
-    throw errors[0].error;
-  }
+  const { error } = await supabase.rpc("reorder_recipe_photos", {
+    updates: updates.map(({ id, sort_order }) => ({ id, sort_order })),
+  });
+
+  if (error) throw error;
 }

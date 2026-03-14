@@ -1,4 +1,4 @@
-import { searchPublicRecipes, getPublicRecipeCount } from '../search';
+import { searchPublicRecipes, getPublicRecipeCount, escapeLikePattern } from '../search';
 
 // Chainable query builder mock
 function createMockBuilder(result: { data: unknown; error: unknown; count?: number | null }) {
@@ -185,5 +185,77 @@ describe('getPublicRecipeCount', () => {
     const count = await getPublicRecipeCount();
 
     expect(count).toBe(0);
+  });
+
+  it('escapes LIKE special characters in query', async () => {
+    latestResult = { data: null, error: null, count: 0 };
+
+    await getPublicRecipeCount({ query: '100% organic' });
+
+    expect(latestBuilder['ilike']).toHaveBeenCalledWith(
+      'title',
+      '%100\\% organic%'
+    );
+  });
+});
+
+describe('escapeLikePattern', () => {
+  it('escapes percent sign', () => {
+    expect(escapeLikePattern('100%')).toBe('100\\%');
+  });
+
+  it('escapes underscore', () => {
+    expect(escapeLikePattern('a_b')).toBe('a\\_b');
+  });
+
+  it('escapes backslash', () => {
+    expect(escapeLikePattern('a\\b')).toBe('a\\\\b');
+  });
+
+  it('escapes all special characters together', () => {
+    expect(escapeLikePattern('100% off_sale\\deal')).toBe(
+      '100\\% off\\_sale\\\\deal'
+    );
+  });
+
+  it('returns normal text unchanged', () => {
+    expect(escapeLikePattern('pasta')).toBe('pasta');
+  });
+
+  it('handles empty string', () => {
+    expect(escapeLikePattern('')).toBe('');
+  });
+
+  it('handles string of only special chars', () => {
+    expect(escapeLikePattern('%_%\\')).toBe('\\%\\_\\%\\\\');
+  });
+});
+
+describe('searchPublicRecipes — LIKE injection prevention', () => {
+  it('escapes % in query so it does not match all recipes', async () => {
+    latestResult = { data: [], error: null };
+
+    await searchPublicRecipes({ query: '%' });
+
+    expect(latestBuilder['ilike']).toHaveBeenCalledWith('title', '%\\%%');
+  });
+
+  it('escapes _ in query so it does not match single-char wildcard', async () => {
+    latestResult = { data: [], error: null };
+
+    await searchPublicRecipes({ query: '_' });
+
+    expect(latestBuilder['ilike']).toHaveBeenCalledWith('title', '%\\_%');
+  });
+
+  it('escapes mixed special characters in real-world query', async () => {
+    latestResult = { data: [], error: null };
+
+    await searchPublicRecipes({ query: '50% off_sale' });
+
+    expect(latestBuilder['ilike']).toHaveBeenCalledWith(
+      'title',
+      '%50\\% off\\_sale%'
+    );
   });
 });

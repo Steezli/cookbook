@@ -33,8 +33,18 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
  * that only have a `text` field. Idempotent — skips ingredients that
  * already have `amount` set.  Silently no-ops if the current user isn't
  * the recipe owner (RLS will block the update).
+ *
+ * IMPORTANT: Does NOT mutate the input recipe object. The caller should
+ * re-fetch if it needs the updated ingredient data. This avoids race
+ * conditions where a fire-and-forget background mutation changes an
+ * object that React is already rendering.
  */
-async function backfillIngredients(recipe: Recipe): Promise<void> {
+async function backfillIngredients(recipe: Readonly<Recipe>): Promise<void> {
+  // Skip backfill for recipes the current user doesn't own — avoids a
+  // wasted RLS-blocked round-trip.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.id !== recipe.owner_user_id) return;
+
   const needsWork = recipe.ingredients.some(
     (ing) => ing.amount === undefined || ing.amount === null
   );
@@ -70,19 +80,16 @@ async function backfillIngredients(recipe: Recipe): Promise<void> {
 
   if (!changed) return;
 
-  // Fire-and-forget — RLS silently blocks non-owners, which is fine.
-  await supabase
+  // Fire-and-forget DB update. Never mutates the input recipe object —
+  // callers re-fetch if they need updated data.
+  const { error } = await supabase
     .from("recipes")
     .update({ ingredients: updated })
-    .eq("id", recipe.id)
-    .then(({ error }) => {
-      if (error) {
-        // Expected for recipes the user doesn't own — swallow silently
-      } else {
-        // Mutate in-place so the current render picks up the structured data
-        recipe.ingredients = updated;
-      }
-    });
+    .eq("id", recipe.id);
+
+  if (error) {
+    // RLS rejection or network error — swallow silently for background backfill
+  }
 }
 
 export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {

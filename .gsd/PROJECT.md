@@ -10,7 +10,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Current State
 
-Four milestones complete (M001–M004). Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating, cooking walkthrough ingredient highlighting, smart liquid/dry unit conversions, dynamic scan timeout, full-screen iOS scanner. 540 tests across 23 suites. Zero TypeScript errors. Codebase is clean: single consolidated `src/features/scan/` directory, 16 dead files removed, zero debug console.* in client code, all forms chain focus on Enter, cross-platform alert utility replaces all 41 raw Alert.alert calls, error states wired in key screens. Web scan upload has native drag-and-drop with design-token-based responsive UI. OAuth branding documented. Verified across 8 web routes and iOS simulator.
+Four milestones complete (M001–M004), M005 in progress (S01 done). Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating, cooking walkthrough ingredient highlighting, smart liquid/dry unit conversions, dynamic scan timeout, full-screen iOS scanner. 585 tests across 26 suites. Zero TypeScript errors. M005/S01 hardened: search injection-safe (escapeLikePattern on all ilike calls), scan retry logic correct with preserved error messages, backfillIngredients non-mutating (Readonly<Recipe>), photo reorder atomic (RPC), CORS tightened from wildcard to origin allowlist across all 11 edge functions, password validation strengthened with structured per-rule errors.
 
 ## Architecture / Key Patterns
 
@@ -34,10 +34,11 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M002: Production Polish — Multi-recipe scan, SEO structured data, production ad config, GDPR consent, UX polish
 - [x] M003: Quality Audit & Cleanup — Scan code consolidation, dead code removal, form focus chaining, cross-platform alert fix, scan UI polish, logging cleanup, full app audit
 - [x] M004: QOL & Bug Fixes — Ingredient highlighting in cooking walkthrough, smart liquid/dry unit conversions, multi-image scan timeout fix, iOS full-screen scanner
+- [ ] M005: Technical Hardening — Security fixes, data integrity, performance, code deduplication, type safety, error handling, end-to-end verification (S01 ✅)
 
 ## Backlog
 
 - **Subscriptions** — Subscription gating on scan via RevenueCat, paywall UI, web checkout (SUB-01, SUB-02, SUB-03). Punted — not the immediate priority.
 
 ---
-*Last updated: 2026-03-13 after M003 completion — M004 slot open*
+*Last updated: 2026-03-14 after M005/S01 completion*

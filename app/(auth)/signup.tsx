@@ -7,7 +7,7 @@ import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { showAlert } from '@/lib/alert';
-import { isValidPassword } from '@/features/auth/password';
+import { validatePassword } from '@/features/auth/password';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
@@ -52,10 +52,11 @@ export default function SignupScreen() {
   const confirmPasswordRef = useRef<TextInputType>(null);
 
   async function onSignup() {
-    if (!isValidPassword(password)) {
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.valid) {
       showAlert(
         'Password requirements',
-        'Use at least 8 characters and include a number or symbol.',
+        passwordCheck.errors.join('. ') + '.',
       );
       return;
     }

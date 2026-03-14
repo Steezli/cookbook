@@ -1,6 +1,21 @@
 import { supabase } from "@/lib/supabase";
 import type { Recipe, RecipeVisibility } from "./types";
 
+/**
+ * Escape special LIKE/ILIKE pattern characters in user input.
+ *
+ * PostgreSQL's LIKE treats `%` as "any string" and `_` as "any single char".
+ * Backslash is the default escape character. Without escaping, a user query
+ * containing these characters can match unintended rows (e.g. `%` matches
+ * every recipe title).
+ */
+export function escapeLikePattern(input: string): string {
+  return input
+    .replace(/\\/g, "\\\\") // escape backslash first
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
 export type SearchFilters = {
   query?: string;
   tags?: string[];
@@ -21,7 +36,7 @@ export async function searchRecipes(filters: SearchFilters = {}): Promise<Recipe
 
   // Title search (case-insensitive substring match)
   if (filters.query && filters.query.trim()) {
-    query = query.ilike("title", `%${filters.query.trim()}%`);
+    query = query.ilike("title", `%${escapeLikePattern(filters.query.trim())}%`);
   }
 
   // Tag filter (array contains)
@@ -124,7 +139,7 @@ export async function searchPublicRecipes(
 
   // Title search (case-insensitive substring match)
   if (filters.query && filters.query.trim()) {
-    query = query.ilike("title", `%${filters.query.trim()}%`);
+    query = query.ilike("title", `%${escapeLikePattern(filters.query.trim())}%`);
   }
 
   // Tag filter (single tag, ignored for 'All')
@@ -160,7 +175,7 @@ export async function getPublicRecipeCount(
     .eq("visibility", "public");
 
   if (filters.query && filters.query.trim()) {
-    query = query.ilike("title", `%${filters.query.trim()}%`);
+    query = query.ilike("title", `%${escapeLikePattern(filters.query.trim())}%`);
   }
 
   if (filters.tag && filters.tag !== "All") {

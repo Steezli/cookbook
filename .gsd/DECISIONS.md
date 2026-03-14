@@ -246,3 +246,38 @@
 ### iOS scan route: full-screen over modal
 - **Decision:** Removed `presentation: "modal"` from scan route, replaced with `fullScreenGestureEnabled: true` and `animation: 'slide_from_right'`.
 - **Why:** Modal presentation shows the scanner as a popup/sheet on iOS, which feels cramped. Full-screen with swipe-back gesture is the standard iOS navigation pattern for a content creation flow like scanning.
+
+## M005/S01: Security & Data Integrity
+
+### Centralized CORS module with dynamic origin allowlist
+- **Decision:** Replaced all inline `Access-Control-Allow-Origin: *` across 11 edge functions with a shared `_shared/cors.ts` module that validates the request `Origin` against an allowlist derived from `SUPABASE_URL` and optional `ALLOWED_ORIGINS` env var.
+- **Why:** Wildcard CORS on sensitive edge functions (scan jobs, invites, password resets) is unnecessarily permissive. Any website could make authenticated cross-origin requests. Dynamic origin checking with `Vary: Origin` is the standard secure pattern.
+- **Trade-off:** Adds an env-var dependency for custom domains. Native mobile clients are unaffected since they don't send `Origin` headers. The static `corsHeaders` export is kept for backward compatibility but now defaults to `SUPABASE_URL` instead of `*`.
+
+### Structured password validation result
+- **Decision:** Added `validatePassword()` returning `{ valid: boolean, errors: string[] }` alongside the existing boolean `isValidPassword()` wrapper.
+- **Why:** Callers need per-rule error messages for good UX. The boolean-only API forced generic "requirements not met" messages.
+- **Trade-off:** Two exported functions instead of one; mitigated by `isValidPassword` being a thin wrapper that's easy to deprecate later.
+
+### LIKE pattern escape at call site
+- **Decision:** `escapeLikePattern()` applied at each ilike call site in search.ts, not wrapped into a query builder abstraction.
+- **Why:** Minimal change surface, immediately auditable via grep. Only 3 call sites exist — a query builder wrapper would be over-engineering.
+- **Trade-off:** Relies on developers remembering to use it for new ilike calls; mitigated by the grep-based verification pattern.
+
+### Extracted computeRetryDecision() for Deno/Jest boundary
+- **Decision:** Extracted the pure retry boundary logic into `src/lib/scan/retry-logic.ts` with `computeRetryDecision()` while keeping an inlined copy in the Deno edge function.
+- **Why:** The edge function runs on Deno and can't import from `src/`. The extracted function enables Jest testing of the critical retry boundary without running Deno.
+- **Trade-off:** Two copies of the logic that could drift; same pattern as the parser duplication that S02 will address.
+
+### Single atomic DB update per retry decision path
+- **Decision:** Replaced the two-step update (set failed → set queued) with a single update per retry path in process-scan-job.
+- **Why:** Two sequential updates created a race window where another worker could pick up a job in an intermediate failed state. Single atomic update eliminates the race.
+
+### Readonly<Recipe> for no-mutation contract
+- **Decision:** Typed the `backfillIngredients` parameter as `Readonly<Recipe>` to enforce the no-mutation contract at compile time.
+- **Why:** The previous in-place `recipe.ingredients = updated` mutation caused potential race conditions during React rendering. `Readonly` makes the compiler catch any future mutation attempts.
+
+### SQL RPC with security invoker for atomic photo reorder
+- **Decision:** Created a `reorder_recipe_photos` Postgres RPC function (`security invoker`, `search_path = ''`) replacing N individual updates via `Promise.all`.
+- **Why:** Individual updates are not transactional — a mid-batch failure leaves photos in inconsistent sort order. The RPC runs all updates in a single transaction. `security invoker` preserves RLS enforcement.
+- **Trade-off:** Adds a migration dependency; the RPC must be deployed before the client code is used.
