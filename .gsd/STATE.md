@@ -28,7 +28,7 @@
 - [x] Scan processing UX redesign — status pipeline, no false timeouts
 - [x] Fix inline:// photo URL crash on iOS
 - [x] Multi-draft carousel → arrow/dot navigation (no nested scroll conflicts)
-- [ ] **NEXT: Web scan page needs same multi-draft treatment**
+- [x] Web multi-draft layout fix — fixed-width sidebar, proper flex detail panel
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
@@ -39,4 +39,4 @@
 - None
 
 ## Next Action
-Apply the same multi-draft arrow/dot navigation + processing pipeline UX to the web scan page. The mobile DraftListView already has this — the web/tablet sidebar layout in DraftListView also needs review. The scan processing screen (draft/[id].tsx) should render well on web too.
+Web scan pages verified working. Waiting for user direction.
