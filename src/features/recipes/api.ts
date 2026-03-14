@@ -46,7 +46,6 @@ async function backfillIngredients(recipe: Readonly<Recipe>): Promise<void> {
 
   let changed = false;
   const updated: RecipeIngredient[] = recipe.ingredients.map((ing) => {
-    // Already has structured data — leave it alone
     if (ing.amount !== undefined && ing.amount !== null) return ing;
 
     const parsed = parseIngredient(ing.text);
@@ -67,15 +66,13 @@ async function backfillIngredients(recipe: Readonly<Recipe>): Promise<void> {
       };
     }
 
-    // Unparseable — mark so we don't re-attempt
+    // Mark unparseable so we don't re-attempt on future reads
     changed = true;
     return { ...ing, amount: null, unit: null, original_text: ing.text, is_ambiguous: false };
   });
 
   if (!changed) return;
 
-  // Fire-and-forget DB update. Never mutates the input recipe object —
-  // callers re-fetch if they need updated data.
   const { error } = await supabase
     .from("recipes")
     .update({ ingredients: updated })

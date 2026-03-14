@@ -63,7 +63,7 @@ This milestone is complete only when all are true:
 - [x] **S03: Type Safety & Error Handling** `risk:medium` `depends:[S01]`
   > After this: Zero `any` in feature code, Supabase types generated, web scan upload reports failures, ensureProfile logs errors, health check endpoint exists
 
-- [ ] **S04: Code Quality & Readability** `risk:low` `depends:[S01,S02]`
+- [x] **S04: Code Quality & Readability** `risk:low` `depends:[S01,S02]`
   > After this: Repetitive OAuth functions consolidated, excess comments trimmed, consistent patterns across all API modules, clean readable codebase
 
 - [ ] **S05: End-to-End Verification** `risk:medium` `depends:[S01,S02,S03,S04]`

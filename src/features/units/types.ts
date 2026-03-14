@@ -1,4 +1,3 @@
-// Unit conversion types - placeholder for TDD RED phase
 export type UnitSystem = 'metric' | 'imperial';
 
 export interface ParsedIngredient {

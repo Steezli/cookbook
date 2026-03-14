@@ -9,9 +9,6 @@ export type ScanPhoto = {
   created_at: string;
 };
 
-/**
- * Get public URL for a scan photo
- */
 export function getScanPhotoUrl(storagePath: string): string {
   const { data } = supabase.storage
     .from("scan-photos")
@@ -20,9 +17,6 @@ export function getScanPhotoUrl(storagePath: string): string {
   return data.publicUrl;
 }
 
-/**
- * Get thumbnail URL for scan photo
- */
 export function getScanThumbnailUrl(storagePath: string, width: number = 400): string {
   const url = getScanPhotoUrl(storagePath);
   return `${url}?width=${width}&quality=85`;
@@ -126,12 +120,12 @@ export async function uploadScanPhotos(
     enableCompression = true
   } = options;
 
-  // --- Native path: skip Storage, send base64 inline ---
+  // Native: send base64 inline to edge function (avoids 0-byte Storage bug on iOS)
   if (Platform.OS !== "web") {
     return uploadScanPhotosInline(files);
   }
 
-  // --- Web path: upload to Storage as before ---
+  // Web: upload to Storage then invoke edge function
   const batchTimestamp = Date.now();
   const uploadedPhotos: Array<{ photoUrl: string; storagePath: string; index: number }> = [];
   const failedUploads: Array<{ index: number; name: string; error: string }> = [];
@@ -222,14 +216,13 @@ export async function uploadScanPhotos(
 }
 
 /**
- * Native-only: read images as base64 and send them inline to the edge function.
- * Avoids the 0-byte Supabase Storage upload bug on iOS.
- * The edge function saves images to Storage server-side and updates photo_urls.
+ * Native-only path: sends base64 images inline to the edge function to avoid
+ * the 0-byte Supabase Storage upload bug on iOS. The edge function persists
+ * images to Storage server-side.
  */
 async function uploadScanPhotosInline(
   files: { uri: string; name: string; type: string }[]
 ): Promise<{ jobId: string; photoUrls: string[] }> {
-  // Read all images as base64
   const images: Array<{ base64: string; mediaType: string }> = [];
   const failedReads: Array<{ index: number; name: string; error: string }> = [];
 
@@ -253,14 +246,12 @@ async function uploadScanPhotosInline(
     throw new Error('Failed to read all photos. Please try again.');
   }
 
-  // Create scan job with placeholder URLs — edge function will update with real URLs
+  // Placeholder URLs — the edge function replaces them with real Storage URLs
   const placeholderUrls = images.map((_, i) => `inline://photo-${i + 1}`);
   const job = await createMultiPhotoScanJob(placeholderUrls);
 
-  // Send images inline to the edge function (it will save to Storage server-side)
-  // If invocation fails, mark job as failed so the user sees an error instead of
-  // waiting forever. Jobs with inline:// placeholder URLs can't be retried by the
-  // queue worker since it doesn't have the image data.
+  // Inline jobs can't be retried by the queue worker (no image data), so mark
+  // as failed immediately on invocation error rather than leaving them stuck.
   supabase.functions.invoke('process-scan-job', {
     body: {
       jobId: job.id,
@@ -286,10 +277,7 @@ async function uploadScanPhotosInline(
   return { jobId: job.id, photoUrls: placeholderUrls };
 }
 
-/**
- * Upload a single photo for scanning (React Native compatible)
- * Maintained for backward compatibility
- */
+/** Backward-compatible single-photo wrapper. */
 export async function uploadScanPhoto(
   file: { uri: string; name: string; type: string },
   options: {
@@ -299,7 +287,6 @@ export async function uploadScanPhoto(
     enableCompression?: boolean;
   } = {}
 ): Promise<{ jobId: string; photoUrl: string }> {
-  // Use multi-photo upload with single file
   const result = await uploadScanPhotos([file], options);
 
   return {
@@ -308,9 +295,7 @@ export async function uploadScanPhoto(
   };
 }
 
-/**
- * Compress image using canvas API (web only)
- */
+/** Web only — resizes via canvas and re-encodes at the given quality. */
 async function compressImageWeb(
   file: { uri: string; name: string; type: string },
   maxWidth: number,
@@ -328,7 +313,6 @@ async function compressImageWeb(
         return;
       }
 
-      // Calculate new dimensions
       let { width, height } = img;
 
       if (!width || !height) {
@@ -350,8 +334,6 @@ async function compressImageWeb(
 
       canvas.width = width;
       canvas.height = height;
-
-      // Draw and compress image
       ctx.drawImage(img, 0, 0, width, height);
       
       canvas.toBlob(
@@ -382,9 +364,7 @@ async function compressImageWeb(
   });
 }
 
-/**
- * Estimate image quality for React Native
- */
+/** Heuristic quality check based on file size (no image decode). */
 export async function estimateImageQuality(file: { uri: string; name: string; type: string; size?: number }): Promise<{
   quality: 'low' | 'medium' | 'high';
   confidence: number;
@@ -394,7 +374,6 @@ export async function estimateImageQuality(file: { uri: string; name: string; ty
   let quality: 'low' | 'medium' | 'high' = 'high';
   let confidence = 1.0;
 
-  // Check file size
   const fileSizeKB = (file.size || 0) / 1024;
   
   if (fileSizeKB < 50) {
@@ -407,8 +386,6 @@ export async function estimateImageQuality(file: { uri: string; name: string; ty
     recommendations.push('Small image size, larger images give better results');
   }
 
-  // For React Native, we can't easily analyze image dimensions without additional libraries
-  // So we provide basic recommendations based on file size
   if (fileSizeKB > 5 * 1024) {
     recommendations.push('Large image file detected, ensure good lighting and focus');
   }
@@ -420,11 +397,7 @@ export async function estimateImageQuality(file: { uri: string; name: string; ty
   };
 }
 
-/**
- * Delete scan photos and associated job
- */
 export async function deleteScanPhoto(jobId: string): Promise<void> {
-  // Get job to find photo URLs
   const { data: job, error: fetchError } = await supabase
     .from('scan_jobs')
     .select('photo_url, photo_urls')
@@ -434,10 +407,9 @@ export async function deleteScanPhoto(jobId: string): Promise<void> {
   if (fetchError) throw fetchError;
   if (!job) throw new Error('Scan job not found');
 
-  // Get all photo URLs (multi-photo or single)
   const photoUrls = job.photo_urls || [job.photo_url];
 
-  // Extract storage paths from URLs (skip inline:// placeholders)
+  // Skip inline:// placeholders — those were sent as base64 to the edge function
   const storagePaths = photoUrls
     .filter((photoUrl: string) => !photoUrl.startsWith('inline://'))
     .map((photoUrl: string) => {
@@ -447,16 +419,12 @@ export async function deleteScanPhoto(jobId: string): Promise<void> {
       return `scans/${fileName}`;
     });
 
-  // Delete all photos from storage
+  // Storage deletion is best-effort — photos expire via lifecycle policy
   if (storagePaths.length > 0) {
-    const { error: storageError } = await supabase.storage
-      .from("scan-photos")
-      .remove(storagePaths);
-
-    // Storage deletion is best-effort — photos will expire via lifecycle policy
+    await supabase.storage.from("scan-photos").remove(storagePaths);
   }
 
-  // Delete job (cascade will delete draft)
+  // Cascade deletes associated drafts
   const { error: deleteError } = await supabase
     .from('scan_jobs')
     .delete()

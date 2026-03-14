@@ -1,9 +1,5 @@
-// Shared scan types — canonical export location for all scan-related type definitions.
-// Originally defined in recipe-parsing-service.ts and confidence-scoring-service.ts.
-
-// ---------------------------------------------------------------------------
-// Recipe parsing types
-// ---------------------------------------------------------------------------
+// Canonical scan type definitions (originally in recipe-parsing-service.ts
+// and confidence-scoring-service.ts).
 
 export interface ParsedRecipe {
   title?: string
@@ -37,10 +33,6 @@ export interface FieldConfidence {
   cookTime: number
   servings: number
 }
-
-// ---------------------------------------------------------------------------
-// Confidence scoring types
-// ---------------------------------------------------------------------------
 
 export interface ConfidenceThresholds {
   high: number    // >= high: ready for approval

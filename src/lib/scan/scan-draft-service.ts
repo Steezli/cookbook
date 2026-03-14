@@ -89,9 +89,6 @@ interface RecipeStepRow {
 }
 
 export class ScanDraftService {
-  /**
-   * Map a database record to a ScanDraft interface object
-   */
   private mapRecordToDraft(record: ScanDraftRow): ScanDraft {
     const structuredData = record.structured_data as Record<string, unknown> | null
     return {
@@ -112,14 +109,10 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Create a new scan draft from OCR results
-   */
   async createDraft(input: ScanDraftInput): Promise<ScanDraft> {
     try {
       const startTime = Date.now()
 
-      // Prepare draft data
       const draftData: ScanDraftInsert = {
         job_id: input.jobId,
         user_id: input.userId,
@@ -137,7 +130,6 @@ export class ScanDraftService {
         processing_time_ms: Date.now() - startTime
       }
 
-      // Insert draft into database
       const { data, error } = await supabase
         .from('scan_drafts')
         .insert(draftData)
@@ -152,19 +144,13 @@ export class ScanDraftService {
         throw new Error('No data returned from draft creation')
       }
 
-      // Convert database record to ScanDraft format
-      const scanDraft = this.mapRecordToDraft(data)
-
-      return scanDraft
+      return this.mapRecordToDraft(data)
 
     } catch (error) {
       throw new Error(`Scan draft creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  /**
-   * Get a scan draft by ID
-   */
   async getDraft(draftId: string, userId: string): Promise<ScanDraft | null> {
     try {
       const { data, error } = await supabase
@@ -192,9 +178,7 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Get the first scan draft by job ID (returns draft_index 0 when multiple drafts exist)
-   */
+  /** Returns draft_index 0 when multiple drafts exist for a job. */
   async getDraftByJobId(jobId: string, userId: string): Promise<ScanDraft | null> {
     try {
       const { data, error } = await supabase
@@ -223,10 +207,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Get all scan drafts for a job, ordered by draft_index ascending.
-   * Returns empty array when no drafts exist.
-   */
   async getDraftsByJobId(jobId: string, userId: string): Promise<ScanDraft[]> {
     try {
       const { data, error } = await supabase
@@ -246,9 +226,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Get all drafts for a user
-   */
   async getUserDrafts(
     userId: string,
     status?: 'ready' | 'needs_review' | 'enhanced',
@@ -280,9 +257,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Update draft status
-   */
   async updateDraftStatus(
     draftId: string,
     userId: string,
@@ -307,9 +281,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Update draft recipe data
-   */
   async updateDraftRecipe(
     draftId: string,
     userId: string,
@@ -317,16 +288,14 @@ export class ScanDraftService {
     fieldConfidence?: FieldConfidence
   ): Promise<void> {
     try {
-      // Get current draft to preserve existing data
       const currentDraft = await this.getDraft(draftId, userId)
       if (!currentDraft) {
         throw new Error('Draft not found')
       }
 
-      // Recalculate overall confidence if field confidence provided
+      // Recalculate overall confidence — simplified average, not the full scoring service
       let overallConfidence = currentDraft.overallConfidence
       if (fieldConfidence) {
-        // This is a simplified recalculation - in practice you'd use the confidence scoring service
         const avgConfidence = (
           fieldConfidence.title +
           fieldConfidence.ingredients +
@@ -370,9 +339,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Delete a draft
-   */
   async deleteDraft(draftId: string, userId: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -390,9 +356,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Get drafts by status for processing queue
-   */
   async getDraftsByStatus(
     status: 'ready' | 'needs_review' | 'enhanced',
     limit: number = 10
@@ -416,9 +379,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Convert draft to recipe (for approved drafts)
-   */
   async convertToRecipe(
     draftId: string,
     userId: string,
@@ -435,13 +395,11 @@ export class ScanDraftService {
     }
   ): Promise<{ recipeId: string }> {
     try {
-      // Verify draft exists and belongs to user
       const draft = await this.getDraft(draftId, userId)
       if (!draft) {
         throw new Error('Draft not found')
       }
 
-      // Transform ParsedIngredient[] → RecipeIngredientRow[]
       const ingredients: RecipeIngredientRow[] = recipeData.ingredients.map((ing, i) => ({
         text: [ing.amount, ing.unit, ing.name, ing.preparation].filter(Boolean).join(' '),
         sort_order: i,
@@ -451,13 +409,11 @@ export class ScanDraftService {
         is_ambiguous: false,
       }))
 
-      // Transform string[] → RecipeStepRow[]
       const steps: RecipeStepRow[] = recipeData.instructions.map((instruction, i) => ({
         text: instruction,
         sort_order: i,
       }))
 
-      // Create recipe from draft
       const insertData: RecipeInsert = {
         owner_user_id: userId,
         title: recipeData.title,
@@ -487,7 +443,6 @@ export class ScanDraftService {
         throw new Error('No data returned from recipe creation')
       }
 
-      // Update draft status to indicate it was converted
       await this.updateDraftStatus(draftId, userId, 'ready')
 
       return { recipeId: data.id }
@@ -497,9 +452,6 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Get draft statistics for a user
-   */
   async getUserDraftStats(userId: string): Promise<{
     total: number
     ready: number
@@ -544,18 +496,12 @@ export class ScanDraftService {
     }
   }
 
-  /**
-   * Map confidence score to level
-   */
   private mapConfidenceToLevel(confidence: number): 'low' | 'medium' | 'high' {
     if (confidence >= 0.85) return 'high'
     if (confidence >= 0.65) return 'medium'
     return 'low'
   }
 
-  /**
-   * Map score to status
-   */
   private mapScoreToStatus(score: number): 'ready' | 'needs_review' | 'enhanced' {
     if (score >= 0.8) return 'ready'
     if (score >= 0.5) return 'needs_review'
@@ -563,5 +509,4 @@ export class ScanDraftService {
   }
 }
 
-// Export singleton instance
 export const scanDraftService = new ScanDraftService()

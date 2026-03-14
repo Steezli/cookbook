@@ -320,3 +320,30 @@
 - **Decision:** Replaced `any` in `multi-recipe-parser.ts` with `unknown` + `Record<string, unknown>` narrowing pattern for parsing Claude API responses.
 - **Why:** The parser handles untyped JSON from an external API. `unknown` forces explicit narrowing at each access point, catching structural assumption errors at compile time instead of runtime.
 - **Trade-off:** More verbose property access; justified by the safety improvement for the most critical data pipeline in the app.
+
+## S04: Code Quality & Readability
+
+### Auth convention: getUser() for mutations, getSession() for reads
+- **Decision:** Standardized all API modules to use `supabase.auth.getUser()` for mutations and `supabase.auth.getSession()` for reads. Public reads (unauthenticated) or RLS-guarded updates/deletes skip auth entirely.
+- **Why:** `getUser()` makes a server round-trip to verify the user is still valid — appropriate for mutations where stale identity is dangerous. `getSession()` reads the locally cached session (auto-refreshing expired tokens) — appropriate for reads where a slightly stale identity is harmless and the network call is wasteful.
+- **Trade-off:** Read-path auth errors are caught by RLS rather than client-side. Acceptable since RLS is the authoritative access control layer.
+
+### Retained `as Type` casts for Supabase query results
+- **Decision:** Kept `data as Recipe`, `data as Collection`, etc. casts on Supabase query results rather than removing them.
+- **Why:** Domain types (Recipe, Collection, etc.) have richer typing than the auto-generated Supabase DB row types — e.g., `ingredients` is `Json` in DB types but `RecipeIngredient[]` in domain types. The casts are structurally necessary and can't be replaced with Supabase generics.
+- **Trade-off:** Casts bypass TypeScript's structural checking at those points; mitigated by the generated DB types matching the actual DB schema.
+
+### OAuth redirect consolidation into shared helper
+- **Decision:** Extracted `handleOAuthRedirect(provider)` as a private function in `social-auth.ts`. Each provider function (Google, Apple non-iOS, Facebook) is a one-liner calling the shared helper.
+- **Why:** All three providers had identical ~20-line redirect handling: `signInWithOAuth` → `openAuthSessionAsync` → URL parse → `setSession`. Triplication was a maintenance burden and divergence risk.
+- **Trade-off:** The shared helper uses a union type `OAuthProvider` ('google' | 'apple' | 'facebook') instead of Supabase's broader `Provider` type — tighter contract but must be updated if new OAuth providers are added.
+
+### Comment standard: retain only non-obvious explanations
+- **Decision:** Removed all comments that restate the function name, describe what the next line obviously does, or are JSDoc with no additional insight. Retained comments that explain WHY (business logic, edge cases, platform workarounds).
+- **Why:** ~254 lines of noise comments obscured the actually valuable explanations. Code should be self-documenting for WHAT; comments should explain WHY.
+- **Trade-off:** Fewer comments means developers must read code to understand WHAT — accepted since the code is well-typed and well-named.
+
+### Error convention: throw Supabase errors directly
+- **Decision:** Standardized all API modules to throw Supabase error objects directly (`throw error`) rather than wrapping them in `new Error(message)`.
+- **Why:** Supabase errors already contain descriptive messages, status codes, and error codes. Wrapping them in `new Error()` loses the structured information and adds no value.
+- **Trade-off:** Callers must handle Supabase error shapes rather than plain Error objects; acceptable since all callers already do this.

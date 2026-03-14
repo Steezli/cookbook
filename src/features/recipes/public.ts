@@ -7,10 +7,7 @@ export type PublicAuthor = {
 
 const FALLBACK_AUTHOR: PublicAuthor = { display_name: null, initials: 'U' };
 
-/**
- * Get author display info for a single public recipe via SECURITY DEFINER RPC.
- * Returns fallback { display_name: null, initials: 'U' } if recipe not found or not public.
- */
+/** Uses SECURITY DEFINER RPC. Returns FALLBACK_AUTHOR if not found or not public. */
 export async function getPublicRecipeAuthor(recipeId: string): Promise<PublicAuthor> {
   const { data, error } = await supabase.rpc('get_public_recipe_author', {
     p_recipe_id: recipeId,
@@ -28,10 +25,7 @@ export async function getPublicRecipeAuthor(recipeId: string): Promise<PublicAut
   };
 }
 
-/**
- * Get author display info for multiple public recipes in one RPC call.
- * Returns a Record keyed by recipe_id. Skips RPC for empty input.
- */
+/** Batch variant — returns a Record keyed by recipe_id. */
 export async function getPublicRecipeAuthors(
   recipeIds: string[]
 ): Promise<Record<string, PublicAuthor>> {

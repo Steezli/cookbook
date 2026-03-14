@@ -6,25 +6,26 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { supabase } from '@/lib/supabase';
 
-// Ensure web browser auth sessions are properly dismissed
 WebBrowser.maybeCompleteAuthSession();
 
 const redirectUri = AuthSession.makeRedirectUri({ path: 'auth/callback' });
 
+type OAuthProvider = 'google' | 'apple' | 'facebook';
+
 /**
- * Sign in with Google OAuth via Supabase.
- * On native: opens an in-app browser session.
- * On web: Supabase handles the redirect automatically.
+ * Shared OAuth redirect flow for native platforms.
+ * Initiates Supabase OAuth, opens an in-app browser on native,
+ * then extracts tokens from the redirect URL and sets the session.
+ * On web, Supabase handles the redirect automatically.
  */
-export async function signInWithGoogle() {
+async function handleOAuthRedirect(provider: OAuthProvider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+    provider,
     options: { redirectTo: redirectUri },
   });
 
   if (error) return { data: null, error };
 
-  // On native, open the auth URL in an in-app browser
   if (Platform.OS !== 'web' && data.url) {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
     if (result.type === 'success' && result.url) {
@@ -46,15 +47,18 @@ export async function signInWithGoogle() {
   return { data, error: null };
 }
 
+export async function signInWithGoogle() {
+  return handleOAuthRedirect('google');
+}
+
 /**
- * Sign in with Apple.
  * On iOS: uses native Apple Authentication with nonce verification.
- * On other platforms: falls back to OAuth flow like Google.
+ * On other platforms: falls back to standard OAuth redirect flow.
  */
 export async function signInWithApple() {
   if (Platform.OS === 'ios') {
     try {
-      // Generate nonce for security — Apple gets the hash, Supabase gets the raw
+      // Apple gets the SHA-256 hash, Supabase gets the raw nonce for verification
       const rawNonce = Crypto.randomUUID();
       const hashedNonce = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
@@ -90,76 +94,17 @@ export async function signInWithApple() {
 
       return { data, error };
     } catch (e) {
-      // User cancelled or other Apple auth error
       return { data: null, error: e instanceof Error ? e : new Error('Apple sign in failed') };
     }
   }
 
-  // Non-iOS: use OAuth flow
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'apple',
-    options: { redirectTo: redirectUri },
-  });
-
-  if (error) return { data: null, error };
-
-  if (Platform.OS !== 'web' && data.url) {
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-    if (result.type === 'success' && result.url) {
-      const params = new URL(result.url).hash.substring(1);
-      const urlParams = new URLSearchParams(params);
-      const accessToken = urlParams.get('access_token');
-      const refreshToken = urlParams.get('refresh_token');
-      if (accessToken && refreshToken) {
-        const sessionResult = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        return { data: sessionResult.data, error: sessionResult.error };
-      }
-    }
-    return { data: null, error: null };
-  }
-
-  return { data, error: null };
+  return handleOAuthRedirect('apple');
 }
 
-/**
- * Sign in with Facebook OAuth via Supabase.
- * Same pattern as Google.
- */
 export async function signInWithFacebook() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'facebook',
-    options: { redirectTo: redirectUri },
-  });
-
-  if (error) return { data: null, error };
-
-  if (Platform.OS !== 'web' && data.url) {
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-    if (result.type === 'success' && result.url) {
-      const params = new URL(result.url).hash.substring(1);
-      const urlParams = new URLSearchParams(params);
-      const accessToken = urlParams.get('access_token');
-      const refreshToken = urlParams.get('refresh_token');
-      if (accessToken && refreshToken) {
-        const sessionResult = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        return { data: sessionResult.data, error: sessionResult.error };
-      }
-    }
-    return { data: null, error: null };
-  }
-
-  return { data, error: null };
+  return handleOAuthRedirect('facebook');
 }
 
-/**
- * Check if native Apple authentication is available (iOS only).
- */
 export function isAppleNativeAvailable(): boolean {
   return Platform.OS === 'ios';
 }

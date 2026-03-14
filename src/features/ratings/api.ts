@@ -2,14 +2,14 @@ import { supabase } from "@/lib/supabase";
 import type { RecipeRating, RatingAggregate } from "./types";
 
 export async function getUserRating(recipeId: string): Promise<RecipeRating | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error("Not authenticated");
 
   const { data, error } = await supabase
     .from("recipe_ratings")
     .select("*")
     .eq("recipe_id", recipeId)
-    .eq("user_id", user.id)
+    .eq("user_id", session.user.id)
     .maybeSingle();
 
   if (error) throw error;

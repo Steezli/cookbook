@@ -14,17 +14,13 @@ export type ScanJob = {
   max_retries: number;
 };
 
-/**
- * Create a new scan job for multiple photos
- */
 export async function createMultiPhotoScanJob(photoUrls: string[]): Promise<ScanJob> {
   if (photoUrls.length === 0) {
     throw new Error('At least one photo URL is required');
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) throw new Error('Not authenticated');
-  const user = session.user;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
 
   const { data, error } = await supabase
     .from('scan_jobs')
@@ -42,18 +38,11 @@ export async function createMultiPhotoScanJob(photoUrls: string[]): Promise<Scan
   return data as ScanJob;
 }
 
-/**
- * Create a new scan job for a single photo
- * Maintained for backward compatibility
- */
+/** Backward-compatible single-photo wrapper. */
 export async function createScanJob(photoUrl: string): Promise<ScanJob> {
-  // Use multi-photo function with single URL
   return createMultiPhotoScanJob([photoUrl]);
 }
 
-/**
- * Get all scan jobs for current user
- */
 export async function getUserScanJobs(): Promise<ScanJob[]> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) throw new Error('Not authenticated');
@@ -69,9 +58,6 @@ export async function getUserScanJobs(): Promise<ScanJob[]> {
   return (data as ScanJob[]) || [];
 }
 
-/**
- * Get a single scan job by ID
- */
 export async function getJobById(jobId: string): Promise<ScanJob> {
   const { data, error } = await supabase
     .from('scan_jobs')
@@ -84,9 +70,6 @@ export async function getJobById(jobId: string): Promise<ScanJob> {
   return data as ScanJob;
 }
 
-/**
- * Get all photo URLs for a job
- */
 export async function getJobPhotos(jobId: string): Promise<string[]> {
   const { data: job, error } = await supabase
     .from('scan_jobs')
@@ -97,15 +80,9 @@ export async function getJobPhotos(jobId: string): Promise<string[]> {
   if (error) throw error;
   if (!job) throw new Error('Scan job not found');
 
-  // Return photo_urls if available (multi-photo job), otherwise fallback to single photo_url
   return job.photo_urls || [job.photo_url];
 }
 
-
-
-/**
- * Subscribe to all jobs for current user (React Native compatible)
- */
 export function subscribeToUserJobs(
   userId: string,
   callback: (job: ScanJob) => void
@@ -131,9 +108,6 @@ export function subscribeToUserJobs(
   return channel;
 }
 
-/**
- * Subscribe to a specific job for real-time updates
- */
 export function subscribeToJob(
   jobId: string,
   callback: (job: ScanJob) => void
@@ -159,9 +133,7 @@ export function subscribeToJob(
   return channel;
 }
 
-/**
- * Check if user has reached concurrent job limit
- */
+/** Max 3 concurrent jobs per user. */
 export async function checkJobLimit(): Promise<{ canCreate: boolean; activeCount: number }> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) throw new Error('Not authenticated');

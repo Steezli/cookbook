@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
-import { supabase } from "@/lib/supabase";
-import { uploadScanPhoto, uploadScanPhotos, estimateImageQuality } from "./scan-photos";
+import { uploadScanPhotos, estimateImageQuality } from "./scan-photos";
 import { checkJobLimit } from "./scan-service";
 
 export interface ScanUploadOptions {
@@ -33,15 +32,11 @@ export interface MultiScanUploadResult extends ScanUploadResult {
   failedPhotos?: Array<{ index: number; name: string; error: string }>;
 }
 
-/**
- * Upload and process multiple scan photos with all validations (React Native compatible)
- */
 export async function uploadScanPhotosWithValidation(
   files: (File | { uri: string; name: string; type: string; size?: number })[],
   options: ScanUploadOptions = {}
 ): Promise<MultiScanUploadResult> {
   try {
-    // Convert to consistent format — URL.createObjectURL only exists on web
     const normalizedFiles = files.map(file =>
       'uri' in file ? file : {
         uri: Platform.OS === 'web' ? URL.createObjectURL(file) : '',
@@ -51,8 +46,7 @@ export async function uploadScanPhotosWithValidation(
       }
     );
 
-    // Validate all file types
-    // iOS photo library often returns HEIC/HEIF — these are valid image formats
+    // iOS photo library often returns HEIC/HEIF — accept those alongside standard formats
     const allowedTypes = [
       'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
       'image/heic', 'image/heif',
@@ -70,7 +64,6 @@ export async function uploadScanPhotosWithValidation(
       };
     }
 
-    // Check individual file sizes (10MB limit per file)
     const oversizedFiles = normalizedFiles.filter(file => file.size && file.size > 10 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       return {
@@ -81,7 +74,6 @@ export async function uploadScanPhotosWithValidation(
       };
     }
 
-    // Check total size limit (50MB total for batch)
     const totalSize = normalizedFiles.reduce((sum, file) => sum + (file.size || 0), 0);
     if (totalSize > 50 * 1024 * 1024) {
       return {
@@ -92,14 +84,8 @@ export async function uploadScanPhotosWithValidation(
       };
     }
 
-    // Estimate quality for first image as representative sample
     const qualityEstimate = await estimateImageQuality(normalizedFiles[0]);
 
-    if (qualityEstimate.quality === 'low') {
-      // Low quality is captured in qualityEstimate.recommendations — returned to caller
-    }
-
-    // Check job limit
     const { canCreate, activeCount } = await checkJobLimit();
     if (!canCreate) {
       return {
@@ -110,7 +96,6 @@ export async function uploadScanPhotosWithValidation(
       };
     }
 
-    // Upload all photos and create multi-photo scan job
     const result = await uploadScanPhotos(normalizedFiles, {
       maxWidth: options.maxWidth || 2048,
       maxHeight: options.maxHeight || 2048,
@@ -137,18 +122,13 @@ export async function uploadScanPhotosWithValidation(
   }
 }
 
-/**
- * Upload and process a single scan photo with all validations (React Native compatible)
- * Maintained for backward compatibility
- */
+/** Backward-compatible single-photo wrapper. */
 export async function uploadScanPhotoWithValidation(
   file: File | { uri: string; name: string; type: string; size?: number },
   options: ScanUploadOptions = {}
 ): Promise<ScanUploadResult> {
-  // Use the multi-photo function with single file
   const result = await uploadScanPhotosWithValidation([file], options);
 
-  // Convert multi-photo result to single-photo format
   return {
     success: result.success,
     jobId: result.jobId,

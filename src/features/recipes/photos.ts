@@ -9,9 +9,6 @@ export type RecipePhoto = {
   created_at: string;
 };
 
-/**
- * Get public URL for a photo
- */
 export function getPhotoUrl(storagePath: string): string {
   const { data } = supabase.storage
     .from("recipe-photos")
@@ -20,17 +17,11 @@ export function getPhotoUrl(storagePath: string): string {
   return data.publicUrl;
 }
 
-/**
- * Get thumbnail URL (Supabase auto-resize via URL params)
- */
 export function getThumbnailUrl(storagePath: string, width: number = 300): string {
   const url = getPhotoUrl(storagePath);
   return `${url}?width=${width}&quality=80`;
 }
 
-/**
- * Get all photos for a recipe
- */
 export async function getRecipePhotos(recipeId: string): Promise<RecipePhoto[]> {
   const { data, error } = await supabase
     .from("recipe_photos")
@@ -81,24 +72,15 @@ export async function getRecipeThumbnailUrlMap(
   return out;
 }
 
-/**
- * Upload a photo for a recipe
- * 
- * @param recipeId - Recipe to attach photo to
- * @param file - File object with uri, name, type
- * @param sortOrder - Display order (default: 0)
- */
 export async function uploadRecipePhoto(
   recipeId: string,
   file: { uri: string; name: string; type: string },
   sortOrder: number = 0
 ): Promise<RecipePhoto> {
-  // Generate unique filename
   const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
   const storagePath = `${recipeId}/${fileName}`;
 
-  // Convert file to blob for web, use uri for native
   let fileData: Blob | string;
   if (Platform.OS === "web") {
     const response = await fetch(file.uri);
@@ -107,7 +89,6 @@ export async function uploadRecipePhoto(
     fileData = file.uri;
   }
 
-  // Upload to storage
   const { error: uploadError } = await supabase.storage
     .from("recipe-photos")
     .upload(storagePath, fileData, {
@@ -117,7 +98,6 @@ export async function uploadRecipePhoto(
 
   if (uploadError) throw uploadError;
 
-  // Create database record
   const { data, error: dbError } = await supabase
     .from("recipe_photos")
     .insert({
@@ -129,7 +109,7 @@ export async function uploadRecipePhoto(
     .single();
 
   if (dbError) {
-    // Cleanup: delete uploaded file if DB insert fails
+    // Roll back: delete uploaded file if DB insert fails
     await supabase.storage.from("recipe-photos").remove([storagePath]);
     throw dbError;
   }
@@ -137,11 +117,7 @@ export async function uploadRecipePhoto(
   return data as RecipePhoto;
 }
 
-/**
- * Delete a recipe photo
- */
 export async function deleteRecipePhoto(photoId: string): Promise<void> {
-  // Get photo to find storage path
   const { data: photo, error: fetchError } = await supabase
     .from("recipe_photos")
     .select("storage_path")
@@ -151,14 +127,12 @@ export async function deleteRecipePhoto(photoId: string): Promise<void> {
   if (fetchError) throw fetchError;
   if (!photo) throw new Error("Photo not found");
 
-  // Delete from storage
   const { error: storageError } = await supabase.storage
     .from("recipe-photos")
     .remove([photo.storage_path]);
 
   if (storageError) throw storageError;
 
-  // Delete database record
   const { error: dbError } = await supabase
     .from("recipe_photos")
     .delete()
