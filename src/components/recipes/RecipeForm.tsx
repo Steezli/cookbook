@@ -20,6 +20,7 @@ import {
   accentCoral,
   bgCard,
   borderDefault,
+  errorText,
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyBodyMedium,
@@ -252,8 +253,12 @@ export function RecipeForm({
       showAlert('Validation', 'Title is required');
       return;
     }
-    if (ingredients.length === 0) {
-      showAlert('Validation', 'At least one ingredient is required');
+    if (ingredients.length < 2) {
+      showAlert('Validation', 'At least 2 ingredients are required');
+      return;
+    }
+    if (steps.length < 1) {
+      showAlert('Validation', 'At least 1 step is required');
       return;
     }
 
@@ -287,7 +292,7 @@ export function RecipeForm({
     await onSubmit(input, newPhotos);
   }
 
-  const isDisabled = isSubmitting || !title.trim() || ingredients.length === 0;
+  const isDisabled = isSubmitting || !title.trim() || ingredients.length < 2 || steps.length < 1;
   const allPhotos = [
     ...existingPhotos.map(p => ({ id: p.id, uri: null as null, storagePath: p.storage_path })),
   ];
@@ -369,9 +374,9 @@ export function RecipeForm({
           )}
         </View>
 
-        {/* Section 2: Title */}
+        {/* Section 2: Title * */}
         <View>
-          <Text style={labelStyle}>Title</Text>
+          <Text style={labelStyle}>Title<Text style={requiredStyle}> *</Text></Text>
           <TextInput
             style={inputStyle}
             value={title}
@@ -402,7 +407,7 @@ export function RecipeForm({
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <Text style={sectionLabelStyle}>
-              Ingredients {ingredients.length > 0 ? `(${ingredients.length})` : ''}
+              Ingredients<Text style={requiredStyle}> *</Text> {ingredients.length > 0 ? `(${ingredients.length})` : ''}
             </Text>
             <Pressable
               onPress={() => setBulkMode(m => !m)}
@@ -485,7 +490,7 @@ export function RecipeForm({
         {/* Section 5: Steps */}
         <View>
           <Text style={sectionLabelStyle}>
-            Steps {steps.length > 0 ? `(${steps.length})` : ''}
+            Steps<Text style={requiredStyle}> *</Text> {steps.length > 0 ? `(${steps.length})` : ''}
           </Text>
 
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
@@ -582,9 +587,9 @@ export function RecipeForm({
           </View>
         </View>
 
-        {/* Section 7: Visibility */}
+        {/* Section 7: Visibility * */}
         <View>
-          <Text style={sectionLabelStyle}>Visibility</Text>
+          <Text style={sectionLabelStyle}>Visibility<Text style={requiredStyle}> *</Text></Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {(['private', 'family', 'public'] as RecipeVisibility[]).map(v => (
               <Pressable
@@ -706,6 +711,11 @@ export function RecipeForm({
 // ---------------------------------------------------------------------------
 // Shared style constants (not StyleSheet.create — keeps values readable)
 // ---------------------------------------------------------------------------
+
+const requiredStyle = {
+  color: errorText,
+  fontFamily: fontFamilyBody,
+} as const;
 
 const labelStyle = {
   fontFamily: fontFamilyBodyMedium,
