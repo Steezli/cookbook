@@ -168,12 +168,18 @@ export default function ScanUploadScreen() {
 
     setUploading(true);
     try {
-      const files = selectedImages.map((image, index) => ({
-        uri: image.uri,
-        name: image.fileName || `scan-${index + 1}.jpg`,
-        type: image.mimeType || 'image/jpeg',
-        size: image.fileSize,
-      }));
+      const files = selectedImages.map((image, index) => {
+        // expo-image-picker on iOS may return mimeType as "image/heic", "image",
+        // or undefined. Normalize to a valid MIME type for validation.
+        let mimeType = image.mimeType || 'image/jpeg';
+        if (mimeType === 'image') mimeType = 'image/jpeg'; // bare "image" has no subtype
+        return {
+          uri: image.uri,
+          name: image.fileName || `scan-${index + 1}.jpg`,
+          type: mimeType,
+          size: image.fileSize,
+        };
+      });
 
       const result = await uploadScanPhotosWithValidation(files);
       setUploadResult(result);

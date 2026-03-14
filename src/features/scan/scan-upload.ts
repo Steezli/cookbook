@@ -52,14 +52,21 @@ export async function uploadScanPhotosWithValidation(
     );
 
     // Validate all file types
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const invalidFiles = normalizedFiles.filter(file => !allowedTypes.includes(file.type));
+    // iOS photo library often returns HEIC/HEIF — these are valid image formats
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+      'image/heic', 'image/heif',
+    ];
+    const invalidFiles = normalizedFiles.filter(file => {
+      if (!file.type || file.type === 'image') return false; // trust picker when type is generic
+      return !allowedTypes.includes(file.type.toLowerCase());
+    });
     if (invalidFiles.length > 0) {
       return {
         success: false,
         photoUrls: [],
         error: 'Invalid file types detected',
-        message: `${invalidFiles.length} file(s) are not JPEG, PNG, or WebP images.`
+        message: `${invalidFiles.length} file(s) are not JPEG, PNG, HEIC, or WebP images.`
       };
     }
 
