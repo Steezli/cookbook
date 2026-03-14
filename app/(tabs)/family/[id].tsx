@@ -2,8 +2,6 @@ import { Link, Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -13,6 +11,7 @@ import {
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 
+import { showAlert, confirmAction } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
 import { PageContainer } from "@/components/nav/PageContainer";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
@@ -63,31 +62,6 @@ type InviteRow = {
   revoked_at: string | null;
   accepted_at: string | null;
 };
-
-/**
- * Cross-platform alert/confirm helpers.
- * On web, Alert.alert is unreliable — use window.alert/confirm instead.
- */
-function showAlert(title: string, message?: string) {
-  if (Platform.OS === "web") {
-    window.alert(message ? `${title}\n\n${message}` : title);
-  } else {
-    Alert.alert(title, message);
-  }
-}
-
-function confirmAction(title: string, message: string, onConfirm: () => void) {
-  if (Platform.OS === "web") {
-    if (window.confirm(`${title}\n\n${message}`)) {
-      onConfirm();
-    }
-  } else {
-    Alert.alert(title, message, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Confirm", style: "destructive", onPress: onConfirm },
-    ]);
-  }
-}
 
 export default function FamilyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

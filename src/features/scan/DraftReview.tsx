@@ -705,30 +705,25 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     );
   }
 
-  // --- Tablet / Web Layout (side-by-side) ---
+  // --- Tablet / Web Layout — scrollable form filling left panel ---
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row' }}>
-      {/* Left panel - Photo (~40%) */}
-      <View
-        style={{
-          width: '40%',
-          padding: 16,
-          borderRightWidth: 1,
-          borderRightColor: borderSubtle,
-        }}
-      >
-        <PhotoSection />
+    <ScrollView
+      style={{ flex: 1, backgroundColor: bgPage }}
+      contentContainerStyle={{
+        padding: 24,
+        paddingBottom: 40,
+        maxWidth: 720,
+      }}
+    >
+      {/* Compact photo area */}
+      <View style={{ marginBottom: 20 }}>
+        <PhotoSection height={200} />
       </View>
 
-      {/* Right panel - Draft fields (~60%) */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
-      >
-        <DraftFields />
-      </ScrollView>
-    </View>
+      {/* Draft fields */}
+      <DraftFields />
+    </ScrollView>
   );
 }
 

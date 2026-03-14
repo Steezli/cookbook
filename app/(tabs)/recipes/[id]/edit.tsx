@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { showAlert } from '@/lib/alert';
 import { getRecipeById, updateRecipe } from '@/features/recipes/api';
 import { getRecipePhotos, uploadRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { RecipeForm, type PendingPhoto } from '@/components/recipes/RecipeForm';
@@ -19,14 +20,14 @@ export default function EditRecipeScreen() {
       try {
         const [r, p] = await Promise.all([getRecipeById(id), getRecipePhotos(id)]);
         if (!r) {
-          Alert.alert('Error', 'Recipe not found');
+          showAlert('Error', 'Recipe not found');
           router.back();
           return;
         }
         setRecipe(r);
         setPhotos(p);
       } catch {
-        Alert.alert('Error', 'Failed to load recipe');
+        showAlert('Error', 'Failed to load recipe');
         router.back();
       } finally {
         setIsLoading(false);
@@ -45,7 +46,7 @@ export default function EditRecipeScreen() {
       }
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to update recipe');
+      showAlert('Error', err.message ?? 'Failed to update recipe');
     } finally {
       setIsSubmitting(false);
     }

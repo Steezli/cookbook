@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Pencil, X, Check, ExternalLink } from "lucide-react-native";
+import { showAlert } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
 import { supabase } from "@/lib/supabase";
 import { getUnitPreference, setUnitPreference } from "@/features/units/api";
@@ -126,7 +126,7 @@ export default function ProfileScreen() {
       );
       setIsEditing(false);
     } catch (e) {
-      Alert.alert(
+      showAlert(
         "Error",
         e instanceof Error ? e.message : "Failed to update name"
       );
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
     try {
       await setUnitPreference(preference);
     } catch (e) {
-      Alert.alert(
+      showAlert(
         "Error",
         e instanceof Error ? e.message : "Failed to update preference"
       );
@@ -160,7 +160,7 @@ export default function ProfileScreen() {
       await supabase.auth.signOut();
       // Reactive redirect in _layout.tsx handles navigation when session becomes null
     } catch (e) {
-      Alert.alert(
+      showAlert(
         "Error",
         e instanceof Error ? e.message : "Failed to sign out"
       );

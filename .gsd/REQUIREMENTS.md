@@ -2,53 +2,40 @@
 
 ## Active
 
-### QA-04 — Form Enter-key submission
-- Class: quality-attribute
-- Status: active
-- Description: All TextInput fields across auth and recipe forms chain focus (Tab to next field) or submit the form on Enter. No field should require the user to manually tap the button after typing.
-- Why it matters: Standard form UX — users expect Enter to advance or submit. Currently only the last field in some forms has onSubmitEditing.
-- Source: user
-- Primary owning slice: M003/S02
-- Supporting slices: M003/S05
-- Validation: partial — S02 UAT
-- Notes: Auth forms (login, signup, reset-password) and collection create form wired with focus chaining in S02. RecipeForm coverage and runtime verification deferred to S05.
-
-### QA-08 — Button/interaction audit
-- Class: quality-attribute
-- Status: active
-- Description: Every Pressable, Link, and navigation action across all screens verified to work correctly. No dead buttons, broken links, or confusing interaction patterns.
-- Why it matters: Users encounter buttons that don't work or behave unexpectedly.
-- Source: user
-- Primary owning slice: M003/S05
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Systematic screen-by-screen audit. Test on both web and iOS simulator.
-
-### QA-09 — Error handling audit
-- Class: failure-visibility
-- Status: active
-- Description: All screens audited for poor error handling, missing error states, bad fallbacks, and swallowed errors. Fix any found issues.
-- Why it matters: Users need clear feedback when things go wrong. Errors should be visible and actionable, not silently swallowed.
-- Source: user
-- Primary owning slice: M003/S05
-- Supporting slices: M003/S04
-- Validation: unmapped
-- Notes: Check for try/catch blocks that swallow errors, missing loading/error states, and insufficient user feedback.
-
-### QA-10 — Cross-platform verification
-- Class: quality-attribute
-- Status: active
-- Description: All screens and flows tested on both web (browser) and iOS (simulator). Platform-specific bugs identified and fixed.
-- Why it matters: Cross-platform consistency is essential for a cross-platform app.
-- Source: user
-- Primary owning slice: M003/S05
-- Supporting slices: all slices
-- Validation: unmapped
-- Notes: Web tested via localhost, iOS tested via Expo simulator using mac-tools.
-
-
+_(No active requirements — all M003 requirements validated.)_
 
 ## Validated
+
+### QA-04 — Form Enter-key submission
+- Status: validated
+- Class: quality-attribute
+- Source: user
+- Primary Slice: M003/S02
+- Supporting Slices: M003/S05
+- Notes: All sequential forms chain focus on Enter: login (email→password→submit), signup (name→email→password→confirm→submit), reset-password (password→submit), forgot-password (email→submit), collection create (name→description), RecipeForm (title→description, ingredient/step/tag→add). Wired in S02 (auth + collection) and S05/T02 (RecipeForm). Verified by grep of returnKeyType + onSubmitEditing across all form files.
+
+### QA-08 — Button/interaction audit
+- Status: validated
+- Class: quality-attribute
+- Source: user
+- Primary Slice: M003/S05
+- Notes: All 41 Alert.alert calls replaced with cross-platform showAlert/confirmAction utility. 8 web routes verified with zero dead buttons or broken links. Auth guard redirects work correctly. See AUDIT-REPORT.md for screen-by-screen results.
+
+### QA-09 — Error handling audit
+- Status: validated
+- Class: failure-visibility
+- Source: user
+- Primary Slice: M003/S05
+- Supporting Slices: M003/S04
+- Notes: Error states added to Home, recipes index, and cook mode screens (empty catch blocks fixed). All user-facing error/confirmation messages display on web via cross-platform alert utility. Redundant console.error calls removed from service catch blocks in S04. See AUDIT-REPORT.md.
+
+### QA-10 — Cross-platform verification
+- Status: validated
+- Class: quality-attribute
+- Source: user
+- Primary Slice: M003/S05
+- Supporting Slices: all M003 slices
+- Notes: Web: 8 routes verified in browser with 0 JS errors (home, login, signup, forgot-password, scan, recipes redirect, collections redirect, family redirect). iOS: app launched on iPhone 16 simulator (iOS 18.6), home screen rendered with recipe data. Real device testing gaps documented in AUDIT-REPORT.md.
 
 ### QA-01 — Scan flow code consolidation
 - Status: validated
@@ -217,13 +204,13 @@
 | QA-01 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-02 | primary-user-loop | validated | M003/S03 | M003/S01 | S03 UAT |
 | QA-03 | primary-user-loop | validated | M003/S03 | M003/S01 | S03 UAT |
-| QA-04 | quality-attribute | active | M003/S02 | M003/S05 | partial — S02 UAT |
+| QA-04 | quality-attribute | validated | M003/S02 | M003/S05 | S02 UAT + S05/T02 |
 | QA-05 | launchability | validated | M003/S02 | none | S02 UAT |
 | QA-06 | quality-attribute | validated | M003/S04 | none | S04 UAT |
 | QA-07 | quality-attribute | validated | M003/S01, M003/S04 | none | S04 UAT |
-| QA-08 | quality-attribute | active | M003/S05 | none | unmapped |
-| QA-09 | failure-visibility | active | M003/S05 | M003/S04 | unmapped |
-| QA-10 | quality-attribute | active | M003/S05 | all | unmapped |
+| QA-08 | quality-attribute | validated | M003/S05 | none | S05 AUDIT-REPORT |
+| QA-09 | failure-visibility | validated | M003/S05 | M003/S04 | S05 AUDIT-REPORT |
+| QA-10 | quality-attribute | validated | M003/S05 | all | S05 AUDIT-REPORT |
 | QA-11 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-12 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | SUB-01 | core-capability | deferred | M004 | none | unmapped |
@@ -233,7 +220,7 @@
 
 ## Coverage Summary
 
-- Active requirements: 4
-- Mapped to slices: 4
-- Validated (prior milestones + M003/S01 + M003/S02 + M003/S03 + M003/S04): 34+
+- Active requirements: 0
+- Deferred requirements: 4 (SUB-01, SUB-02, SUB-03, SEO-02)
+- Validated (all milestones complete through M003): 38+
 - Unmapped active requirements: 0

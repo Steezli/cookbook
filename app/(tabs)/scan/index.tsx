@@ -4,14 +4,14 @@ import {
   Text,
   ScrollView,
   Image,
+  Platform,
   Pressable,
   ActivityIndicator,
-  Platform,
-  Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImagePlus, X, Upload } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { showAlert } from '@/lib/alert';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import { uploadScanPhotosWithValidation, ScanUploadResult } from '@/features/scan/scan-upload';
@@ -109,7 +109,7 @@ export default function ScanUploadScreen() {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
       if (permissionResult.status !== 'granted') {
-        Alert.alert(
+        showAlert(
           'Permission Required',
           'Camera permission is needed to take photos of recipes.'
         );
@@ -126,7 +126,7 @@ export default function ScanUploadScreen() {
         setUploadResult(null);
       }
     } catch (e) {
-      Alert.alert('Camera Unavailable', 'Camera is not available on this device.');
+      showAlert('Camera Unavailable', 'Camera is not available on this device.');
     }
   }, []);
 
@@ -134,7 +134,7 @@ export default function ScanUploadScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.status !== 'granted') {
-      Alert.alert(
+      showAlert(
         'Permission Required',
         'Photo library permission is needed to select recipe photos.'
       );
@@ -198,7 +198,7 @@ export default function ScanUploadScreen() {
   const uploadZoneMaxWidth = isMobile ? undefined : 600;
 
   return (
-    <PageContainer>
+    <PageContainer style={Platform.OS !== 'web' ? { paddingTop: 0 } : undefined}>
       <ScrollView
         style={{ flex: 1, backgroundColor: bgPage }}
         contentContainerStyle={{

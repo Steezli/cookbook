@@ -5,6 +5,7 @@ import {
   canConvert,
   getTargetUnit,
   formatAmount,
+  isLiquidIngredient,
 } from '../conversions';
 
 describe('Unit Conversions', () => {
@@ -133,26 +134,108 @@ describe('Unit Conversions', () => {
       expect(formatAmount(2.456)).toBe('2');
     });
 
-    it('rounds small amounts', () => {
-      expect(formatAmount(0.125)).toBe('0');
+    it('shows one decimal for small amounts', () => {
+      expect(formatAmount(0.5)).toBe('0.5');
     });
 
     it('rounds metric conversions to whole numbers', () => {
       expect(formatAmount(236.588)).toBe('237');
       expect(formatAmount(473.176)).toBe('473');
     });
+
+    it('handles very small amounts', () => {
+      const result = formatAmount(0.05);
+      expect(result).toBe('0.1');
+    });
+  });
+
+  describe('isLiquidIngredient', () => {
+    it('identifies water as liquid', () => {
+      expect(isLiquidIngredient('water')).toBe(true);
+    });
+
+    it('identifies milk as liquid', () => {
+      expect(isLiquidIngredient('milk')).toBe(true);
+    });
+
+    it('identifies olive oil as liquid', () => {
+      expect(isLiquidIngredient('olive oil')).toBe(true);
+    });
+
+    it('identifies chicken broth as liquid', () => {
+      expect(isLiquidIngredient('chicken broth')).toBe(true);
+    });
+
+    it('identifies honey as liquid', () => {
+      expect(isLiquidIngredient('honey')).toBe(true);
+    });
+
+    it('identifies vanilla extract as liquid', () => {
+      expect(isLiquidIngredient('vanilla extract')).toBe(true);
+    });
+
+    it('identifies soy sauce as liquid', () => {
+      expect(isLiquidIngredient('soy sauce')).toBe(true);
+    });
+
+    it('does not identify flour as liquid', () => {
+      expect(isLiquidIngredient('all-purpose flour')).toBe(false);
+    });
+
+    it('does not identify sugar as liquid', () => {
+      expect(isLiquidIngredient('granulated sugar')).toBe(false);
+    });
+
+    it('does not identify salt as liquid', () => {
+      expect(isLiquidIngredient('salt')).toBe(false);
+    });
+
+    it('does not identify butter as liquid', () => {
+      expect(isLiquidIngredient('butter')).toBe(false);
+    });
+
+    it('handles empty string', () => {
+      expect(isLiquidIngredient('')).toBe(false);
+    });
+
+    it('handles case insensitivity', () => {
+      expect(isLiquidIngredient('Whole Milk')).toBe(true);
+    });
   });
 
   describe('displayAmount', () => {
-    it('converts and displays cup to ml for metric preference', () => {
-      const result = displayAmount(2, 'cup', 'metric', '2 cups flour');
-      expect(result).toContain('473');
+    it('converts and displays cup to ml for metric preference (liquid)', () => {
+      const result = displayAmount(1, 'cup', 'metric', '1 cup milk', 'milk');
+      expect(result).toContain('237');
       expect(result).toContain('ml');
-      expect(result).toContain('2 cup');
+      expect(result).toContain('milk');
+    });
+
+    it('converts dry ingredient cups to grams for metric preference', () => {
+      const result = displayAmount(2, 'cup', 'metric', '2 cups all-purpose flour', 'all-purpose flour');
+      expect(result).toContain('250');
+      expect(result).toContain('g');
       expect(result).toContain('flour');
     });
 
-    it('converts and displays ml to cup for imperial preference', () => {
+    it('converts sugar cups to grams for metric preference', () => {
+      const result = displayAmount(1, 'cup', 'metric', '1 cup sugar', 'sugar');
+      expect(result).toContain('200');
+      expect(result).toContain('g');
+    });
+
+    it('converts butter cups to grams for metric preference', () => {
+      const result = displayAmount(1, 'cup', 'metric', '1 cup butter', 'butter');
+      expect(result).toContain('227');
+      expect(result).toContain('g');
+    });
+
+    it('falls back to ml for unknown dry ingredient', () => {
+      const result = displayAmount(1, 'cup', 'metric', '1 cup mystery ingredient', 'mystery ingredient');
+      expect(result).toContain('ml');
+    });
+
+    it('converts ml to cup for imperial preference', () => {
       const result = displayAmount(500, 'ml', 'imperial', '500ml flour');
       expect(result).toContain('2');
       expect(result).toContain('cup');
@@ -174,6 +257,24 @@ describe('Unit Conversions', () => {
     it('shows just amount and unit when preference matches metric stored', () => {
       const result = displayAmount(500, 'ml', 'metric', '500ml flour');
       expect(result).toBe('500ml flour');
+    });
+
+    it('converts oz to g for metric preference', () => {
+      const result = displayAmount(8, 'oz', 'metric', '8 oz cheese');
+      expect(result).toContain('227');
+      expect(result).toContain('g');
+    });
+
+    it('converts grams to cups for dry ingredients in imperial mode', () => {
+      const result = displayAmount(250, 'g', 'imperial', '250g flour', 'flour');
+      expect(result).toContain('cup');
+    });
+
+    it('backward compatible — works without ingredientName param', () => {
+      const result = displayAmount(2, 'cup', 'metric', '2 cups flour');
+      // Should still produce a valid conversion (either g or ml based on text extraction)
+      expect(result).not.toBe('2 cups flour');
+      expect(result).toContain('2 cup');
     });
   });
 });

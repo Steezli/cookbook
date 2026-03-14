@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput as TextInputType } from 'react-native';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { showAlert } from '@/lib/alert';
 import { createCollection } from '@/features/collections/api';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
@@ -55,7 +56,7 @@ export default function CreateCollectionScreen() {
 
   async function handleSubmit() {
     if (!name.trim()) {
-      Alert.alert('Validation Error', 'Collection name is required');
+      showAlert('Validation Error', 'Collection name is required');
       return;
     }
 

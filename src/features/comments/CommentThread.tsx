@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { showAlert, confirmAction } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
 import { supabase } from "@/lib/supabase";
 import { getRecipeComments, deleteComment } from "./api";
@@ -34,7 +35,7 @@ export function CommentThread({
       const data = await getRecipeComments(recipeId);
       setComments(data);
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to load comments");
+      showAlert("Error", e instanceof Error ? e.message : "Failed to load comments");
     } finally {
       setIsLoading(false);
     }
@@ -72,28 +73,15 @@ export function CommentThread({
         await deleteComment(commentId);
         await loadComments();
       } catch (e) {
-        Alert.alert("Error", e instanceof Error ? e.message : "Failed to delete comment");
+        showAlert("Error", e instanceof Error ? e.message : "Failed to delete comment");
       }
     }
 
-    if (Platform.OS === 'web') {
-      if (window.confirm("Are you sure you want to delete this comment?")) {
-        await doDelete();
-      }
-    } else {
-      Alert.alert(
-        "Delete Comment",
-        "Are you sure you want to delete this comment?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: doDelete
-          }
-        ]
-      );
-    }
+    confirmAction(
+      "Delete Comment",
+      "Are you sure you want to delete this comment?",
+      doDelete,
+    );
   }
 
   function canDeleteComment(comment: Comment): boolean {

@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Pressable,
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { showAlert, confirmAction } from "@/lib/alert";
 import { useFocusEffect } from "@react-navigation/native";
 import { ChevronLeft, UtensilsCrossed } from "lucide-react-native";
 import { getRecipeById, deleteRecipe } from "@/features/recipes/api";
@@ -30,9 +30,8 @@ import {
   type RecipePhoto,
 } from "@/features/recipes/photos";
 import { CommentThread } from "@/features/comments/CommentThread";
-import { displayAmount } from "@/features/units/conversions";
-import { parseIngredient } from "@/features/units/parser";
 import { getUnitPreference } from "@/features/units/api";
+import { displayIngredient } from "@/features/units/displayIngredient";
 import type { UnitSystem } from "@/features/units/types";
 import { StarRating } from "@/features/ratings/StarRating";
 import { getUserRating, upsertRating } from "@/features/ratings/api";
@@ -180,27 +179,20 @@ export default function RecipeDetailScreen() {
   async function handleDelete() {
     if (!recipe) return;
 
-    Alert.alert(
+    confirmAction(
       "Delete Recipe",
       "Are you sure you want to delete this recipe? This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteRecipe(recipe.id);
-              router.back();
-            } catch (e) {
-              Alert.alert(
-                "Error",
-                e instanceof Error ? e.message : "Failed to delete recipe"
-              );
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await deleteRecipe(recipe.id);
+          router.back();
+        } catch (e) {
+          showAlert(
+            "Error",
+            e instanceof Error ? e.message : "Failed to delete recipe"
+          );
+        }
+      },
     );
   }
 
@@ -225,7 +217,7 @@ export default function RecipeDetailScreen() {
         }
       }, 500);
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed to submit rating");
+      showAlert("Error", e instanceof Error ? e.message : "Failed to submit rating");
     }
   }
 
@@ -252,37 +244,11 @@ export default function RecipeDetailScreen() {
         ]);
       }
     } catch (e) {
-      Alert.alert(
+      showAlert(
         "Error",
         e instanceof Error ? e.message : "Failed to update collection membership"
       );
     }
-  }
-
-  function displayIngredient(ing: Recipe["ingredients"][0]): string {
-    if (
-      ing.amount !== undefined &&
-      ing.unit !== undefined &&
-      !ing.is_ambiguous
-    ) {
-      return displayAmount(
-        ing.amount ?? null,
-        ing.unit ?? null,
-        unitPreference,
-        ing.original_text || ing.text
-      );
-    }
-    if (ing.is_ambiguous) {
-      return `${ing.text} (approx.)`;
-    }
-    // Legacy ingredient: no structured amount/unit — try to parse from text
-    if (ing.amount === undefined && ing.unit === undefined) {
-      const parsed = parseIngredient(ing.text);
-      if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
-        return displayAmount(parsed.amount, parsed.unit, unitPreference, ing.text);
-      }
-    }
-    return ing.text;
   }
 
   function getVisibilityLabel(visibility: string): string {
@@ -391,7 +357,7 @@ export default function RecipeDetailScreen() {
                     await deleteRecipePhoto(item.id);
                     setPhotos((prev) => prev.filter((p) => p.id !== item.id));
                   } catch {
-                    Alert.alert("Error", "Failed to delete photo");
+                    showAlert("Error", "Failed to delete photo");
                   }
                 }}
               >
@@ -437,7 +403,7 @@ export default function RecipeDetailScreen() {
                 lineHeight: 22,
               }}
             >
-              {displayIngredient(ing)}
+              {displayIngredient(ing, unitPreference)}
             </Text>
           </View>
         ))}

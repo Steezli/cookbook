@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { showAlert } from "@/lib/alert";
 import { supabase } from "@/lib/supabase";
 
 export default function LogoutScreen() {
@@ -16,7 +17,7 @@ export default function LogoutScreen() {
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Logout failed";
-        Alert.alert("Logout failed", msg);
+        showAlert("Logout failed", msg);
         // Reactive redirect in (tabs)/_layout.tsx handles navigation when session becomes null
       }
     }

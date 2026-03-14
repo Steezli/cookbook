@@ -10,17 +10,19 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Current State
 
-Two milestones complete, M003 S01–S04 done. Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating. 499 tests across 22 suites. Zero TypeScript errors. Scan codebase consolidated to single `src/features/scan/` directory. All auth forms and collection create form have Enter-key focus chaining. OAuth branding documented. Web scan upload has native drag-and-drop. DraftEditor and DraftManager fully migrated to design tokens with responsive breakpoint layouts. Client code clean of debug console.* calls. 16 dead files removed across S01+S04. Remaining: full app audit and cross-platform verification (S05).
+Four milestones complete (M001–M004). Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating, cooking walkthrough ingredient highlighting, smart liquid/dry unit conversions, dynamic scan timeout, full-screen iOS scanner. 540 tests across 23 suites. Zero TypeScript errors. Codebase is clean: single consolidated `src/features/scan/` directory, 16 dead files removed, zero debug console.* in client code, all forms chain focus on Enter, cross-platform alert utility replaces all 41 raw Alert.alert calls, error states wired in key screens. Web scan upload has native drag-and-drop with design-token-based responsive UI. OAuth branding documented. Verified across 8 web routes and iOS simulator.
 
 ## Architecture / Key Patterns
 
 Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, edge functions, real-time), Google Cloud Vision API, OpenAI.
-~90 TypeScript source files, 34 route files.
-Design system: tokens.ts (24 variables), useBreakpoint hook, PageContainer, MobileTabBar, WebSidebar.
+~75 TypeScript source files (16 dead files removed in M003), 34 route files.
+Design system: tokens.ts (39 variables including 15 semantic state/badge tokens), useBreakpoint hook, PageContainer, MobileTabBar, WebSidebar.
+Cross-platform alert utility: src/lib/alert.ts (showAlert/confirmAction) — branches Platform.OS for web compatibility.
 Public browsing with cursor-based pagination and SECURITY DEFINER RPCs.
 Advertising module with platform-branched AdMob/placeholder, ATT permission, GDPR consent gating.
 SEO: schema.org/Recipe JSON-LD + OG/Twitter Card meta tags.
 Multi-recipe scan: edge function splits 1 photo → N drafts; multi-draft review UI with batch save.
+Shared scan types: src/features/scan/types.ts (7 types — ParsedRecipe, ParsedIngredient, FieldConfidence, etc.).
 
 ## Capability Contract
 
@@ -30,8 +32,12 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 
 - [x] M001: Migration — Full-stack cross-platform family recipe app with AI scanning, family spaces, responsive design, public browsing, ads
 - [x] M002: Production Polish — Multi-recipe scan, SEO structured data, production ad config, GDPR consent, UX polish
-- [ ] M003: Quality Audit & Cleanup — Systematic bug hunt, code consolidation, dead code removal, UX consistency across platforms
-- [ ] M004: Subscriptions — Subscription gating on scan via RevenueCat, paywall UI, web checkout (SUB-01, SUB-02, SUB-03)
+- [x] M003: Quality Audit & Cleanup — Scan code consolidation, dead code removal, form focus chaining, cross-platform alert fix, scan UI polish, logging cleanup, full app audit
+- [x] M004: QOL & Bug Fixes — Ingredient highlighting in cooking walkthrough, smart liquid/dry unit conversions, multi-image scan timeout fix, iOS full-screen scanner
+
+## Backlog
+
+- **Subscriptions** — Subscription gating on scan via RevenueCat, paywall UI, web checkout (SUB-01, SUB-02, SUB-03). Punted — not the immediate priority.
 
 ---
-*Last updated: 2026-03-12 after M003/S04 completion*
+*Last updated: 2026-03-13 after M003 completion — M004 slot open*

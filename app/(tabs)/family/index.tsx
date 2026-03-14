@@ -2,7 +2,6 @@ import { Link, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Platform,
   Pressable,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { showAlert } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
 import { PageContainer } from "@/components/nav/PageContainer";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
@@ -67,7 +67,7 @@ export default function FamiliesHomeScreen() {
       setFamilies((data ?? []) as Family[]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load families";
-      Alert.alert("Error", msg);
+      showAlert("Error", msg);
     } finally {
       setIsRefreshing(false);
     }
@@ -95,7 +95,7 @@ export default function FamiliesHomeScreen() {
       router.push(`/family/${familyId}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to create family";
-      Alert.alert("Create family failed", msg);
+      showAlert("Create family failed", msg);
     } finally {
       setIsSubmitting(false);
     }

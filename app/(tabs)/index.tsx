@@ -22,6 +22,7 @@ import type { Recipe } from '@/features/recipes/types';
 import {
   accentBlue,
   borderDefault,
+  errorText,
   fontFamilyBody,
   fontFamilyDisplay,
   fontSizeBase,
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
   const [thumbnailMap, setThumbnailMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const sectionGap = breakpoint === 'mobile' ? 24 : 32;
   const numColumns = getNumColumns(breakpoint);
@@ -58,6 +60,7 @@ export default function HomeScreen() {
     if (!userId) return;
 
     setIsLoading(true);
+    setError(null);
     try {
       // Load display name from profiles table
       const { data: profile } = await supabase
@@ -86,7 +89,7 @@ export default function HomeScreen() {
         setThumbnailMap(urls);
       }
     } catch (err) {
-      // Load error — user sees empty state
+      setError('Unable to load recipes. Pull down to refresh.');
     } finally {
       setIsLoading(false);
     }
@@ -117,6 +120,25 @@ export default function HomeScreen() {
   }
 
   const hasRecipes = featuredRecipes.length > 0 || recentRecipes.length > 0;
+
+  if (error && !isLoading) {
+    return (
+      <PageContainer>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase,
+              color: errorText,
+              textAlign: 'center',
+            }}
+          >
+            {error}
+          </Text>
+        </View>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>

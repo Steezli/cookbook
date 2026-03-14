@@ -2,9 +2,10 @@
 
 ## Tooling
 
-### Pencil design tool access
-- **Decision:** Use mac-tools (accessibility API + screenshots) to inspect Pencil designs during development. Pencil MCP server is available at `/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64 --app desktop` for future MCP-enabled sessions.
-- **Why:** Pencil contains all cookbook.pen designs (screens × breakpoints + components); designs should be referenced during UI work rather than guessing
+### Pencil design tool access — ALWAYS use mcporter
+- **Decision:** **Always use mcporter (`mcp_call` with server `pencil`)** to interact with Pencil design files. Never launch Pencil directly or use mac-tools to interact with it. The mcporter integration provides `mcp_call(server='pencil', tool='...', args={...})` with 15 tools for reading, searching, exporting, and modifying `.pen` files.
+- **Why:** Pencil contains all cookbook.pen designs (screens × breakpoints + components); designs should be referenced during UI work rather than guessing. The MCP server provides structured, reliable access to design data — mac-tools/direct app interaction is unreliable and incorrect.
+- **Enforcement:** When the user mentions "pencil", "checking pencil", "pencil MCP", or "use pencil", this means use `mcp_call` with server `pencil`. This is a permanent, non-negotiable rule.
 
 ## S07–S12: Design, Navigation, Screens, Public Browsing, Audit, Remaining Screens
 
@@ -207,3 +208,41 @@
 ### Console.log policy — keep edge functions, clean client
 - **Decision:** Remove debug console.* from client-side code (src/, app/). Edge functions (supabase/functions/) retain their logging since server-side logs are the primary diagnostic surface.
 - **Why:** Client console pollution hides real errors. Server logs are expected and useful.
+
+## M003/S05: Full App Audit & Cross-Platform Verification
+
+### Shared cross-platform alert utility over per-file inline wrappers
+- **Decision:** Extract `showAlert`/`confirmAction` into `src/lib/alert.ts` as the single source of truth, replacing 3 inline copies and 15 unguarded files.
+- **Why:** `Alert.alert` is `static alert() {}` on react-native-web 0.21 — a complete silent no-op. 41 calls across 17 files silently swallow all error feedback on web. A shared utility ensures every call site gets cross-platform behavior automatically.
+- **Trade-off:** All 17 files take a new import dependency; but the alternative (per-file wrappers or leaving calls broken) is worse.
+
+### Inline error state UI over alert-based error display for data loading failures
+- **Decision:** Home screen, recipes index, and cook mode use inline error text/state in the UI for load failures, rather than calling `showAlert`.
+- **Why:** Data loading failures happen at mount time before user interaction. An alert popup for a background load error is jarring. Inline error text with retry guidance is better UX for these cases.
+- **Trade-off:** Each screen needs its own error state variable; but these are simple `useState<string | null>` additions.
+
+## M004: QOL & Bug Fixes
+
+### Ingredient matching via normalized substring with word boundaries
+- **Decision:** Use normalized text comparison with word-boundary-aware regex matching for step↔ingredient matching, not NLP or fuzzy string distance.
+- **Why:** Cooking ingredients have predictable patterns. Word boundaries prevent false matches (flour≠cauliflower). Bidirectional plural handling covers singular/plural variations. Zero external dependencies.
+- **Trade-off:** Won't match creative rewordings ("melt the golden spread" for butter). Acceptable for recipe apps where ingredients and steps use consistent terminology.
+
+### Liquid/dry ingredient classification via known-liquids set
+- **Decision:** Use a static `KNOWN_LIQUIDS` set (60+ items) to classify ingredients. Items NOT in the set are treated as dry when measured in volume units.
+- **Why:** Deterministic, zero dependencies, fast. The set covers the vast majority of cooking liquids. Unknown ingredients safely fall back to ml (volume) which is less wrong than converting unknown dry goods to ml.
+- **Trade-off:** New/unusual liquid ingredients won't be classified correctly until added to the set. Edge cases like "melted chocolate" (liquid state of a dry ingredient) default to dry behavior.
+
+### Dry ingredient density table (grams per cup)
+- **Decision:** Maintain a `DRY_GRAMS_PER_CUP` lookup table with 40+ entries for common baking/cooking ingredients. Used when converting dry volume to metric weight.
+- **Why:** Standard baking measurements are well-established (1 cup flour = 125g). The table enables accurate conversions without requiring users to weigh ingredients. Falls back gracefully to ml when an ingredient isn't in the table.
+- **Trade-off:** Table must be maintained. Ingredient names must match (uses substring matching for flexibility). Densities are approximate averages.
+
+### Dynamic scan timeout scaling
+- **Decision:** Scan processing timeout scales with image count: base 60s + 30s per additional image, capped at 180s. Previous fixed 60s timeout caused false failures for multi-image scans.
+- **Why:** Claude API calls with 3+ images can take 60-90+ seconds. A fixed 60s timeout incorrectly reports failure for jobs that will succeed.
+- **Trade-off:** Users wait longer before seeing an error for legitimately failed multi-image jobs. Mitigated by the "Check Again" retry button.
+
+### iOS scan route: full-screen over modal
+- **Decision:** Removed `presentation: "modal"` from scan route, replaced with `fullScreenGestureEnabled: true` and `animation: 'slide_from_right'`.
+- **Why:** Modal presentation shows the scanner as a popup/sheet on iOS, which feels cramped. Full-screen with swipe-back gesture is the standard iOS navigation pattern for a content creation flow like scanning.

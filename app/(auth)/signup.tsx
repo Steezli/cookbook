@@ -1,11 +1,12 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { TextInput as TextInputType } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 
+import { showAlert } from '@/lib/alert';
 import { isValidPassword } from '@/features/auth/password';
 import { supabase } from '@/lib/supabase';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
@@ -52,7 +53,7 @@ export default function SignupScreen() {
 
   async function onSignup() {
     if (!isValidPassword(password)) {
-      Alert.alert(
+      showAlert(
         'Password requirements',
         'Use at least 8 characters and include a number or symbol.',
       );
@@ -60,7 +61,7 @@ export default function SignupScreen() {
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Passwords do not match', 'Please make sure both passwords are the same.');
+      showAlert('Passwords do not match', 'Please make sure both passwords are the same.');
       return;
     }
 
@@ -79,7 +80,7 @@ export default function SignupScreen() {
       router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sign up failed';
-      Alert.alert('Sign up failed', msg);
+      showAlert('Sign up failed', msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +99,7 @@ export default function SignupScreen() {
       router.replace(target as Href);
     } catch (e) {
       const msg = e instanceof Error ? e.message : `${provider} sign up failed`;
-      Alert.alert('Sign up failed', msg);
+      showAlert('Sign up failed', msg);
     } finally {
       setSocialLoading(null);
     }

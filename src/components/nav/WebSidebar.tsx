@@ -1,12 +1,13 @@
 // Web left sidebar — 260px, always visible, matching cookbook.pen sidebar spec.
 // Tab-based items use TabTrigger asChild for isFocused forwarding.
-// Scan uses plain SidebarItem with onPress (modal overlay, not a tab route).
+// Scan uses plain SidebarItem with onPress (navigates to scan tab).
 
 import React from "react";
 import { Text, View } from "react-native";
 import { TabTrigger } from "expo-router/ui";
 import { router } from "expo-router";
-// router is retained for Scan (modal overlay, not a tab route)
+import AdSlot from "@/components/public/AdSlot";
+// router is retained for Scan navigation
 import {
   BookOpen,
   Camera,
@@ -66,11 +67,11 @@ export function WebSidebar() {
           <SidebarItem icon={<Folder />} label="Collections" />
         </TabTrigger>
 
-        {/* Scan: opens modal overlay on all breakpoints */}
+        {/* Scan: navigates to the scan tab */}
         <SidebarItem
           icon={<Camera />}
           label="Scan Recipe"
-          onPress={() => router.navigate("/scan")}
+          onPress={() => router.navigate("/scan" as any)}
         />
 
         <TabTrigger name="family" asChild>
@@ -81,6 +82,11 @@ export function WebSidebar() {
         <TabTrigger name="profile" asChild>
           <SidebarItem icon={<Settings />} label="Settings" />
         </TabTrigger>
+      </View>
+
+      {/* Ad at bottom of sidebar — per cookbook.pen Home - Web (1440px) */}
+      <View style={{ marginTop: "auto" }}>
+        <AdSlot variant="leaderboard" style={{ width: "100%", height: 90 }} />
       </View>
     </View>
   );

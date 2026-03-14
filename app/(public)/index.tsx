@@ -345,7 +345,6 @@ function WebChipsRow({
           </Text>
         </View>
       </View>
-      <AdSlot variant="leaderboard" style={{ alignSelf: 'center', marginBottom: 12 }} />
     </View>
   );
 }
@@ -486,21 +485,29 @@ export default function PublicBrowseScreen() {
   // Layout config per breakpoint
   const layoutConfig = getLayoutConfig(breakpoint);
 
-  // Render item
+  // Render item — on mobile, show inline ad after the 3rd result (per cookbook.pen)
   const renderItem = useCallback(
-    ({ item }: { item: Recipe }) => {
+    ({ item, index }: { item: Recipe; index: number }) => {
       const thumb = thumbnailMap[item.id];
       const author = authorMap[item.id];
       const onPress = () => navigateToRecipe(item.id);
 
       if (breakpoint === 'mobile') {
         return (
-          <PublicListRow
-            recipe={item}
-            thumbnailUrl={thumb}
-            author={author}
-            onPress={onPress}
-          />
+          <>
+            <PublicListRow
+              recipe={item}
+              thumbnailUrl={thumb}
+              author={author}
+              onPress={onPress}
+            />
+            {index === 2 && (
+              <AdSlot
+                variant="mobile"
+                style={{ alignSelf: 'center', marginVertical: 8 }}
+              />
+            )}
+          </>
         );
       }
 
@@ -529,21 +536,21 @@ export default function PublicBrowseScreen() {
       );
     }
 
-    return (
-      <View>
-        <CountSortRow totalCount={totalCount} />
-        <AdSlot
-          variant={breakpoint === 'mobile' ? 'mobile' : 'leaderboard'}
-          style={{ alignSelf: 'center', marginBottom: 4 }}
-        />
-      </View>
-    );
+    // Mobile: ad is interleaved in renderItem; tablet: ad below list via footer
+    return <CountSortRow totalCount={totalCount} />;
   }, [breakpoint, selectedTag, totalCount]);
 
   // List footer
   const listFooter = useCallback(() => {
     return (
       <View style={{ alignItems: 'center', gap: 16, paddingVertical: 16 }}>
+        {/* Tablet/web: ad below results per cookbook.pen */}
+        {breakpoint !== 'mobile' && recipes.length > 0 && (
+          <AdSlot
+            variant="leaderboard"
+            style={{ alignSelf: 'center', marginBottom: 8 }}
+          />
+        )}
         {isLoadingMore && (
           <ActivityIndicator color={accentWarm} />
         )}

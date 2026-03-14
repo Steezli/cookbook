@@ -95,6 +95,14 @@ export const warningTitle = '#92400E';
 export const warningText = '#A16207';
 
 // ---------------------------------------------------------------------------
+// Ingredient highlight (cooking walkthrough)
+// Warm-tinted background for inline ingredient mentions in step text.
+// Derived from accent-warm (#E8784E) at ~15% opacity over white.
+// ---------------------------------------------------------------------------
+export const highlightIngredientBg = '#FDEEE8';
+export const highlightIngredientText = '#C4562E';
+
+// ---------------------------------------------------------------------------
 // Accent colors — extended palette
 // ---------------------------------------------------------------------------
 export const accentPurple = '#7C3AED';  // Violet-600, used for share/secondary actions

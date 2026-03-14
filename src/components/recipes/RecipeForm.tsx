@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
   Text,
   TextInput,
+  TextInput as TextInputType,
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ChevronDown, ChevronUp, X } from 'lucide-react-native';
+import { showAlert } from '@/lib/alert';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { deleteRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { parseIngredient } from '@/features/units/parser';
@@ -19,6 +20,7 @@ import {
   accentCoral,
   bgCard,
   borderDefault,
+  errorText,
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyBodyMedium,
@@ -83,6 +85,12 @@ export function RecipeForm({
   submitLabel,
   isSubmitting,
 }: RecipeFormProps) {
+  // Refs for focus chaining
+  const descriptionRef = useRef<TextInputType>(null);
+
+  // Tracks whether user has attempted to submit — warnings show only after first attempt
+  const [attempted, setAttempted] = useState(false);
+
   // Photo state
   const [existingPhotos, setExistingPhotos] = useState<RecipePhoto[]>(initialExistingPhotos);
   const [newPhotos, setNewPhotos] = useState<PendingPhoto[]>([]);
@@ -133,7 +141,7 @@ export function RecipeForm({
   async function pickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Camera roll permission is needed to add photos');
+      showAlert('Permission Required', 'Camera roll permission is needed to add photos');
       return;
     }
 
@@ -166,7 +174,7 @@ export function RecipeForm({
       await deleteRecipePhoto(photoId);
       setExistingPhotos(prev => prev.filter(p => p.id !== photoId));
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to delete photo');
+      showAlert('Error', err.message ?? 'Failed to delete photo');
     }
   }
 
@@ -244,12 +252,9 @@ export function RecipeForm({
   // -------------------------------------------------------------------------
 
   async function handleSubmit() {
-    if (!title.trim()) {
-      Alert.alert('Validation', 'Title is required');
-      return;
-    }
-    if (ingredients.length === 0) {
-      Alert.alert('Validation', 'At least one ingredient is required');
+    setAttempted(true);
+
+    if (!title.trim() || ingredients.length < 2 || steps.length < 1) {
       return;
     }
 
@@ -283,7 +288,13 @@ export function RecipeForm({
     await onSubmit(input, newPhotos);
   }
 
-  const isDisabled = isSubmitting || !title.trim() || ingredients.length === 0;
+  // Validation state
+  const titleMissing = !title.trim();
+  const ingredientsTooFew = ingredients.length < 2;
+  const stepsMissing = steps.length < 1;
+  const hasErrors = titleMissing || ingredientsTooFew || stepsMissing;
+  const isDisabled = isSubmitting || hasErrors;
+
   const allPhotos = [
     ...existingPhotos.map(p => ({ id: p.id, uri: null as null, storagePath: p.storage_path })),
   ];
@@ -365,22 +376,28 @@ export function RecipeForm({
           )}
         </View>
 
-        {/* Section 2: Title */}
+        {/* Section 2: Title * */}
         <View>
-          <Text style={labelStyle}>Title</Text>
+          <Text style={labelStyle}>Title<Text style={requiredStyle}> *</Text></Text>
           <TextInput
             style={inputStyle}
             value={title}
             onChangeText={setTitle}
             placeholder="e.g., Grandma's Chocolate Chip Cookies"
             placeholderTextColor={textSecondary}
+            returnKeyType="next"
+            onSubmitEditing={() => descriptionRef.current?.focus()}
           />
+          {attempted && titleMissing && (
+            <Text style={fieldWarningStyle}>Please enter a recipe title</Text>
+          )}
         </View>
 
         {/* Section 3: Description */}
         <View>
           <Text style={labelStyle}>Description</Text>
           <TextInput
+            ref={descriptionRef}
             style={[inputStyle, { height: 80, textAlignVertical: 'top' }]}
             value={description}
             onChangeText={setDescription}
@@ -395,7 +412,7 @@ export function RecipeForm({
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <Text style={sectionLabelStyle}>
-              Ingredients {ingredients.length > 0 ? `(${ingredients.length})` : ''}
+              Ingredients<Text style={requiredStyle}> *</Text> {ingredients.length > 0 ? `(${ingredients.length})` : ''}
             </Text>
             <Pressable
               onPress={() => setBulkMode(m => !m)}
@@ -473,12 +490,19 @@ export function RecipeForm({
               </View>
             </View>
           ))}
+          {attempted && ingredientsTooFew && (
+            <Text style={fieldWarningStyle}>
+              {ingredients.length === 0
+                ? 'Add at least 2 ingredients'
+                : `Add ${2 - ingredients.length} more ingredient`}
+            </Text>
+          )}
         </View>
 
         {/* Section 5: Steps */}
         <View>
           <Text style={sectionLabelStyle}>
-            Steps {steps.length > 0 ? `(${steps.length})` : ''}
+            Steps<Text style={requiredStyle}> *</Text> {steps.length > 0 ? `(${steps.length})` : ''}
           </Text>
 
           <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
@@ -533,6 +557,9 @@ export function RecipeForm({
               </View>
             </View>
           ))}
+          {attempted && stepsMissing && (
+            <Text style={fieldWarningStyle}>Add at least 1 step</Text>
+          )}
         </View>
 
         {/* Section 6: Metadata */}
@@ -575,9 +602,9 @@ export function RecipeForm({
           </View>
         </View>
 
-        {/* Section 7: Visibility */}
+        {/* Section 7: Visibility * */}
         <View>
-          <Text style={sectionLabelStyle}>Visibility</Text>
+          <Text style={sectionLabelStyle}>Visibility<Text style={requiredStyle}> *</Text></Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {(['private', 'family', 'public'] as RecipeVisibility[]).map(v => (
               <Pressable
@@ -668,6 +695,41 @@ export function RecipeForm({
           )}
         </View>
 
+        {/* Validation summary */}
+        {attempted && hasErrors && (
+          <View
+            style={{
+              backgroundColor: '#FEF2F2',
+              borderWidth: 1,
+              borderColor: '#FCA5A5',
+              borderRadius: radiusMd,
+              padding: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeSm,
+                color: errorText,
+                marginBottom: 4,
+              }}
+            >
+              Please fix the following before saving:
+            </Text>
+            {titleMissing && (
+              <Text style={summaryItemStyle}>• Recipe title is required</Text>
+            )}
+            {ingredientsTooFew && (
+              <Text style={summaryItemStyle}>
+                • At least 2 ingredients are required{ingredients.length === 1 ? ' (have 1)' : ''}
+              </Text>
+            )}
+            {stepsMissing && (
+              <Text style={summaryItemStyle}>• At least 1 step is required</Text>
+            )}
+          </View>
+        )}
+
         {/* Submit */}
         <Pressable
           onPress={handleSubmit}
@@ -699,6 +761,25 @@ export function RecipeForm({
 // ---------------------------------------------------------------------------
 // Shared style constants (not StyleSheet.create — keeps values readable)
 // ---------------------------------------------------------------------------
+
+const requiredStyle = {
+  color: errorText,
+  fontFamily: fontFamilyBody,
+} as const;
+
+const fieldWarningStyle = {
+  fontFamily: fontFamilyBody,
+  fontSize: fontSizeSm,
+  color: errorText,
+  marginTop: 6,
+} as const;
+
+const summaryItemStyle = {
+  fontFamily: fontFamilyBody,
+  fontSize: fontSizeSm,
+  color: errorText,
+  marginTop: 2,
+} as const;
 
 const labelStyle = {
   fontFamily: fontFamilyBodyMedium,

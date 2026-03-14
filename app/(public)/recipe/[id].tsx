@@ -22,7 +22,10 @@ import { getRecipeById } from '@/features/recipes/api';
 import { getPublicRecipeAuthor } from '@/features/recipes/public';
 import type { PublicAuthor } from '@/features/recipes/public';
 import { getRecipePhotos, getPhotoUrl } from '@/features/recipes/photos';
-import type { Recipe } from '@/features/recipes/types';
+import type { Recipe, RecipeIngredient } from '@/features/recipes/types';
+import { displayIngredient } from '@/features/units/displayIngredient';
+import { getUnitPreference } from '@/features/units/api';
+import type { UnitSystem } from '@/features/units/types';
 import {
   accentBlue,
   accentWarm,
@@ -54,6 +57,11 @@ export default function PublicRecipeDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllIngredients, setShowAllIngredients] = useState(false);
+  const [unitPreference, setUnitPreference] = useState<UnitSystem>('imperial');
+
+  useEffect(() => {
+    getUnitPreference().then(setUnitPreference).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -325,7 +333,7 @@ export default function PublicRecipeDetail() {
     );
   }
 
-  function renderIngredientItem(ingredient: { text: string }, index: number) {
+  function renderIngredientItem(ingredient: RecipeIngredient, index: number) {
     return (
       <View
         key={index}
@@ -346,7 +354,7 @@ export default function PublicRecipeDetail() {
             color: textPrimary,
           }}
         >
-          {ingredient.text}
+          {displayIngredient(ingredient, unitPreference)}
         </Text>
       </View>
     );
@@ -590,6 +598,10 @@ export default function PublicRecipeDetail() {
           {renderIngredients(20, 13)}
           {renderSteps()}
           {renderCTA()}
+          <AdSlot
+            variant={breakpoint === 'mobile' ? 'mobile' : 'leaderboard'}
+            style={{ alignSelf: 'center', marginTop: 8 }}
+          />
         </View>
       </ScrollView>
     </View>
