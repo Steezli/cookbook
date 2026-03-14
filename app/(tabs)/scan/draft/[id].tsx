@@ -80,6 +80,7 @@ export default function DraftReviewScreen() {
   // Processing state
   const [phase, setPhase] = useState<JobPhase>('uploading');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [imageCount, setImageCount] = useState(0);
   const [draftsFound, setDraftsFound] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
@@ -149,10 +150,13 @@ export default function DraftReviewScreen() {
           job = { status: 'queued' } as ScanJob;
         }
 
-        // 2. Fetch photo URLs for thumbnails
+        // 2. Fetch photo URLs for thumbnails (filter out inline:// placeholders)
         try {
           const photos = await getJobPhotos(id);
-          if (!cancelled) setPhotoUrls(photos);
+          if (!cancelled) {
+            setImageCount(photos.length);
+            setPhotoUrls(photos.filter(u => !u.startsWith('inline://')));
+          }
         } catch {
           // Non-critical
         }
@@ -210,10 +214,21 @@ export default function DraftReviewScreen() {
         pollIntervalId = setInterval(async () => {
           if (cancelled) return;
           try {
-            // Also refresh job status in case realtime missed it
+            // Also refresh job status and photo URLs in case realtime missed it
             try {
               const freshJob = await getJobById(id);
-              if (!cancelled) setPhase(freshJob.status as JobPhase);
+              if (!cancelled) {
+                setPhase(freshJob.status as JobPhase);
+
+                // Refresh photo URLs — edge function updates them after saving to Storage
+                if (photoUrls.length === 0) {
+                  try {
+                    const photos = await getJobPhotos(id);
+                    const real = photos.filter(u => !u.startsWith('inline://'));
+                    if (real.length > 0 && !cancelled) setPhotoUrls(real);
+                  } catch { /* non-critical */ }
+                }
+              }
 
               if (freshJob.status === 'failed') {
                 cleanup();
@@ -271,7 +286,7 @@ export default function DraftReviewScreen() {
   if (mode === 'processing') {
     const isActive = phase === 'processing' || phase === 'queued' || phase === 'uploading';
     const isDone = phase === 'completed';
-    const imageCount = photoUrls.length || 1;
+    const photoCount = imageCount || 1;
 
     return (
       <PageContainer style={containerStyle}>
@@ -289,7 +304,7 @@ export default function DraftReviewScreen() {
               marginBottom: 8,
             }}
           >
-            Scanning {imageCount > 1 ? `${imageCount} Photos` : 'Your Recipe'}
+            Scanning {photoCount > 1 ? `${photoCount} Photos` : 'Your Recipe'}
           </Text>
 
           <Text
@@ -301,7 +316,7 @@ export default function DraftReviewScreen() {
               marginBottom: 32,
             }}
           >
-            {imageCount > 1
+            {photoCount > 1
               ? 'We\'re reading each photo and extracting any recipes found'
               : 'We\'re reading the photo and extracting the recipe'}
           </Text>
@@ -365,8 +380,8 @@ export default function DraftReviewScreen() {
               active={phase === 'queued'}
             />
             <StatusStep
-              label={imageCount > 1
-                ? `Reading ${imageCount} photos for recipes`
+              label={photoCount > 1
+                ? `Reading ${photoCount} photos for recipes`
                 : 'Reading photo and extracting recipe'}
               done={phase === 'completed'}
               active={phase === 'processing'}
