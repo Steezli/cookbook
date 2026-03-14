@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  FlatList,
-  Dimensions,
-  Image,
   Pressable,
   ActivityIndicator,
-  type ViewToken,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
 import { getJobPhotos, subscribeToJob } from '@/features/scan/scan-service';
 import { getScanPhotoUrl, getScanThumbnailUrl } from '@/features/scan/scan-photos';
@@ -109,7 +106,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [batchFailures, setBatchFailures] = useState<string[]>([]);
 
-  const flatListRef = useRef<FlatList<ScanDraft>>(null);
   const userId = session?.user?.id;
 
   // Load drafts and photos on mount
@@ -207,20 +203,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   };
 
   const handleDraftConverted = (_recipeId: string) => { refreshDrafts(); };
-
-  const scrollToIndex = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(index, drafts.length - 1));
-    flatListRef.current?.scrollToIndex({ index: clamped, animated: true });
-  }, [drafts.length]);
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      setCurrentIndex(viewableItems[0].index);
-      setIsEditing(false);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
   // Batch save
   const handleSaveAll = async () => {
@@ -342,75 +324,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     );
   };
 
-  // --- Draft summary card (rendered inside FlatList) ---
-  const renderDraftCard = ({ item: draft, index }: { item: ScanDraft; index: number }) => {
-    const displayStatus = getDraftDisplayStatus(draft);
-    const statusStyle = getStatusStyle(displayStatus);
-    const confidenceColor = getConfidenceColor(draft.overallConfidence.score);
-    const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
-    const ingredientCount = draft.recipe.ingredients?.length ?? 0;
-    const stepCount = draft.recipe.instructions?.length ?? 0;
-    const screenWidth = Dimensions.get('window').width;
-
-    return (
-      <View style={{ width: screenWidth, paddingHorizontal: 16 }}>
-        <View
-          style={{
-            backgroundColor: white,
-            borderWidth: 2,
-            borderColor: accentBlue,
-            borderRadius: radiusMd,
-            padding: 20,
-            ...shadowSm,
-          }}
-        >
-          {/* Title */}
-          <Text
-            numberOfLines={2}
-            style={{
-              fontFamily: fontFamilyDisplay,
-              fontSize: fontSizeLg,
-              color: textPrimary,
-              marginBottom: 12,
-            }}
-          >
-            {title}
-          </Text>
-
-          {/* Quick stats */}
-          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12 }}>
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
-              {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
-            </Text>
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
-              {stepCount} step{stepCount !== 1 ? 's' : ''}
-            </Text>
-            {draft.recipe.servings && (
-              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
-                Serves {draft.recipe.servings}
-              </Text>
-            )}
-          </View>
-
-          {/* Badges */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <View style={{ backgroundColor: confidenceColor.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill }}>
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confidenceColor.text }}>
-                {getConfidenceLabel(draft.overallConfidence.score)} ({Math.round(draft.overallConfidence.score * 100)}%)
-              </Text>
-            </View>
-            <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill }}>
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusStyle.text }}>
-                {statusStyle.label}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  // --- Mobile Layout (swipeable) ---
+  // --- Mobile Layout ---
   if (isMobile) {
     return (
       <View style={{ flex: 1, backgroundColor: bgPage }}>
@@ -429,71 +343,53 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           <ProgressSection />
         </View>
 
-        {/* Draft carousel with arrows */}
-        <View style={{ marginTop: 20 }}>
-          {/* Navigation header */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 }}>
-            <Pressable
-              onPress={() => scrollToIndex(currentIndex - 1)}
-              disabled={!canGoPrev}
-              style={{ opacity: canGoPrev ? 1 : 0.25, padding: 8 }}
-              hitSlop={8}
-            >
-              <ChevronLeft size={24} color={accentBlue} />
-            </Pressable>
+        {/* Draft navigation */}
+        {drafts.length > 1 && (
+          <View style={{ marginTop: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8 }}>
+              <Pressable
+                onPress={() => { setCurrentIndex(i => Math.max(0, i - 1)); setIsEditing(false); }}
+                disabled={!canGoPrev}
+                style={{ opacity: canGoPrev ? 1 : 0.25, padding: 8 }}
+                hitSlop={8}
+              >
+                <ChevronLeft size={24} color={accentBlue} />
+              </Pressable>
 
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textSecondary }}>
-              Recipe {currentIndex + 1} of {drafts.length}
-            </Text>
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textSecondary }}>
+                Recipe {currentIndex + 1} of {drafts.length}
+              </Text>
 
-            <Pressable
-              onPress={() => scrollToIndex(currentIndex + 1)}
-              disabled={!canGoNext}
-              style={{ opacity: canGoNext ? 1 : 0.25, padding: 8 }}
-              hitSlop={8}
-            >
-              <ChevronRight size={24} color={accentBlue} />
-            </Pressable>
-          </View>
+              <Pressable
+                onPress={() => { setCurrentIndex(i => Math.min(drafts.length - 1, i + 1)); setIsEditing(false); }}
+                disabled={!canGoNext}
+                style={{ opacity: canGoNext ? 1 : 0.25, padding: 8 }}
+                hitSlop={8}
+              >
+                <ChevronRight size={24} color={accentBlue} />
+              </Pressable>
+            </View>
 
-          {/* Dot indicators */}
-          {drafts.length > 1 && (
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+            {/* Dot indicators */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
               {drafts.map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: i === currentIndex ? 20 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: i === currentIndex ? accentBlue : borderDefault,
-                  }}
-                />
+                <Pressable key={i} onPress={() => { setCurrentIndex(i); setIsEditing(false); }}>
+                  <View
+                    style={{
+                      width: i === currentIndex ? 20 : 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: i === currentIndex ? accentBlue : borderDefault,
+                    }}
+                  />
+                </Pressable>
               ))}
             </View>
-          )}
+          </View>
+        )}
 
-          {/* Swipeable draft cards */}
-          <FlatList
-            ref={flatListRef}
-            data={drafts}
-            renderItem={renderDraftCard}
-            keyExtractor={(item) => item.id}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={viewabilityConfig}
-            getItemLayout={(_, index) => ({
-              length: Dimensions.get('window').width,
-              offset: Dimensions.get('window').width * index,
-              index,
-            })}
-          />
-        </View>
-
-        {/* Draft detail below — scrollable */}
-        <View style={{ flex: 1, marginTop: 16 }}>
+        {/* Draft detail */}
+        <View style={{ flex: 1, marginTop: 12 }}>
           {currentDraft && (
             isEditing ? (
               <DraftEditor
