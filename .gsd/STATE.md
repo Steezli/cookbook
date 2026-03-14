@@ -28,15 +28,16 @@
 - [x] Scan processing UX redesign — status pipeline, no false timeouts
 - [x] Fix inline:// photo URL crash on iOS
 - [x] Multi-draft carousel → arrow/dot navigation (no nested scroll conflicts)
-- [x] Web multi-draft layout — matches Pencil design (centered form, no sidebar split)
+- [x] Web multi-draft layout — matches Pencil design (centered form, arrow/dot nav)
+- [x] Web DraftReview — vertical column layout (600px centered form, not side-by-side)
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
 - Tests: 540 passing, 23 suites
-- Branch: gsd/M004/QOL-bug-fixes (14 commits ahead of main)
+- Branch: gsd/M004/QOL-bug-fixes (17 commits ahead of main)
 
 ## Blockers
 - None
 
 ## Next Action
-Web scan pages verified working. Waiting for user direction.
+Web scan UX redesigned per Pencil designs. Waiting for user direction.
