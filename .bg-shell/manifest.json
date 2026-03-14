@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "b7c39545",
+    "label": "EAS iOS Production Build",
+    "command": "cd /Users/elinicholson/development/cookbook && eas build --platform ios --profile production --non-interactive 2>&1",
+    "cwd": "/Users/elinicholson/development/cookbook",
+    "startedAt": 1773466436782,
+    "processType": "build",
+    "group": "deploy",
+    "readyPattern": null,
+    "readyPort": null,
+    "pid": 37151
+  }
+]
