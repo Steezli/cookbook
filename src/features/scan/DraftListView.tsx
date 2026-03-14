@@ -252,6 +252,21 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < drafts.length - 1;
 
+  // --- Swipe support (hooks must be before early returns) ---
+  const scrollToIndex = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(index, drafts.length - 1));
+    flatListRef.current?.scrollToIndex({ index: clamped, animated: true });
+  }, [drafts.length]);
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      setCurrentIndex(viewableItems[0].index);
+      setIsEditing(false);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+
   // --- Loading ---
   if (loading) {
     return (
@@ -327,21 +342,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       </View>
     );
   };
-
-  // --- Swipe support ---
-  const scrollToIndex = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(index, drafts.length - 1));
-    flatListRef.current?.scrollToIndex({ index: clamped, animated: true });
-  }, [drafts.length]);
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      setCurrentIndex(viewableItems[0].index);
-      setIsEditing(false);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
   // Render a single draft detail page (full-width for paging)
   const renderDraftPage = ({ item: draft }: { item: ScanDraft }) => {
