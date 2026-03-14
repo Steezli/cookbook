@@ -3,6 +3,7 @@ import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import type { Database } from "./database.types";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -33,7 +34,7 @@ const storage =
 // Simple in-memory lock set for serializing auth operations (token refresh, etc.)
 const _activeLocks = new Set<string>();
 
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient<Database>(url, anonKey, {
   auth: {
     storage,
     persistSession: true,

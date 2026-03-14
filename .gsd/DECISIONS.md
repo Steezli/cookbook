@@ -298,3 +298,25 @@
 - **Decision:** Pagination for comments is applied in the API layer (JavaScript) after the RPC returns the full recursive comment tree, rather than modifying the Postgres RPC itself.
 - **Why:** The existing RPC handles access control, recursive CTE for nested threads, and path-based hierarchy. Modifying it for server-side pagination would be a significant change with limited benefit at current scale. Client-side slicing is simpler and preserves thread integrity.
 - **Trade-off:** Full comment tree is always fetched from Postgres. If comment volumes grow large, the RPC should be refactored for server-side pagination.
+
+## M005/S03: Type Safety & Error Handling
+
+### Generated Supabase types from remote DB
+- **Decision:** Used `supabase gen types typescript --project-id` to generate `database.types.ts` from the remote DB rather than manually creating types from migration schema.
+- **Why:** Generated types are authoritative, comprehensive (1304 lines covering all tables, RPCs, enums), and regenerable. Manual types would be incomplete and drift.
+- **Trade-off:** Requires remote DB access for regeneration. Two RPCs not yet applied to remote DB are missing from generated types — workaround with `(supabase.rpc as Function)` cast.
+
+### toJson() helper for typed jsonb column assignment
+- **Decision:** Created a `toJson()` helper function that casts typed TypeScript objects to the `Json` type expected by Supabase's generated types for jsonb columns.
+- **Why:** The generated types define jsonb columns as `Json` (a union of primitives), but application code passes structured typed objects. Direct assignment fails type checking. The helper provides a clean, auditable cast point.
+- **Trade-off:** One cast point per jsonb assignment; better than scattering `as unknown as Json` throughout the codebase.
+
+### NonEmptyArray<T> tuple type for compile-time validation
+- **Decision:** Created `NonEmptyArray<T>` as `[T, ...T[]]` and applied to `ingredients` and `steps` in both `CreateRecipeInput` and `UpdateRecipeInput`.
+- **Why:** Empty ingredients/steps arrays are never valid for recipes. The tuple type catches empty-array construction at compile time. Runtime validation in `api.ts` remains the authoritative guard.
+- **Trade-off:** Call sites that construct these inputs need safe casts when TypeScript can't infer non-emptiness from runtime checks. Two call sites updated with documented casts.
+
+### `unknown` + Record narrowing for untyped external JSON parsing
+- **Decision:** Replaced `any` in `multi-recipe-parser.ts` with `unknown` + `Record<string, unknown>` narrowing pattern for parsing Claude API responses.
+- **Why:** The parser handles untyped JSON from an external API. `unknown` forces explicit narrowing at each access point, catching structural assumption errors at compile time instead of runtime.
+- **Trade-off:** More verbose property access; justified by the safety improvement for the most critical data pipeline in the app.

@@ -1,5 +1,31 @@
 import { supabase } from '@/lib/supabase'
-import { ParsedRecipe, FieldConfidence, OverallConfidence } from '@/features/scan/types'
+import type { Json, Tables, TablesInsert } from '@/lib/database.types'
+import { ParsedRecipe, FieldConfidence, OverallConfidence, ParsedIngredient } from '@/features/scan/types'
+
+/** Cast a typed object to Supabase Json for jsonb columns */
+function toJson<T>(value: T): Json {
+  return value as unknown as Json
+}
+
+// ---------------------------------------------------------------------------
+// Database row type aliases
+// ---------------------------------------------------------------------------
+
+/** Full scan_drafts row as returned by Supabase queries */
+type ScanDraftRow = Tables<'scan_drafts'>
+
+/** Full recipes row as returned by Supabase queries */
+type RecipeRow = Tables<'recipes'>
+
+/** Insertable scan_drafts record */
+type ScanDraftInsert = TablesInsert<'scan_drafts'>
+
+/** Insertable recipes record */
+type RecipeInsert = TablesInsert<'recipes'>
+
+// ---------------------------------------------------------------------------
+// Application-level types
+// ---------------------------------------------------------------------------
 
 export interface ScanDraftInput {
   jobId: string
@@ -40,27 +66,44 @@ export interface DraftEnhancement {
 export interface DraftReviewAction {
   type: 'approve' | 'edit' | 'enhance' | 'reject'
   field?: string
-  oldValue?: any
-  newValue?: any
+  oldValue?: string | string[] | number | null
+  newValue?: string | string[] | number | null
   timestamp: string
   userId: string
+}
+
+/** Shape of ingredients stored in the recipes table (jsonb) */
+interface RecipeIngredientRow {
+  text: string
+  sort_order: number
+  amount: number | null
+  unit: string | null
+  original_text: string | null
+  is_ambiguous: boolean
+}
+
+/** Shape of steps stored in the recipes table (jsonb) */
+interface RecipeStepRow {
+  text: string
+  sort_order: number
 }
 
 export class ScanDraftService {
   /**
    * Map a database record to a ScanDraft interface object
    */
-  private mapRecordToDraft(record: any): ScanDraft {
+  private mapRecordToDraft(record: ScanDraftRow): ScanDraft {
+    const structuredData = record.structured_data as Record<string, unknown> | null
     return {
       id: record.id,
       jobId: record.job_id,
       userId: record.user_id,
-      rawText: record.raw_text,
-      ocrConfidence: record.ocr_confidence,
-      recipe: record.structured_data?.recipe || {},
-      fieldConfidence: record.field_confidence || {},
-      overallConfidence: record.structured_data?.overallConfidence || {},
-      status: record.status,
+      rawText: record.raw_text ?? '',
+      ocrConfidence: record.ocr_confidence ?? 0,
+      recipe: (structuredData?.recipe as ParsedRecipe) || {} as ParsedRecipe,
+      fieldConfidence: (record.field_confidence as FieldConfidence | null) || {} as FieldConfidence,
+      overallConfidence: (structuredData?.overallConfidence as OverallConfidence) || {} as OverallConfidence,
+      status: record.status as ScanDraft['status'],
       aiModelVersion: record.ai_model_version || '1.0',
       processingTimeMs: record.processing_time_ms || 0,
       createdAt: record.created_at,
@@ -77,17 +120,17 @@ export class ScanDraftService {
       const startTime = Date.now()
 
       // Prepare draft data
-      const draftData = {
+      const draftData: ScanDraftInsert = {
         job_id: input.jobId,
         user_id: input.userId,
         raw_text: input.rawText,
         ocr_confidence: input.ocrConfidence,
-        structured_data: {
+        structured_data: toJson({
           recipe: input.recipe,
           fieldConfidence: input.fieldConfidence,
           overallConfidence: input.overallConfidence
-        },
-        field_confidence: input.fieldConfidence,
+        }),
+        field_confidence: toJson(input.fieldConfidence),
         status: input.overallConfidence.status,
         confidence_level: this.mapConfidenceToLevel(input.overallConfidence.score),
         ai_model_version: '1.0',
@@ -197,7 +240,7 @@ export class ScanDraftService {
         throw new Error(`Failed to fetch scan drafts by job ID: ${error.message}`)
       }
 
-      return (data || []).map((record: any) => this.mapRecordToDraft(record))
+      return (data || []).map((record) => this.mapRecordToDraft(record))
     } catch (error) {
       throw new Error(`Failed to fetch scan drafts by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -230,7 +273,7 @@ export class ScanDraftService {
         throw new Error(`Failed to fetch user drafts: ${error.message}`)
       }
 
-      return (data || []).map((record: any) => this.mapRecordToDraft(record))
+      return (data || []).map((record) => this.mapRecordToDraft(record))
 
     } catch (error) {
       throw new Error(`Failed to fetch user drafts: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -301,12 +344,12 @@ export class ScanDraftService {
       }
 
       const updateData = {
-        structured_data: {
+        structured_data: toJson({
           recipe,
           fieldConfidence: fieldConfidence || currentDraft.fieldConfidence,
           overallConfidence
-        },
-        field_confidence: fieldConfidence || currentDraft.fieldConfidence,
+        }),
+        field_confidence: toJson(fieldConfidence || currentDraft.fieldConfidence),
         status: overallConfidence.status as 'ready' | 'needs_review' | 'enhanced',
         confidence_level: this.mapConfidenceToLevel(overallConfidence.score),
         updated_at: new Date().toISOString()
@@ -366,7 +409,7 @@ export class ScanDraftService {
         throw new Error(`Failed to fetch drafts by status: ${error.message}`)
       }
 
-      return (data || []).map((record: any) => this.mapRecordToDraft(record))
+      return (data || []).map((record) => this.mapRecordToDraft(record))
 
     } catch (error) {
       throw new Error(`Failed to fetch drafts by status: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -382,7 +425,7 @@ export class ScanDraftService {
     recipeData: {
       title: string
       description?: string
-      ingredients: any[]
+      ingredients: ParsedIngredient[]
       instructions: string[]
       prepTimeMinutes?: number
       cookTimeMinutes?: number
@@ -398,39 +441,41 @@ export class ScanDraftService {
         throw new Error('Draft not found')
       }
 
-      // Transform ParsedIngredient[] → RecipeIngredient[] (with text field)
-      const ingredients = recipeData.ingredients.map((ing: any, i: number) => ({
-        text: ing.text || [ing.amount, ing.unit, ing.name, ing.preparation].filter(Boolean).join(' '),
+      // Transform ParsedIngredient[] → RecipeIngredientRow[]
+      const ingredients: RecipeIngredientRow[] = recipeData.ingredients.map((ing, i) => ({
+        text: [ing.amount, ing.unit, ing.name, ing.preparation].filter(Boolean).join(' '),
         sort_order: i,
         amount: ing.quantity ?? (ing.amount ? parseFloat(ing.amount) : null) ?? null,
         unit: ing.unit || null,
-        original_text: ing.text || null,
+        original_text: null,
         is_ambiguous: false,
       }))
 
-      // Transform string[] → RecipeStep[] (with text field)
-      const steps = recipeData.instructions.map((instruction: any, i: number) => ({
-        text: typeof instruction === 'string' ? instruction : instruction.text || String(instruction),
+      // Transform string[] → RecipeStepRow[]
+      const steps: RecipeStepRow[] = recipeData.instructions.map((instruction, i) => ({
+        text: instruction,
         sort_order: i,
       }))
 
       // Create recipe from draft
+      const insertData: RecipeInsert = {
+        owner_user_id: userId,
+        title: recipeData.title,
+        description: recipeData.description || null,
+        ingredients: toJson(ingredients),
+        steps: toJson(steps),
+        prep_time_minutes: recipeData.prepTimeMinutes || null,
+        cook_time_minutes: recipeData.cookTimeMinutes || null,
+        servings: recipeData.servings || null,
+        tags: recipeData.tags || [],
+        visibility: 'private',
+        family_id: null,
+        source_story: null,
+      }
+
       const { data, error } = await supabase
         .from('recipes')
-        .insert({
-          owner_user_id: userId,
-          title: recipeData.title,
-          description: recipeData.description || null,
-          ingredients,
-          steps,
-          prep_time_minutes: recipeData.prepTimeMinutes || null,
-          cook_time_minutes: recipeData.cookTimeMinutes || null,
-          servings: recipeData.servings || null,
-          tags: recipeData.tags || [],
-          visibility: 'private',
-          family_id: null,
-          source_story: null,
-        })
+        .insert(insertData)
         .select('id')
         .single()
 
@@ -478,7 +523,7 @@ export class ScanDraftService {
         enhanced: 0
       }
 
-      data?.forEach((draft: any) => {
+      data?.forEach((draft) => {
         switch (draft.status) {
           case 'ready':
             stats.ready++

@@ -145,7 +145,7 @@ describe('ScanDraftService', () => {
       const recipeData = {
         title: 'Grandma\'s Cookies',
         description: 'Family recipe',
-        ingredients: [{ name: 'flour', amount: '2 cups' }],
+        ingredients: [{ name: 'flour', amount: '2 cups', confidence: 0.9 }],
         instructions: ['Mix ingredients', 'Bake at 350'],
         prepTimeMinutes: 15,
         cookTimeMinutes: 30,
@@ -239,7 +239,7 @@ describe('ScanDraftService', () => {
 
       const recipeData = {
         title: 'Test Recipe',
-        ingredients: [{ name: 'sugar' }],
+        ingredients: [{ name: 'sugar', confidence: 0.8 }],
         instructions: ['Step 1'],
       };
 

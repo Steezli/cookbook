@@ -60,7 +60,7 @@ This milestone is complete only when all are true:
 - [x] **S02: Performance & Code Deduplication** `risk:medium` `depends:[]`
   > After this: Photo queries are efficient, tags query is optimized, comments are paginated, parser logic is single-source, deprecated code removed
 
-- [ ] **S03: Type Safety & Error Handling** `risk:medium` `depends:[S01]`
+- [x] **S03: Type Safety & Error Handling** `risk:medium` `depends:[S01]`
   > After this: Zero `any` in feature code, Supabase types generated, web scan upload reports failures, ensureProfile logs errors, health check endpoint exists
 
 - [ ] **S04: Code Quality & Readability** `risk:low` `depends:[S01,S02]`

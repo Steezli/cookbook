@@ -5,7 +5,7 @@ import { showAlert } from '@/lib/alert';
 import { getRecipeById, updateRecipe } from '@/features/recipes/api';
 import { getRecipePhotos, uploadRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { RecipeForm, type PendingPhoto } from '@/components/recipes/RecipeForm';
-import type { CreateRecipeInput, Recipe } from '@/features/recipes/types';
+import type { CreateRecipeInput, NonEmptyArray, Recipe, RecipeIngredient, RecipeStep } from '@/features/recipes/types';
 
 export default function EditRecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -72,8 +72,9 @@ export default function EditRecipeScreen() {
         initialValues={{
           title: recipe.title,
           description: recipe.description ?? undefined,
-          ingredients: recipe.ingredients,
-          steps: recipe.steps,
+          // Safe casts: recipes from DB always have ≥1 ingredient and step
+          ingredients: recipe.ingredients as NonEmptyArray<RecipeIngredient>,
+          steps: recipe.steps as NonEmptyArray<RecipeStep>,
           visibility: recipe.visibility,
           family_id: recipe.family_id,
           servings: recipe.servings,

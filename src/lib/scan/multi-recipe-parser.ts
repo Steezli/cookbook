@@ -39,7 +39,7 @@ export interface ScanResult {
  * Parse a single recipe object (flat key structure from Claude's JSON) into
  * a typed ScanResult. Applies safe defaults for missing/malformed fields.
  */
-export function parseSingleRecipe(parsed: any): ScanResult {
+export function parseSingleRecipe(parsed: unknown): ScanResult {
   if (!parsed || typeof parsed !== 'object') {
     return {
       rawText: '',
@@ -48,26 +48,29 @@ export function parseSingleRecipe(parsed: any): ScanResult {
     };
   }
 
+  // After the typeof guard, narrow to a record so property access is safe.
+  const p = parsed as Record<string, unknown>;
+
   return {
-    rawText: parsed.rawText || '',
-    confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
-    sourceImageIndex: typeof parsed.sourceImageIndex === 'number' ? parsed.sourceImageIndex : undefined,
+    rawText: (p.rawText as string) || '',
+    confidence: typeof p.confidence === 'number' ? p.confidence : 0.7,
+    sourceImageIndex: typeof p.sourceImageIndex === 'number' ? p.sourceImageIndex : undefined,
     extracted: {
-      title: parsed.title || undefined,
-      ingredients: Array.isArray(parsed.ingredients)
-        ? parsed.ingredients.map((ing: any) => ({
-            name: ing.name || '',
+      title: (p.title as string) || undefined,
+      ingredients: Array.isArray(p.ingredients)
+        ? (p.ingredients as Record<string, unknown>[]).map((ing) => ({
+            name: (ing.name as string) || '',
             amount: String(ing.amount || ''),
-            unit: ing.unit || '',
-            preparation: ing.preparation || '',
+            unit: (ing.unit as string) || '',
+            preparation: (ing.preparation as string) || '',
           }))
         : undefined,
-      instructions: Array.isArray(parsed.instructions) ? parsed.instructions : undefined,
+      instructions: Array.isArray(p.instructions) ? (p.instructions as string[]) : undefined,
       prepTimeMinutes:
-        typeof parsed.prepTimeMinutes === 'number' ? parsed.prepTimeMinutes : undefined,
+        typeof p.prepTimeMinutes === 'number' ? p.prepTimeMinutes : undefined,
       cookTimeMinutes:
-        typeof parsed.cookTimeMinutes === 'number' ? parsed.cookTimeMinutes : undefined,
-      servings: typeof parsed.servings === 'number' ? parsed.servings : undefined,
+        typeof p.cookTimeMinutes === 'number' ? p.cookTimeMinutes : undefined,
+      servings: typeof p.servings === 'number' ? p.servings : undefined,
     },
   };
 }
@@ -82,25 +85,28 @@ export function parseSingleRecipe(parsed: any): ScanResult {
  * Returns an empty array when the input is null, undefined, or structurally
  * unparseable (no crash).
  */
-export function parseMultiScanResult(parsed: any): ScanResult[] {
+export function parseMultiScanResult(parsed: unknown): ScanResult[] {
   if (!parsed || typeof parsed !== 'object') {
     return [];
   }
 
+  // After the typeof guard, narrow to a record so property access is safe.
+  const p = parsed as Record<string, unknown>;
+
   // Array format — { recipes: [...] }
-  if (Array.isArray(parsed.recipes)) {
-    if (parsed.recipes.length === 0) {
+  if (Array.isArray(p.recipes)) {
+    if (p.recipes.length === 0) {
       return [];
     }
-    return parsed.recipes.map((r: any) => parseSingleRecipe(r));
+    return (p.recipes as unknown[]).map((r) => parseSingleRecipe(r));
   }
 
   // Legacy single-object format — { rawText, title, … }
   // Detect by checking for at least one expected top-level key.
   if (
-    parsed.rawText !== undefined ||
-    parsed.title !== undefined ||
-    parsed.ingredients !== undefined
+    p.rawText !== undefined ||
+    p.title !== undefined ||
+    p.ingredients !== undefined
   ) {
     return [parseSingleRecipe(parsed)];
   }

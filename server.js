@@ -29,6 +29,11 @@ app.use(
   }),
 );
 
+// Health check for Railway/load-balancer probes
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // SPA fallback: serve index.html for all non-file routes
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(DIST, 'index.html'));

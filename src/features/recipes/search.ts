@@ -76,7 +76,7 @@ export async function getAvailableTags(): Promise<string[]> {
   const { data, error } = await supabase
     .from("recipes")
     .select("tags")
-    .neq("tags", "{}");
+    .neq("tags", "{}" as unknown as string[]);
 
   if (error) throw error;
 

@@ -40,21 +40,21 @@
 
 ## Tasks
 
-- [ ] **T01: Generate Supabase types and replace `any` in scan draft service** `est:30m`
+- [x] **T01: Generate Supabase types and replace `any` in scan draft service** `est:30m` ✅
   - Why: ScanDraftService uses `any` for all DB records — schema changes aren't caught by TypeScript
   - Files: new: `src/lib/database.types.ts`, `src/lib/supabase.ts`, `src/lib/scan/scan-draft-service.ts`
   - Do: Generate types with `supabase gen types typescript`. If CLI not available, manually create types from migration schema. Replace all `any` in ScanDraftService with proper types. Type the supabase client with generated types.
   - Verify: `npx tsc --noEmit`, grep for `any` in scan-draft-service shows zero hits
   - Done when: all DB record types are explicit
 
-- [ ] **T02: Fix error handling in scan upload and session provider** `est:20m`
+- [x] **T02: Fix error handling in scan upload and session provider** `est:20m` ✅
   - Why: Web scan upload swallows edge function errors; ensureProfile failures are completely silent
   - Files: `src/features/scan/scan-photos.ts`, `src/features/auth/session.tsx`
   - Do: Web upload path: on edge function failure, update job status to failed (mirror native path behavior). ensureProfile: add console.warn on error instead of completely swallowing. Mark job as failed with meaningful error message.
   - Verify: Code review confirms error paths propagate
   - Done when: no silent error swallowing in scan upload or profile ensure
 
-- [ ] **T03: Add health endpoint and tighten UpdateRecipeInput type** `est:15m`
+- [x] **T03: Add health endpoint and tighten UpdateRecipeInput type** `est:15m` ✅
   - Why: No health check for Railway deployment; UpdateRecipeInput allows invalid partial state
   - Files: `server.js`, `src/features/recipes/types.ts`
   - Do: Add `GET /health` that returns `{ status: 'ok', timestamp }`. Tighten UpdateRecipeInput to disallow empty title/ingredients/steps when those keys are present.

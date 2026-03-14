@@ -54,14 +54,15 @@ export async function getFirstRecipePhotos(
 ): Promise<Record<string, RecipePhoto>> {
   if (recipeIds.length === 0) return {};
 
-  const { data, error } = await supabase.rpc("get_first_recipe_photos", {
+  // RPC not yet reflected in generated Supabase types — cast via unknown
+  const { data, error } = await (supabase.rpc as Function)("get_first_recipe_photos", {
     recipe_ids: recipeIds,
   });
 
   if (error) throw error;
 
   const firstByRecipeId: Record<string, RecipePhoto> = {};
-  for (const row of (data as RecipePhoto[]) || []) {
+  for (const row of ((data as unknown as RecipePhoto[]) || [])) {
     firstByRecipeId[row.recipe_id] = row;
   }
 
@@ -177,7 +178,8 @@ export async function reorderRecipePhotos(
 ): Promise<void> {
   if (updates.length === 0) return;
 
-  const { error } = await supabase.rpc("reorder_recipe_photos", {
+  // RPC not yet reflected in generated Supabase types — cast via unknown
+  const { error } = await (supabase.rpc as Function)("reorder_recipe_photos", {
     updates: updates.map(({ id, sort_order }) => ({ id, sort_order })),
   });
 

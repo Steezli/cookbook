@@ -15,6 +15,9 @@ export type RecipeStep = {
   sort_order: number;
 };
 
+/** A non-empty array — at least one element is required. */
+export type NonEmptyArray<T> = [T, ...T[]];
+
 export type Recipe = {
   id: string;
   owner_user_id: string;
@@ -38,8 +41,8 @@ export type Recipe = {
 export type CreateRecipeInput = {
   title: string;
   description?: string;
-  ingredients: RecipeIngredient[];
-  steps: RecipeStep[];
+  ingredients: NonEmptyArray<RecipeIngredient>;
+  steps: NonEmptyArray<RecipeStep>;
   visibility: RecipeVisibility;
   family_id?: string | null;
   servings?: number | null;
@@ -49,4 +52,17 @@ export type CreateRecipeInput = {
   tags?: string[];
 };
 
-export type UpdateRecipeInput = Partial<CreateRecipeInput>;
+/**
+ * When updating a recipe, keys are optional (partial update), but when present
+ * they must satisfy stricter constraints than Partial<CreateRecipeInput>:
+ * - title must be a non-empty string (enforced at runtime in api.ts)
+ * - ingredients must contain at least one item
+ * - steps must contain at least one item
+ */
+export type UpdateRecipeInput = Omit<
+  Partial<CreateRecipeInput>,
+  'ingredients' | 'steps'
+> & {
+  ingredients?: NonEmptyArray<RecipeIngredient>;
+  steps?: NonEmptyArray<RecipeStep>;
+};

@@ -14,7 +14,7 @@ import { showAlert } from '@/lib/alert';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { deleteRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { parseIngredient } from '@/features/units/parser';
-import type { CreateRecipeInput, RecipeIngredient, RecipeVisibility } from '@/features/recipes/types';
+import type { CreateRecipeInput, NonEmptyArray, RecipeIngredient, RecipeVisibility } from '@/features/recipes/types';
 import {
   accentBlue,
   accentCoral,
@@ -275,8 +275,9 @@ export function RecipeForm({
     const input: CreateRecipeInput = {
       title: title.trim(),
       description: description.trim() || undefined,
-      ingredients: recipeIngredients,
-      steps: steps.map((text, i) => ({ text, sort_order: i })),
+      // Safe casts: form validation guarantees ≥2 ingredients and ≥1 step
+      ingredients: recipeIngredients as NonEmptyArray<RecipeIngredient>,
+      steps: steps.map((text, i) => ({ text, sort_order: i })) as NonEmptyArray<{ text: string; sort_order: number }>,
       visibility,
       servings: servings ? parseInt(servings, 10) : undefined,
       prep_time_minutes: prepTime ? parseInt(prepTime, 10) : undefined,

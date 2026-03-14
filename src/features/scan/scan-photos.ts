@@ -203,9 +203,19 @@ export async function uploadScanPhotos(
   supabase.functions.invoke('process-scan-job', {
     body: { jobId: job.id }
   }).catch(async (err) => {
-    // Web path has real Storage URLs — queue worker can retry these.
-    // Log but don't fail the job since the queue worker will pick it up.
     console.warn('[scan-photos] Edge function invocation failed (web path):', err);
+    try {
+      await supabase
+        .from('scan_jobs')
+        .update({
+          status: 'failed',
+          error_message: 'Failed to start processing. Please try again.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', job.id);
+    } catch {
+      // Best effort — job will appear stuck, but at least the error is logged above
+    }
   });
 
   return { jobId: job.id, photoUrls };

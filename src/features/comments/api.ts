@@ -76,7 +76,7 @@ export async function getRecipeComments(
     const profile = profileMap.get(comment.user_id);
     return {
       ...comment,
-      author_display_name: profile?.display_name,
+      author_display_name: profile?.display_name ?? undefined,
       author_email: profile?.email
     };
   });
