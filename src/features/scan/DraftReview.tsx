@@ -8,6 +8,7 @@ import {
   Pressable,
   ActivityIndicator,
   Platform,
+  Modal,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
@@ -125,6 +126,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
   const [loading, setLoading] = useState(!draftProp);
   const [jobStatus, setJobStatus] = useState<string>(draftProp ? 'completed' : 'checking');
   const [error, setError] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
 
   // Animated value for mobile collapsible photo
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -651,7 +654,7 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => setShowDiscardDialog(true)}
               accessibilityRole="button"
               accessibilityLabel="Discard draft"
               style={({ pressed }) => ({
@@ -675,6 +678,90 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     </View>
   );
 
+  const handleDiscard = async () => {
+    if (!draft || !session?.user?.id) return;
+    try {
+      setDiscarding(true);
+      await scanDraftService.deleteDraft(draft.id, session.user.id);
+      setShowDiscardDialog(false);
+      router.back();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to discard draft');
+      setDiscarding(false);
+    }
+  };
+
+  const DiscardDialog = () => (
+    <Modal
+      visible={showDiscardDialog}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowDiscardDialog(false)}
+    >
+      <Pressable
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+        onPress={() => setShowDiscardDialog(false)}
+      >
+        <Pressable
+          style={{
+            backgroundColor: white,
+            borderRadius: radiusMd,
+            padding: 24,
+            maxWidth: 360,
+            width: '90%',
+            ...shadowMd,
+          }}
+          onPress={() => {}} // prevent dismiss on inner press
+        >
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary, marginBottom: 8 }}>
+            Discard Draft?
+          </Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textSecondary, marginBottom: 8 }}>
+            This will permanently delete this draft. This can't be undone.
+          </Text>
+          {draft && (
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textTertiary, marginBottom: 16 }}>
+              "{draft.recipe.title || 'Untitled'}"
+            </Text>
+          )}
+          <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'flex-end' }}>
+            <Pressable
+              onPress={() => setShowDiscardDialog(false)}
+              disabled={discarding}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? borderDefault : 'transparent',
+                borderWidth: 1,
+                borderColor: borderDefault,
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: radiusSm,
+              })}
+            >
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary }}>
+                Cancel
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleDiscard}
+              disabled={discarding}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? '#DC2626' : accentCoral,
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: radiusSm,
+                opacity: discarding ? 0.6 : 1,
+              })}
+            >
+              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
+                {discarding ? 'Discarding...' : 'Discard'}
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+
   // --- Mobile Layout (collapsible photo) ---
 
   if (isMobile) {
@@ -685,6 +772,7 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     });
 
     return (
+      <>
       <View style={{ flex: 1, backgroundColor: bgPage }}>
         {/* Collapsible photo */}
         <PhotoSection height={photoHeight} />
@@ -702,12 +790,15 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
           <DraftFields />
         </Animated.ScrollView>
       </View>
+      <DiscardDialog />
+      </>
     );
   }
 
   // --- Tablet / Web Layout — scrollable form filling left panel ---
 
   return (
+    <>
     <ScrollView
       style={{ flex: 1, backgroundColor: bgPage }}
       contentContainerStyle={{
@@ -724,6 +815,8 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
       {/* Draft fields */}
       <DraftFields />
     </ScrollView>
+    <DiscardDialog />
+    </>
   );
 }
 

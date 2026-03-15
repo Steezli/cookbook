@@ -66,7 +66,7 @@ This milestone is complete only when all are true:
 - [x] **S04: Code Quality & Readability** `risk:low` `depends:[S01,S02]`
   > After this: Repetitive OAuth functions consolidated, excess comments trimmed, consistent patterns across all API modules, clean readable codebase
 
-- [ ] **S05: End-to-End Verification** `risk:medium` `depends:[S01,S02,S03,S04]`
+- [x] **S05: End-to-End Verification** `risk:medium` `depends:[S01,S02,S03,S04]`
   > After this: Every feature verified on web and iOS — auth, recipes, scan (with 4 real photos), collections, profile, public browsing — all working
 
 ## Boundary Map

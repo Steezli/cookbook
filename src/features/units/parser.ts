@@ -34,7 +34,7 @@ const AMBIGUOUS_TERMS = [
   'sprinkle',
 ];
 
-// Known units pattern
+// Known units pattern — canonical forms that match the conversion tables
 const KNOWN_UNITS = [
   'tsp',
   'teaspoon',
@@ -67,9 +67,18 @@ const KNOWN_UNITS = [
   'kilogram',
   'kilograms',
   'lb',
+  'lbs',
   'pound',
   'pounds',
 ];
+
+// Short abbreviations common on handwritten/typed recipe cards.
+// Maps to the canonical unit name used in KNOWN_UNITS / conversion tables.
+const ABBREVIATION_MAP: Record<string, string> = {
+  'c': 'cup',
+  't': 'tsp',
+  'T': 'tbsp',
+};
 
 export function parseIngredient(text: string): ParsedIngredient {
   const original = text;
@@ -160,13 +169,26 @@ export function parseIngredient(text: string): ParsedIngredient {
 
   // Try to extract unit
   // Build regex pattern from known units (longest first to match "fl oz" before "oz")
+  // The optional \.? handles period-abbreviated units (tsp., tbsp., lb., etc.)
   const sortedUnits = [...KNOWN_UNITS].sort((a, b) => b.length - a.length);
-  const unitPattern = new RegExp(`^(${sortedUnits.join('|')})\\b`, 'i');
+  const unitPattern = new RegExp(`^(${sortedUnits.join('|')})\\.?(?=\\s|$)`, 'i');
   const unitMatch = remaining.match(unitPattern);
 
   if (unitMatch) {
     unit = unitMatch[1];
     remaining = remaining.slice(unitMatch[0].length).trim();
+  } else {
+    // Check for single-letter abbreviations (c., t., T.) — case-sensitive
+    // These are common on handwritten recipe cards and need special handling
+    // because they're too short for a reliable word-boundary match.
+    const abbrMatch = remaining.match(/^([ctT])\.?\s/);
+    if (abbrMatch) {
+      const abbr = abbrMatch[1];
+      if (abbr in ABBREVIATION_MAP) {
+        unit = ABBREVIATION_MAP[abbr];
+        remaining = remaining.slice(abbrMatch[0].length).trim();
+      }
+    }
   }
 
   // The rest is the ingredient name

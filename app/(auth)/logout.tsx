@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
 
 import { showAlert } from "@/lib/alert";
 import { supabase } from "@/lib/supabase";
@@ -15,10 +16,14 @@ export default function LogoutScreen() {
           const fallback = await supabase.auth.signOut();
           if (fallback.error) throw fallback.error;
         }
+        // Redirect to login after successful sign-out.
+        // The (tabs) layout also guards on session, but this ensures the
+        // logout screen itself navigates away instead of staying stuck.
+        router.replace("/(auth)/login");
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Logout failed";
         showAlert("Logout failed", msg);
-        // Reactive redirect in (tabs)/_layout.tsx handles navigation when session becomes null
+        router.replace("/(auth)/login");
       }
     }
     void run();

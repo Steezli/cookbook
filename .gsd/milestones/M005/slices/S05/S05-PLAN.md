@@ -40,21 +40,21 @@
 
 ## Tasks
 
-- [ ] **T01: Web end-to-end walkthrough** `est:45m`
+- [x] **T01: Web end-to-end walkthrough** `est:45m`
   - Why: Must verify all web features work after code changes
   - Files: none (verification only, fix files as needed)
   - Do: Start web dev server. Navigate every screen. Test: auth (login/signup/logout), recipe CRUD (create, edit, delete), scan upload (4 test images), draft review and save, collections (create, add recipe, remove, delete), profile view, public browsing, public recipe detail with SEO head. Check browser console for errors. Fix any issues found.
   - Verify: All actions complete without errors
   - Done when: every web feature works
 
-- [ ] **T02: iOS end-to-end walkthrough** `est:45m`
+- [x] **T02: iOS end-to-end walkthrough** `est:45m`
   - Why: Must verify all iOS features work after code changes
   - Files: none (verification only, fix files as needed)
   - Do: Start Expo dev server. Open in iOS simulator. Navigate every screen. Test: auth (login/signup/logout), recipe CRUD, scan (pick images from simulator photo library), draft review and save, collections, profile. Fix any issues found.
   - Verify: All actions complete without errors
   - Done when: every iOS feature works
 
-- [ ] **T03: Scanner verification with 4 test images** `est:30m`
+- [x] **T03: Scanner verification with 4 test images** `est:30m`
   - Why: Must verify scanner pipeline processes real handwritten recipe photos
   - Files: test images at /Users/elinicholson/Documents/recipes/
   - Do: Upload all 4 images (IMG_4547.jpeg, IMG_4552.jpeg, IMG_4553.jpeg, IMG_4554.jpeg) through the scan interface on web. Wait for processing. Verify drafts are created with reasonable recipe data. Save at least one as a real recipe. Verify the saved recipe displays correctly.

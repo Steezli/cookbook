@@ -264,4 +264,75 @@ describe('Ingredient Parser', () => {
       expect(result.amount).toBe(0.125);
     });
   });
+
+  describe('period-abbreviated units', () => {
+    it('parses c. as cup', () => {
+      const result = parseIngredient('1/4 c. butter or margarine');
+      expect(result.amount).toBeCloseTo(0.25, 2);
+      expect(result.unit).toBe('cup');
+      expect(result.ingredient).toBe('butter or margarine');
+    });
+
+    it('parses T. as tbsp', () => {
+      const result = parseIngredient('2 T. flour');
+      expect(result.amount).toBe(2);
+      expect(result.unit).toBe('tbsp');
+      expect(result.ingredient).toBe('flour');
+    });
+
+    it('parses t. as tsp', () => {
+      const result = parseIngredient('1 t. salt');
+      expect(result.amount).toBe(1);
+      expect(result.unit).toBe('tsp');
+      expect(result.ingredient).toBe('salt');
+    });
+
+    it('parses c without period as cup', () => {
+      const result = parseIngredient('3 c flour');
+      expect(result.amount).toBe(3);
+      expect(result.unit).toBe('cup');
+      expect(result.ingredient).toBe('flour');
+    });
+
+    it('parses T without period as tbsp', () => {
+      const result = parseIngredient('2 T butter');
+      expect(result.amount).toBe(2);
+      expect(result.unit).toBe('tbsp');
+      expect(result.ingredient).toBe('butter');
+    });
+
+    it('parses tsp. with period', () => {
+      const result = parseIngredient('1 tsp. baking soda');
+      expect(result.amount).toBe(1);
+      expect(result.unit).toBe('tsp');
+      expect(result.ingredient).toBe('baking soda');
+    });
+
+    it('parses tbsp. with period', () => {
+      const result = parseIngredient('2 tbsp. olive oil');
+      expect(result.amount).toBe(2);
+      expect(result.unit).toBe('tbsp');
+      expect(result.ingredient).toBe('olive oil');
+    });
+
+    it('parses lb. with period', () => {
+      const result = parseIngredient('1 1/2 lb. lean ground beef');
+      expect(result.amount).toBeCloseTo(1.5, 2);
+      expect(result.unit).toBe('lb');
+      expect(result.ingredient).toBe('lean ground beef');
+    });
+
+    it('parses lbs. with period', () => {
+      const result = parseIngredient('2 lbs. chicken');
+      expect(result.amount).toBe(2);
+      expect(result.unit).toBe('lbs');
+      expect(result.ingredient).toBe('chicken');
+    });
+
+    it('does not confuse c in ingredient name', () => {
+      const result = parseIngredient('cinnamon');
+      expect(result.unit).toBeNull();
+      expect(result.ingredient).toBe('cinnamon');
+    });
+  });
 });

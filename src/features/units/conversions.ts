@@ -39,6 +39,7 @@ const WEIGHT_TO_GRAMS: Record<string, number> = {
   ounce: 28.3495,
   ounces: 28.3495,
   lb: 453.592,
+  lbs: 453.592,
   pound: 453.592,
   pounds: 453.592,
   // Metric
