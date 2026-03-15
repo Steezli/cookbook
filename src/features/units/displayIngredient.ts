@@ -23,37 +23,34 @@ export function displayIngredient(
   ing: RecipeIngredient,
   unitPreference: UnitSystem
 ): string {
-  const text = ing.original_text || ing.text || '';
-
   // 1. Structured amount/unit available
   if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
     return displayAmount(
       ing.amount ?? null,
       ing.unit ?? null,
       unitPreference,
-      text,
-      ing.text || ''
+      ing.original_text || ing.text,
+      ing.text
     );
   }
 
   // 2. Ambiguous
   if (ing.is_ambiguous) {
-    return `${text} (approx.)`;
+    return `${ing.text} (approx.)`;
   }
 
   // 3. Legacy: parse from text and attempt conversion
-  if (!text) return '';
-  const parsed = parseIngredient(text);
+  const parsed = parseIngredient(ing.text);
   if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
     return displayAmount(
       parsed.amount,
       parsed.unit,
       unitPreference,
-      text,
+      ing.original_text || ing.text,
       parsed.ingredient
     );
   }
 
   // 4. Unparseable — return raw text
-  return text;
+  return ing.text;
 }

@@ -393,14 +393,17 @@ export function displayAmount(
   originalText: string,
   ingredientName?: string
 ): string {
+  // Guard against undefined/null originalText from malformed ingredient data
+  const safeOriginal = originalText || '';
+
   if (amount === null || unit === null) {
-    return originalText;
+    return safeOriginal;
   }
 
   const normalized = unit.toLowerCase();
 
   if (!canConvert(normalized)) {
-    return originalText;
+    return safeOriginal;
   }
 
   // Determine if conversion is needed
@@ -413,11 +416,11 @@ export function displayAmount(
     (preference === 'imperial' && isMetricUnit);
 
   if (!needsConversion) {
-    return originalText;
+    return safeOriginal;
   }
 
   // Extract ingredient name from original text if not provided
-  const ingredientContext = ingredientName || extractIngredientFromText(originalText);
+  const ingredientContext = ingredientName || extractIngredientFromText(safeOriginal);
 
   // Check if this is a volume unit that might need liquid/dry routing
   const isVolumeUnit = normalized in VOLUME_TO_ML;
@@ -435,20 +438,20 @@ export function displayAmount(
         if (grams !== null) {
           // Use kg for large amounts
           if (grams >= 1000) {
-            return formatConvertedDisplay(grams / 1000, 'kg', amount, unit, originalText);
+            return formatConvertedDisplay(grams / 1000, 'kg', amount, unit, safeOriginal);
           }
-          return formatConvertedDisplay(grams, 'g', amount, unit, originalText);
+          return formatConvertedDisplay(grams, 'g', amount, unit, safeOriginal);
         }
       }
       // Liquid or unknown dry: convert to ml (original behavior)
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertVolume(amount, normalized, targetUnit);
-      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, originalText);
+      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);
     } else {
       // Metric volume → imperial volume (liquid stays as volume)
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertVolume(amount, normalized, targetUnit);
-      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, originalText);
+      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);
     }
   }
 
@@ -460,7 +463,7 @@ export function displayAmount(
       const liquid = isLiquidIngredient(ingredientContext);
       if (!liquid && !isMetricUnit) {
         // Already imperial weight, no conversion needed
-        return originalText;
+        return safeOriginal;
       }
       if (!liquid) {
         // Try to convert grams to cups for dry ingredients
@@ -469,23 +472,23 @@ export function displayAmount(
           const totalGrams = amount * fromGrams;
           const volumeResult = convertDryGramsToVolume(totalGrams, ingredientContext);
           if (volumeResult) {
-            return formatConvertedDisplay(volumeResult.amount, volumeResult.unit, amount, unit, originalText);
+            return formatConvertedDisplay(volumeResult.amount, volumeResult.unit, amount, unit, safeOriginal);
           }
         }
       }
       // Fallback: standard weight→weight conversion
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertWeight(amount, normalized, targetUnit);
-      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, originalText);
+      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);
     } else {
       // Imperial weight → metric weight
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertWeight(amount, normalized, targetUnit);
-      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, originalText);
+      return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);
     }
   }
 
-  return originalText;
+  return safeOriginal;
 }
 
 // ---------------------------------------------------------------------------
