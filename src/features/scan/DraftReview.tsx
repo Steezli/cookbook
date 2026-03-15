@@ -57,6 +57,8 @@ interface DraftReviewProps {
   /** Called when the draft is saved as a recipe (multi-draft parent coordination) */
   onDraftSaved?: (draft: ScanDraft) => void;
   onEdit?: () => void;
+  /** Called after a draft is discarded. When provided, replaces the default router.back() navigation. */
+  onDiscarded?: () => void;
 }
 
 const getConfidenceColor = (confidence: number): { bg: string; text: string } => {
@@ -114,7 +116,7 @@ function ConfidenceBadge({ confidence, label }: { confidence: number; label?: st
   );
 }
 
-export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraftSaved, onEdit }: DraftReviewProps) {
+export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraftSaved, onEdit, onDiscarded }: DraftReviewProps) {
   const { session, isLoading: authLoading } = useSession();
   const { breakpoint } = useBreakpoint();
   const isMobile = breakpoint === 'mobile';
@@ -684,7 +686,11 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
       setDiscarding(true);
       await scanDraftService.deleteDraft(draft.id, session.user.id);
       setShowDiscardDialog(false);
-      router.back();
+      if (onDiscarded) {
+        onDiscarded();
+      } else {
+        router.back();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to discard draft');
       setDiscarding(false);

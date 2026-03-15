@@ -198,6 +198,8 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       const updated = await scanDraftService.getDraftsByJobId(jobId, userId);
       setDrafts(updated);
       setIsEditing(false);
+      // Clamp index if a draft was removed and we're past the end
+      setCurrentIndex(i => Math.min(i, Math.max(0, updated.length - 1)));
     } catch { /* ignore */ }
   };
 
@@ -401,6 +403,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
                 draft={currentDraft}
                 onEdit={() => setIsEditing(true)}
                 onDraftSaved={() => refreshDrafts()}
+                onDiscarded={() => refreshDrafts()}
               />
             )
           )}
@@ -426,6 +429,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
               draft={currentDraft}
               onEdit={() => setIsEditing(true)}
               onDraftSaved={() => refreshDrafts()}
+              onDiscarded={() => refreshDrafts()}
             />
           )
         )}
