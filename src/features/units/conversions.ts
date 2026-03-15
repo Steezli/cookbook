@@ -497,7 +497,7 @@ export function displayAmount(
  * "2 cups all-purpose flour" → "all-purpose flour"
  */
 function extractIngredientFromText(text: string): string {
-  return text
+  return (text || '')
     .replace(/^[\d\s/½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+/, '')
     .replace(/^(tsp|teaspoons?|tbsp|tablespoons?|oz|ounces?|fl oz|cups?|pints?|quarts?|gallons?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lb|pounds?)\b\s*/i, '')
     .trim();
