@@ -4,10 +4,12 @@ export type RecipeIngredient = {
   text: string;
   sort_order: number;
   // Phase 4: canonical unit fields (optional for backward compat)
-  amount?: number | null;
+  amount?: number | string | null;
   unit?: string | null;
   original_text?: string | null;
   is_ambiguous?: boolean;
+  // Legacy field — older recipes stored ingredient name here instead of `text`
+  name?: string;
 };
 
 export type RecipeStep = {

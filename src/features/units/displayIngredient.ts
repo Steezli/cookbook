@@ -23,34 +23,60 @@ export function displayIngredient(
   ing: RecipeIngredient,
   unitPreference: UnitSystem
 ): string {
+  // Resolve display text — legacy recipes use `name` instead of `text`
+  const ingredientText = ing.text || ing.name || '';
+  // Reconstruct full text from structured fields if text is missing
+  const fullText = ingredientText
+    ? (ing.original_text || ingredientText)
+    : '';
+
+  // Normalize amount to number (legacy data stores as string like "2 1/4")
+  let numericAmount: number | null = null;
+  if (ing.amount !== undefined && ing.amount !== null) {
+    if (typeof ing.amount === 'number') {
+      numericAmount = ing.amount;
+    } else if (typeof ing.amount === 'string') {
+      // Parse string amounts like "2 1/4", "3/4", "1.5"
+      const parsed = parseIngredient(`${ing.amount} x`);
+      numericAmount = parsed.amount;
+    }
+  }
+
+  // Build original display text: "amount unit name"
+  // For legacy data without `text`, reconstruct from structured fields
+  const originalDisplay = (ing.text && ing.text !== ingredientText)
+    ? (ing.original_text || ing.text)
+    : (ing.original_text || [ing.amount, ing.unit, ingredientText].filter(Boolean).join(' '));
+
   // 1. Structured amount/unit available
-  if (ing.amount !== undefined && ing.unit !== undefined && !ing.is_ambiguous) {
+  if (numericAmount !== null && ing.unit !== undefined && ing.unit !== null && !ing.is_ambiguous) {
     return displayAmount(
-      ing.amount ?? null,
-      ing.unit ?? null,
+      numericAmount,
+      ing.unit,
       unitPreference,
-      ing.original_text || ing.text,
-      ing.text
+      originalDisplay,
+      ingredientText
     );
   }
 
   // 2. Ambiguous
   if (ing.is_ambiguous) {
-    return `${ing.text} (approx.)`;
+    return `${originalDisplay} (approx.)`;
   }
 
   // 3. Legacy: parse from text and attempt conversion
-  const parsed = parseIngredient(ing.text);
+  if (!originalDisplay) return '';
+  const parsed = parseIngredient(originalDisplay);
   if (parsed.amount !== null && parsed.unit !== null && !parsed.isAmbiguous) {
     return displayAmount(
       parsed.amount,
       parsed.unit,
       unitPreference,
-      ing.original_text || ing.text,
+      originalDisplay,
       parsed.ingredient
     );
   }
 
   // 4. Unparseable — return raw text
-  return ing.text;
+  return originalDisplay;
 }

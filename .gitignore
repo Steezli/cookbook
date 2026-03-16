@@ -48,3 +48,4 @@ tmp/
 # E2E test artifacts
 e2e-test.mjs
 .env.test
+cookbook.pen
