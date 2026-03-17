@@ -70,18 +70,17 @@ jest.mock('@/features/auth/session', () => ({
 // ---------------------------------------------------------------------------
 
 import { computeSubscriptionState } from '@/features/subscriptions/SubscriptionContext';
+import { ENTITLEMENT_ID, FREE_SCAN_LIMIT } from '@/features/subscriptions/constants';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const FREE_SCAN_LIMIT = 3;
-
 function makeCustomerInfo(premiumActive: boolean) {
   return {
     entitlements: {
       active: premiumActive
-        ? { premium: { identifier: 'premium', isActive: true } }
+        ? { [ENTITLEMENT_ID]: { identifier: ENTITLEMENT_ID, isActive: true } }
         : {},
     },
   };
@@ -98,7 +97,7 @@ describe('isSubscriber', () => {
     expect(result.isSubscriber).toBe(false);
   });
 
-  it('is true when getCustomerInfo returns active "premium" entitlement', () => {
+  it('is true when getCustomerInfo returns active entitlement', () => {
     const customerInfo = makeCustomerInfo(true);
     const result = computeSubscriptionState(customerInfo, 0);
     expect(result.isSubscriber).toBe(true);

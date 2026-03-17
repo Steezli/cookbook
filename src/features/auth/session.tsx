@@ -100,6 +100,11 @@ async function configurePurchases(userId: string): Promise<void> {
   try {
     const mod = await import('react-native-purchases');
     const Purchases = mod.default;
+
+    if (__DEV__) {
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+    }
+
     Purchases.configure({
       apiKey: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY ?? '',
       appUserID: userId,

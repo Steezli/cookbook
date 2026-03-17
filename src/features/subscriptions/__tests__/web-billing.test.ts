@@ -124,20 +124,22 @@ describe('startWebCheckout', () => {
 });
 
 describe('computeSubscriptionState with web CustomerInfo', () => {
-  test('(e) active premium entitlement → isSubscriber: true', () => {
+  test('(e) active entitlement → isSubscriber: true', () => {
+    const { ENTITLEMENT_ID } = require('@/features/subscriptions/constants');
     const customerInfo = {
-      entitlements: { active: { premium: { isActive: true } } },
+      entitlements: { active: { [ENTITLEMENT_ID]: { isActive: true } } },
     };
     const result = computeSubscriptionState(customerInfo, 1);
     expect(result.isSubscriber).toBe(true);
   });
 
-  test('(f) empty active entitlements → isSubscriber: false, scansRemaining: 3', () => {
+  test('(f) empty active entitlements → isSubscriber: false, scansRemaining: FREE_SCAN_LIMIT', () => {
+    const { FREE_SCAN_LIMIT } = require('@/features/subscriptions/constants');
     const customerInfo = {
       entitlements: { active: {} },
     };
     const result = computeSubscriptionState(customerInfo, 0);
     expect(result.isSubscriber).toBe(false);
-    expect(result.scansRemaining).toBe(3);
+    expect(result.scansRemaining).toBe(FREE_SCAN_LIMIT);
   });
 });

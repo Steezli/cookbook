@@ -34,10 +34,13 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     };
   }
 
-  // Redirect RevenueCat native SDKs to no-op shims when the packages are not
-  // installed (local dev builds, web bundles). In EAS builds the real packages
-  // are installed and resolved normally by the fallback below.
-  if (!purchasesInstalled && moduleName === 'react-native-purchases') {
+  // Redirect RevenueCat native SDKs to no-op shims on web or when the packages
+  // are not installed. In EAS native builds the real packages are installed and
+  // resolved normally by the fallback below.
+  if (
+    (platform === 'web' || !purchasesInstalled) &&
+    moduleName === 'react-native-purchases'
+  ) {
     return {
       filePath: path.resolve(
         __dirname,
@@ -46,7 +49,10 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       type: 'sourceFile',
     };
   }
-  if (!purchasesInstalled && moduleName === 'react-native-purchases-ui') {
+  if (
+    (platform === 'web' || !purchasesInstalled) &&
+    moduleName === 'react-native-purchases-ui'
+  ) {
     return {
       filePath: path.resolve(
         __dirname,

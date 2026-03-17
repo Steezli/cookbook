@@ -632,10 +632,58 @@ export default function ProfileScreen() {
                   fontFamily: fontFamilyBody,
                   fontSize: fontSizeSm,
                   color: textSecondary,
+                  marginBottom: 14,
                 }}
               >
                 Unlimited scans · Ad-free experience
               </Text>
+
+              {/* Manage Subscription — opens RevenueCat Customer Center on native */}
+              <Pressable
+                onPress={async () => {
+                  if (Platform.OS === "web") {
+                    showAlert(
+                      "Manage Subscription",
+                      "Please manage your subscription through Stripe at the link in your confirmation email."
+                    );
+                    return;
+                  }
+                  try {
+                    const mod = await import("react-native-purchases-ui").catch(() => null);
+                    if (!mod) {
+                      showAlert(
+                        "Manage Subscription",
+                        "Please manage your subscription in your device Settings."
+                      );
+                      return;
+                    }
+                    const RevenueCatUI = mod.default;
+                    await RevenueCatUI.presentCustomerCenter();
+                  } catch {
+                    showAlert(
+                      "Manage Subscription",
+                      "Please manage your subscription in your device Settings."
+                    );
+                  }
+                }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  paddingVertical: 12,
+                  borderRadius: radiusMd,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Manage Subscription
+                </Text>
+              </Pressable>
             </>
           ) : (
             <>

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { ScanLimitError } from '@/features/scan/errors';
+import { FREE_SCAN_LIMIT } from '@/features/subscriptions/constants';
 
 function currentYearMonth(): string {
   return new Date().toISOString().slice(0, 7);
@@ -21,7 +22,7 @@ export async function incrementScanCount(userId: string): Promise<number> {
   });
 
   if (error) throw new Error(error.message);
-  if (data > 3) throw new ScanLimitError(data);
+  if (data > FREE_SCAN_LIMIT) throw new ScanLimitError(data);
 
   return data;
 }

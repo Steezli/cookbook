@@ -4,6 +4,7 @@ import { X, Check, RefreshCw } from 'lucide-react-native';
 import { showAlert } from '@/lib/alert';
 import { useSubscription } from '@/features/subscriptions/SubscriptionContext';
 import { useSession } from '@/features/auth/session';
+import { ENTITLEMENT_ID } from '@/features/subscriptions/constants';
 import {
   fontFamilyDisplay,
   fontFamilyBody,
@@ -49,18 +50,29 @@ export function PaywallPlaceholder({ visible, onDismiss }: PaywallPlaceholderPro
       try {
         const mod = await import('react-native-purchases-ui').catch(() => null);
         if (!mod) {
-          console.warn('[ScanScreen] RevenueCatUI unavailable — using alert fallback');
+          console.warn('[Paywall] RevenueCatUI unavailable — using alert fallback');
           showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
           return;
         }
-        const RevenueCatUI = mod.default?.RevenueCatUI ?? mod.RevenueCatUI;
-        await RevenueCatUI.presentPaywallIfNeeded({
-          requiredEntitlementIdentifier: 'premium',
-        }).catch(() => {
-          showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
+        const RevenueCatUI = mod.default;
+        const { PAYWALL_RESULT } = mod;
+        const result = await RevenueCatUI.presentPaywallIfNeeded({
+          requiredEntitlementIdentifier: ENTITLEMENT_ID,
         });
+
+        switch (result) {
+          case PAYWALL_RESULT.PURCHASED:
+          case PAYWALL_RESULT.RESTORED:
+            await refreshSubscription();
+            onDismiss();
+            break;
+          case PAYWALL_RESULT.ERROR:
+            showAlert('Error', 'Something went wrong. Please try again.');
+            break;
+          // CANCELLED / NOT_PRESENTED — do nothing, paywall stays open
+        }
       } catch {
-        console.warn('[ScanScreen] RevenueCatUI unavailable — using alert fallback');
+        console.warn('[Paywall] RevenueCatUI unavailable — using alert fallback');
         showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
       }
     } else {

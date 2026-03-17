@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 import { useSession } from '@/features/auth/session';
 import { getScanCount } from '@/features/subscriptions/scan-count';
+import { ENTITLEMENT_ID, FREE_SCAN_LIMIT } from '@/features/subscriptions/constants';
 import type { CustomerInfo } from 'react-native-purchases';
 
 // ---------------------------------------------------------------------------
@@ -34,8 +35,8 @@ export function computeSubscriptionState(
   customerInfo: CustomerInfoLike,
   scanCount: number,
 ): { isSubscriber: boolean; scanCount: number; scansRemaining: number } {
-  const isSubscriber = !!(customerInfo?.entitlements?.active?.['premium']);
-  const scansRemaining = Math.max(0, 3 - scanCount);
+  const isSubscriber = !!(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
+  const scansRemaining = Math.max(0, FREE_SCAN_LIMIT - scanCount);
   return { isSubscriber, scanCount, scansRemaining };
 }
 
