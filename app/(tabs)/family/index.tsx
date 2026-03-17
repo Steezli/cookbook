@@ -18,6 +18,8 @@ import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { supabase } from "@/lib/supabase";
 import {
   accentBlue,
+  accentGreen,
+  badgeGreenBg,
   bgCard,
   bgPage,
   borderDefault,
@@ -62,6 +64,7 @@ export default function FamiliesHomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [respondingInvite, setRespondingInvite] = useState<string | null>(null);
+  const [acceptedInvite, setAcceptedInvite] = useState<string | null>(null);
 
   const isAuthed = useMemo(() => Boolean(userId), [userId]);
   const isMobile = breakpoint === "mobile";
@@ -152,9 +155,13 @@ export default function FamiliesHomeScreen() {
         p_invite_id: inviteId,
       });
       if (error) throw error;
-      showAlert("Joined!", "You've joined the family.");
+      setAcceptedInvite(inviteId);
       void refresh();
-      if (data) router.push(`/family/${data}`);
+      // Brief pause to show the success state, then navigate
+      setTimeout(() => {
+        if (data) router.push(`/family/${data}`);
+        setAcceptedInvite(null);
+      }, 1200);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to accept invite";
       showAlert("Error", msg);
@@ -397,84 +404,108 @@ export default function FamiliesHomeScreen() {
           >
             Pending Invites
           </Text>
-          {pendingInvites.map((invite) => (
-            <View
-              key={invite.id}
-              style={{
-                backgroundColor: bgCard,
-                borderRadius: radiusMd,
-                padding: 16,
-                marginBottom: 10,
-                ...shadowSm,
-              }}
-            >
-              <Text
+          {pendingInvites.map((invite) => {
+            const isAccepted = acceptedInvite === invite.id;
+            const isResponding = respondingInvite === invite.id;
+
+            return (
+              <View
+                key={invite.id}
                 style={{
-                  fontFamily: fontFamilyBodyBold,
-                  fontSize: fontSizeBase,
-                  color: textPrimary,
+                  backgroundColor: isAccepted ? badgeGreenBg : bgCard,
+                  borderRadius: radiusMd,
+                  borderWidth: isAccepted ? 1 : 0,
+                  borderColor: isAccepted ? accentGreen : "transparent",
+                  padding: 16,
+                  marginBottom: 10,
+                  ...shadowSm,
                 }}
               >
-                {invite.family_name}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: fontFamilyBody,
-                  fontSize: fontSizeSm,
-                  color: textSecondary,
-                  marginTop: 4,
-                  marginBottom: 12,
-                }}
-              >
-                You've been invited to join this family
-              </Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <Pressable
-                  onPress={() => onAcceptInvite(invite.id)}
-                  disabled={respondingInvite === invite.id}
-                  style={({ pressed }) => ({
-                    backgroundColor: accentBlue,
-                    borderRadius: radiusMd,
-                    paddingVertical: 8,
-                    paddingHorizontal: 20,
-                    opacity: pressed || respondingInvite === invite.id ? 0.7 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: fontFamilyBodyMedium,
-                      fontSize: fontSizeSm,
-                      color: white,
-                    }}
-                  >
-                    {respondingInvite === invite.id ? "Joining..." : "Accept"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => onDeclineInvite(invite.id)}
-                  disabled={respondingInvite === invite.id}
-                  style={({ pressed }) => ({
-                    borderWidth: 1,
-                    borderColor: borderDefault,
-                    borderRadius: radiusMd,
-                    paddingVertical: 8,
-                    paddingHorizontal: 20,
-                    opacity: pressed || respondingInvite === invite.id ? 0.7 : 1,
-                  })}
-                >
-                  <Text
-                    style={{
-                      fontFamily: fontFamilyBodyMedium,
-                      fontSize: fontSizeSm,
-                      color: textSecondary,
-                    }}
-                  >
-                    Decline
-                  </Text>
-                </Pressable>
+                {isAccepted ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <Text style={{ fontSize: 20 }}>{"\u2713"}</Text>
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyBold,
+                        fontSize: fontSizeBase,
+                        color: accentGreen,
+                      }}
+                    >
+                      Joined {invite.family_name}!
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyBold,
+                        fontSize: fontSizeBase,
+                        color: textPrimary,
+                      }}
+                    >
+                      {invite.family_name}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBody,
+                        fontSize: fontSizeSm,
+                        color: textSecondary,
+                        marginTop: 4,
+                        marginBottom: 12,
+                      }}
+                    >
+                      You've been invited to join this family
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 10 }}>
+                      <Pressable
+                        onPress={() => onAcceptInvite(invite.id)}
+                        disabled={isResponding}
+                        style={({ pressed }) => ({
+                          backgroundColor: accentBlue,
+                          borderRadius: radiusMd,
+                          paddingVertical: 8,
+                          paddingHorizontal: 20,
+                          opacity: pressed || isResponding ? 0.7 : 1,
+                        })}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: fontFamilyBodyMedium,
+                            fontSize: fontSizeSm,
+                            color: white,
+                          }}
+                        >
+                          {isResponding ? "Joining..." : "Accept"}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => onDeclineInvite(invite.id)}
+                        disabled={isResponding}
+                        style={({ pressed }) => ({
+                          borderWidth: 1,
+                          borderColor: borderDefault,
+                          borderRadius: radiusMd,
+                          paddingVertical: 8,
+                          paddingHorizontal: 20,
+                          opacity: pressed || isResponding ? 0.7 : 1,
+                        })}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: fontFamilyBodyMedium,
+                            fontSize: fontSizeSm,
+                            color: textSecondary,
+                          }}
+                        >
+                          Decline
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </>
+                )}
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
 
