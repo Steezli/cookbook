@@ -347,3 +347,35 @@
 - **Decision:** Standardized all API modules to throw Supabase error objects directly (`throw error`) rather than wrapping them in `new Error(message)`.
 - **Why:** Supabase errors already contain descriptive messages, status codes, and error codes. Wrapping them in `new Error()` loses the structured information and adds no value.
 - **Trade-off:** Callers must handle Supabase error shapes rather than plain Error objects; acceptable since all callers already do this.
+
+## M006: Subscriptions
+
+### Supabase-backed scan count over client-side tracking
+- **Decision:** Track scan counts server-side in a `user_scan_counts(user_id, year_month TEXT, count INTEGER)` table with a Postgres RPC for atomic increment, rather than trusting any client-provided count.
+- **Why:** Client-side count tracking can be bypassed by modifying local state or requests. Server-side atomic increment with `ON CONFLICT DO UPDATE` eliminates the read-then-write race condition and prevents manipulation.
+- **Trade-off:** Every scan attempt requires a Supabase RPC call. Acceptable — scans already require multiple Supabase calls.
+
+### year_month TEXT column over integer count with reset logic
+- **Decision:** Store `year_month` as a TEXT column (e.g., `'2026-03'`) computed server-side via `TO_CHAR(NOW(), 'YYYY-MM')`, not a single rolling integer with a reset timestamp.
+- **Why:** A new month automatically starts at count 0 with no cron job, migration, or reset logic needed. The RPC computes the current month server-side — client cannot spoof the month.
+- **Trade-off:** Historical scan counts are retained per-month (minor storage overhead); useful for potential future analytics.
+
+### Photo upload as "scan" unit, not recipe extraction
+- **Decision:** A "scan" is counted when photos are successfully uploaded (at `createMultiPhotoScanJob` insert time), not when the edge function extracts recipes. Failed edge function calls do not consume the free count.
+- **Why:** One photo upload can yield multiple recipes (multi-recipe scan). Counting extractions would penalize users for the app's feature of detecting multiple recipes. Counting at upload time gives users a predictable understanding of "3 scans = 3 photo uploads."
+- **Trade-off:** A user whose upload succeeds but edge function fails is not charged a scan — this is the correct behavior per requirements.
+
+### RevenueCat initialization in session provider
+- **Decision:** Call `Purchases.configure({ apiKey, appUserID: user.id })` inside the Supabase session provider as soon as a user ID is available, not lazily at the paywall or scan screen.
+- **Why:** Entitlement checks are needed throughout the app (scan gating, ad suppression). Lazy initialization causes race conditions where legitimate subscribers appear unentitled. Initializing alongside auth session establishment ensures RevenueCat is ready before any check runs.
+- **Trade-off:** RevenueCat is initialized even for users who never hit the paywall. The SDK call is lightweight (local SDK configuration, not a network request).
+
+### SubscriptionContext with useSubscription() hook over prop drilling
+- **Decision:** Expose subscription state (`isSubscriber`, `scanCount`, `scansRemaining`) via a React context provider and `useSubscription()` hook, not via prop drilling.
+- **Why:** `AdBanner` needs subscriber state deep in the component tree without touching every intermediate component. Context is the established pattern for cross-cutting app state (same approach as `SessionProvider`).
+- **Trade-off:** Components that call `useSubscription()` must be inside `SubscriptionProvider`. `SubscriptionProvider` wraps the root layout.
+
+### Slice order: Supabase infrastructure → SDK integration → gating → ads → web billing → docs
+- **Decision:** Build in the order: S01 (Supabase scan count), S02 (RevenueCat SDK + context), S03 (scan gating + paywall), S04 (ad suppression), S05 (web billing), S06 (docs + verification).
+- **Why:** Server-side infrastructure is testable in Jest and has no native build requirement — proves the business logic before touching the SDK. RevenueCat SDK integration is the highest technical risk (EAS build requirement) and is addressed second. Each subsequent slice has a stable foundation.
+- **Trade-off:** Web billing (S05) comes after the core native experience is working, which is the correct risk ordering given that native has higher App Store review stakes.

@@ -1747,6 +1747,24 @@
       "toolCalls": 0,
       "assistantMessages": 76,
       "userMessages": 0
+    },
+    {
+      "type": "research-milestone",
+      "id": "M006",
+      "model": "claude-sonnet-4-6",
+      "startedAt": 1773781224572,
+      "finishedAt": 1773781352003,
+      "tokens": {
+        "input": 11,
+        "output": 5135,
+        "cacheRead": 427129,
+        "cacheWrite": 33288,
+        "total": 465563
+      },
+      "cost": 0.33002670000000006,
+      "toolCalls": 0,
+      "assistantMessages": 9,
+      "userMessages": 0
     }
   ]
 }
