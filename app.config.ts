@@ -13,6 +13,11 @@ const attInstalled = fs.existsSync(
   path.join(__dirname, 'node_modules', 'expo-tracking-transparency'),
 );
 
+const purchasesInstalled = fs.existsSync(
+  path.join(__dirname, 'node_modules', 'react-native-purchases'),
+);
+// react-native-purchases has no Expo plugin; EAS config is manual (see docs/subscription-setup.md)
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'Berven',
   slug: 'berven',

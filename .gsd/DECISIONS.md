@@ -384,3 +384,15 @@
 - **Decision:** Build in the order: S01 (Supabase scan count), S02 (RevenueCat SDK + context), S03 (scan gating + paywall), S04 (ad suppression), S05 (web billing), S06 (docs + verification).
 - **Why:** Server-side infrastructure is testable in Jest and has no native build requirement — proves the business logic before touching the SDK. RevenueCat SDK integration is the highest technical risk (EAS build requirement) and is addressed second. Each subsequent slice has a stable foundation.
 - **Trade-off:** Web billing (S05) comes after the core native experience is working, which is the correct risk ordering given that native has higher App Store review stakes.
+
+## M006/S02: SubscriptionContext verification strategy
+
+### Export computeSubscriptionState as pure function for Jest testability
+- **Decision:** Export `computeSubscriptionState(customerInfo, scanCount)` as a named pure function from `SubscriptionContext.tsx`, separate from the React context/hook.
+- **Why:** Follows the AdBanner pattern (pure config/consent functions tested without renderer). Keeps subscription state logic testable in Node environment without React Native renderer infrastructure. The hook tests call the pure function directly; context wiring is covered by the provider wrapping _layout.tsx.
+- **Trade-off:** Slight API surface expansion; negligible — the function is small and the separation is clean.
+
+### RevenueCat configure in session.tsx with purchasesConfiguredRef guard
+- **Decision:** `Purchases.configure()` lives in `session.tsx`'s `onAuthStateChange` handler, not inside `SubscriptionProvider`. A `purchasesConfiguredRef` prevents double-initialization across multiple auth events.
+- **Why:** session.tsx already has the auth event loop and fires before SubscriptionProvider's useEffect runs with a user ID. This eliminates the initialization race condition. SubscriptionProvider only manages entitlement query state, not SDK lifecycle.
+- **Trade-off:** SDK lifecycle is split across two files; mitigated by clear comments and the established ensureProfile precedent in session.tsx.

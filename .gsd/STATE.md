@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M006 — Subscriptions
-**Phase:** S01 ✅ complete — migration, ScanLimitError, client wrappers, all 5 tests passing; S02 next
+**Phase:** S02 ✅ complete; S03 next (scan gating + paywall)
 **Last Updated:** 2026-03-17
 
 ## Milestone History
@@ -10,11 +10,11 @@
 - **M003:** ✅ Quality Audit & Cleanup — complete
 - **M004:** ✅ QOL & Bug Fixes — complete
 - **M005:** ✅ Technical Hardening — complete (S01 ✅, S02 ✅, S03 ✅, S04 ✅, S05 ✅)
-- **M006:** 🔄 Subscriptions — in progress (S01 ✅, S02–S06 pending; 1/6 complete)
+- **M006:** 🔄 Subscriptions — in progress (S01 ✅, S02 ✅, S03–S06 pending; 2/6 complete)
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
-- Tests: 617 passing, 29 suites
+- Tests: 624 passing, 30 suites
 - Zero `: any` types in src/features/ and src/lib/ (non-test, non-.d.ts)
 - Health endpoint: GET /health returns 200
 - E2E: 30/30 API tests pass
