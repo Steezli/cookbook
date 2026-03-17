@@ -102,7 +102,10 @@ export function RecipeForm({
 
   // Ingredients
   const [ingredients, setIngredients] = useState<IngredientItem[]>(
-    initialValues?.ingredients?.map(i => ({ text: i.text, confirmed: !!(i.amount !== undefined && i.unit !== undefined) })) ?? []
+    initialValues?.ingredients?.map(i => ({
+      text: i.text || (i as any).name || '',
+      confirmed: !!(i.amount !== undefined && i.unit !== undefined),
+    })) ?? []
   );
   const [ingredientInput, setIngredientInput] = useState('');
   const [bulkMode, setBulkMode] = useState(false);
@@ -110,7 +113,7 @@ export function RecipeForm({
 
   // Steps
   const [steps, setSteps] = useState<string[]>(
-    initialValues?.steps?.map(s => s.text) ?? []
+    initialValues?.steps?.map(s => typeof s === 'string' ? s : s.text) ?? []
   );
   const [stepInput, setStepInput] = useState('');
 
