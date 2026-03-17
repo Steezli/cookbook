@@ -35,10 +35,11 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M003: Quality Audit & Cleanup — Scan code consolidation, dead code removal, form focus chaining, cross-platform alert fix, scan UI polish, logging cleanup, full app audit
 - [x] M004: QOL & Bug Fixes — Ingredient highlighting in cooking walkthrough, smart liquid/dry unit conversions, multi-image scan timeout fix, iOS full-screen scanner
 - [ ] M005: Technical Hardening — Security fixes, data integrity, performance, code deduplication, type safety, error handling, end-to-end verification (S01 ✅, S02 ✅, S03 ✅, S04 ✅)
+- [ ] M006: Subscriptions — RevenueCat integration, freemium scan gating (3/month free), paywall UI, ad-free for subscribers, web billing via Stripe (SUB-01 through SUB-06)
 
 ## Backlog
 
-- **Subscriptions** — Subscription gating on scan via RevenueCat, paywall UI, web checkout (SUB-01, SUB-02, SUB-03). Punted — not the immediate priority.
+_(empty)_
 
 ---
 *Last updated: 2026-03-14 after M005/S04 completion*

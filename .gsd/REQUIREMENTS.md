@@ -147,36 +147,66 @@ _(No active requirements — all M003 requirements validated.)_
 
 ### SUB-01 — Subscription gating on scan feature via RevenueCat entitlement
 - Class: core-capability
-- Status: deferred
-- Description: Scan feature gated behind subscription check using RevenueCat entitlement.
+- Status: active
+- Description: Scan feature gated behind subscription check using RevenueCat entitlement. Free users get 3 photo scans per calendar month; subscribers get unlimited.
 - Why it matters: Monetization path for the scan feature.
 - Source: user
-- Primary owning slice: M004
+- Primary owning slice: M006
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Deferred to M004 — quality audit takes priority.
+- Notes: Promoted from deferred. Tracks photo uploads (not recipe extractions) since one photo can yield multiple recipes.
 
-### SUB-02 — Paywall UI displayed when non-subscriber accesses scan
+### SUB-02 — Paywall UI displayed when non-subscriber hits scan limit
 - Class: core-capability
-- Status: deferred
-- Description: Non-subscribers see a paywall screen when attempting to use the scan feature.
+- Status: active
+- Description: Non-subscribers see a paywall screen when they exceed 3 scans/month, showing $3.99/month pricing and subscribe button.
 - Why it matters: Clear upgrade path for monetization.
 - Source: user
-- Primary owning slice: M004
+- Primary owning slice: M006
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Deferred to M004.
+- Notes: Promoted from deferred. Using RevenueCat's built-in paywall UI initially.
 
 ### SUB-03 — Web subscription checkout via RevenueCat Web Billing / Stripe
 - Class: core-capability
-- Status: deferred
-- Description: Web users can subscribe via RevenueCat Web Billing or Stripe integration.
+- Status: active
+- Description: Web users can subscribe via RevenueCat Web Billing backed by Stripe.
 - Why it matters: Web monetization parity with mobile.
 - Source: user
-- Primary owning slice: M004
+- Primary owning slice: M006
 - Supporting slices: none
 - Validation: unmapped
-- Notes: Deferred to M004.
+- Notes: Promoted from deferred. Uses @revenuecat/purchases-js for web.
+
+### SUB-04 — Ad-free experience for subscribers
+- Class: core-capability
+- Status: active
+- Description: Active subscribers see no ads anywhere in the app. Ad suppression takes effect immediately on purchase without requiring restart.
+- Why it matters: Premium value proposition — paying users shouldn't see ads.
+- Source: user
+- Primary owning slice: M006
+- Supporting slices: none
+- Validation: unmapped
+
+### SUB-05 — Freemium scan limit (3 photo scans per calendar month)
+- Class: core-capability
+- Status: active
+- Description: Free users can upload up to 3 photos for scanning per calendar month. Count resets on the 1st. Tracked server-side in Supabase. Failed scans do not count.
+- Why it matters: Lets users try the core feature before committing to a subscription.
+- Source: user
+- Primary owning slice: M006
+- Supporting slices: none
+- Validation: unmapped
+
+### SUB-06 — Scan count tracking and remaining scans display
+- Class: core-capability
+- Status: active
+- Description: Free users can see how many scans they have remaining this month. Displayed on the scan upload screen.
+- Why it matters: Transparency about free tier limits.
+- Source: user
+- Primary owning slice: M006
+- Supporting slices: none
+- Validation: unmapped
 
 ### SEO-02 — Server-rendered public recipe pages for SEO crawlers
 - Class: core-capability
