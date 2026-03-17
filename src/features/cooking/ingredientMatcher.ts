@@ -31,7 +31,7 @@ function normalize(text: string): string {
  * "6 large Granny Smith apples" → "large granny smith apples"
  */
 function extractIngredientName(ingredient: RecipeIngredient): string {
-  const text = ingredient.original_text || ingredient.text;
+  const text = ingredient.original_text || ingredient.text || ingredient.name || '';
   let name = normalize(text);
 
   // Remove leading amounts (numbers, fractions, decimals)
