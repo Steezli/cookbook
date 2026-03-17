@@ -25,15 +25,22 @@ Add three apps under the project:
 
 Copy each platform's **public API key** — you'll need them for environment variables later.
 
+### Create the entitlement
+
+1. Go to **Products → Entitlements**
+2. Click **+ New** → identifier: `Berven Book Pro`
+3. This is the entitlement the app checks via `ENTITLEMENT_ID` in `src/features/subscriptions/constants.ts`
+
 ### Configure the offering
 
-> **Critical:** The app code expects a specific offering and package naming convention. `offerings.current?.monthly` will fail silently if these names don't match.
+> **Critical:** The app code expects a specific offering and package naming convention. `offerings.current?.monthly` will fail silently if these names don't match. See `src/features/subscriptions/constants.ts` for the authoritative values.
 
 1. Go to **Products → Offerings**
-2. Create an offering with identifier: "default"
+2. Create an offering with identifier: `default`
 3. Mark it as the **Current Offering**
-4. Inside the "default" offering, create a package with identifier: "monthly"
+4. Inside the "default" offering, create a package with identifier: `monthly`
 5. Attach the subscription products (created in Sections 2–4 below) to this `monthly` package
+6. Attach the `Berven Book Pro` entitlement to each product
 
 ---
 
@@ -174,7 +181,7 @@ Use RevenueCat's promotional entitlements to grant premium access without a purc
 3. Search for the user by **App User ID** (this is the Supabase user UUID — check the `session.tsx` login call)
 4. Click on the customer to open their profile
 5. Click **Grant Promotional**
-6. Select the entitlement to grant (e.g. `premium`)
+6. Select the entitlement to grant: `Berven Book Pro`
 7. Choose the duration:
    - **Lifetime** — never expires
    - **Custom** — set a specific end date
