@@ -2,7 +2,71 @@
 
 ## Active
 
-_(No active requirements — all M003 requirements validated.)_
+### SUB-01 — Subscription gating on scan feature via RevenueCat entitlement
+- Class: core-capability
+- Status: active
+- Description: Scan feature gated behind subscription check using RevenueCat entitlement. Free users get 3 photo scans per calendar month; subscribers get unlimited.
+- Why it matters: Monetization path for the scan feature.
+- Source: user
+- Primary owning slice: M006/S03
+- Supporting slices: M006/S01, M006/S02
+- Validation: contract verified (Jest gate tests in scan-gate.test.ts); operational validation deferred to EAS build + device
+- Notes: Gate in createMultiPhotoScanJob; isSubscriber bypass tested; ScanLimitError at count > 3.
+
+### SUB-02 — Paywall UI displayed when non-subscriber hits scan limit
+- Class: core-capability
+- Status: active
+- Description: Non-subscribers see a paywall screen when they exceed 3 scans/month, showing $3.99/month pricing and subscribe button.
+- Why it matters: Clear upgrade path for monetization.
+- Source: user
+- Primary owning slice: M006/S03
+- Supporting slices: M006/S05
+- Validation: contract verified (PaywallPlaceholder component + ScanLimitError catch wiring); RevenueCatUI rendering deferred to EAS build; web Stripe checkout wired in S05
+- Notes: PaywallPlaceholder with native RevenueCatUI dynamic import + web Stripe checkout.
+
+### SUB-03 — Web subscription checkout via RevenueCat Web Billing / Stripe
+- Class: core-capability
+- Status: active
+- Description: Web users can subscribe via RevenueCat Web Billing backed by Stripe.
+- Why it matters: Web monetization parity with mobile.
+- Source: user
+- Primary owning slice: M006/S05
+- Supporting slices: none
+- Validation: contract verified (6 web-billing.test.ts tests); runtime requires EXPO_PUBLIC_REVENUECAT_WEB_API_KEY + Stripe product configured
+- Notes: @revenuecat/purchases-js ^1.29.0 installed; web-billing.ts module; SubscriptionContext web branch fetches real entitlement.
+
+### SUB-04 — Ad-free experience for subscribers
+- Class: core-capability
+- Status: active
+- Description: Active subscribers see no ads anywhere in the app. Ad suppression takes effect immediately on purchase without requiring restart.
+- Why it matters: Premium value proposition — paying users shouldn't see ads.
+- Source: user
+- Primary owning slice: M006/S04
+- Supporting slices: M006/S02
+- Validation: contract verified (shouldSuppressAd tests + consent bypass tests); visual verification deferred to EAS build
+- Notes: AdBanner returns null via shouldSuppressAd guard; GDPR consent skipped for subscribers.
+
+### SUB-05 — Freemium scan limit (3 photo scans per calendar month)
+- Class: core-capability
+- Status: active
+- Description: Free users can upload up to 3 photos for scanning per calendar month. Count resets on the 1st. Tracked server-side in Supabase. Failed scans do not count.
+- Why it matters: Lets users try the core feature before committing to a subscription.
+- Source: user
+- Primary owning slice: M006/S01
+- Supporting slices: M006/S03
+- Validation: contract verified (5 scan-count tests + 4 gate tests); month rollover via year_month TEXT; operational deferred to EAS build
+- Notes: user_scan_counts table + increment_scan_count RPC; gate at count > 3 in createMultiPhotoScanJob.
+
+### SUB-06 — Scan count tracking and remaining scans display
+- Class: core-capability
+- Status: active
+- Description: Free users can see how many scans they have remaining this month. Displayed on the scan upload screen.
+- Why it matters: Transparency about free tier limits.
+- Source: user
+- Primary owning slice: M006/S03
+- Supporting slices: M006/S01, M006/S02
+- Validation: contract verified (scansRemaining badge render in scan screen); visual validation deferred to EAS build
+- Notes: scansRemaining = Math.max(0, 3 - scanCount) from SubscriptionContext; badge renders when !isSubscriber.
 
 ## Validated
 
@@ -145,69 +209,6 @@ _(No active requirements — all M003 requirements validated.)_
 
 ## Deferred
 
-### SUB-01 — Subscription gating on scan feature via RevenueCat entitlement
-- Class: core-capability
-- Status: active
-- Description: Scan feature gated behind subscription check using RevenueCat entitlement. Free users get 3 photo scans per calendar month; subscribers get unlimited.
-- Why it matters: Monetization path for the scan feature.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: contract verified (Jest); operational validation deferred to M006 DoD (EAS build + device)
-- Notes: Promoted from deferred. Tracks photo uploads (not recipe extractions) since one photo can yield multiple recipes. S03 proves gate logic in createMultiPhotoScanJob; isSubscriber bypass tested.
-
-### SUB-02 — Paywall UI displayed when non-subscriber hits scan limit
-- Class: core-capability
-- Status: active
-- Description: Non-subscribers see a paywall screen when they exceed 3 scans/month, showing $3.99/month pricing and subscribe button.
-- Why it matters: Clear upgrade path for monetization.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: contract verified (Jest + component exists); RevenueCatUI rendering deferred to M006 DoD (EAS build); web Stripe checkout deferred to S05
-- Notes: Promoted from deferred. PaywallPlaceholder component shipped in S03; native RevenueCatUI dynamic import wired; web subscribe stub replaced in S05.
-
-### SUB-03 — Web subscription checkout via RevenueCat Web Billing / Stripe
-- Class: core-capability
-- Status: active
-- Description: Web users can subscribe via RevenueCat Web Billing backed by Stripe.
-- Why it matters: Web monetization parity with mobile.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: unmapped
-- Notes: Promoted from deferred. Uses @revenuecat/purchases-js for web.
-
-### SUB-04 — Ad-free experience for subscribers
-- Class: core-capability
-- Status: active
-- Description: Active subscribers see no ads anywhere in the app. Ad suppression takes effect immediately on purchase without requiring restart.
-- Why it matters: Premium value proposition — paying users shouldn't see ads.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: unmapped
-
-### SUB-05 — Freemium scan limit (3 photo scans per calendar month)
-- Class: core-capability
-- Status: active
-- Description: Free users can upload up to 3 photos for scanning per calendar month. Count resets on the 1st. Tracked server-side in Supabase. Failed scans do not count.
-- Why it matters: Lets users try the core feature before committing to a subscription.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: contract verified (Jest gate tests at count=1, 2, 3); month rollover + failed-scan exclusion tested in S01; operational validation deferred to M006 DoD
-
-### SUB-06 — Scan count tracking and remaining scans display
-- Class: core-capability
-- Status: active
-- Description: Free users can see how many scans they have remaining this month. Displayed on the scan upload screen.
-- Why it matters: Transparency about free tier limits.
-- Source: user
-- Primary owning slice: M006
-- Supporting slices: none
-- Validation: contract verified (scansRemaining badge render condition present in scan screen); visual/live validation deferred to M006 DoD
-
 ### SEO-02 — Server-rendered public recipe pages for SEO crawlers
 - Class: core-capability
 - Status: deferred
@@ -243,17 +244,17 @@ _(No active requirements — all M003 requirements validated.)_
 | QA-10 | quality-attribute | validated | M003/S05 | all | S05 AUDIT-REPORT |
 | QA-11 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-12 | quality-attribute | validated | M003/S01 | none | S01 UAT |
-| SUB-01 | core-capability | active | M006 | M006/S01, M006/S02, M006/S03 | contract (Jest); operational deferred M006 DoD |
-| SUB-02 | core-capability | active | M006 | M006/S03 | contract (component + catch wiring); runtime deferred M006 DoD |
-| SUB-03 | core-capability | active | M006/S05 | none | unmapped — S05 |
-| SUB-04 | core-capability | active | M006/S04 | none | unmapped — S04 |
-| SUB-05 | core-capability | active | M006 | M006/S01, M006/S03 | contract (Jest gate tests); operational deferred M006 DoD |
-| SUB-06 | core-capability | active | M006 | M006/S03 | contract (badge render wired); visual deferred M006 DoD |
+| SUB-01 | core-capability | active | M006/S03 | M006/S01, M006/S02 | contract (4 gate tests + 5 scan-count tests); operational deferred to EAS build |
+| SUB-02 | core-capability | active | M006/S03 | M006/S05 | contract (PaywallPlaceholder + ScanLimitError catch); runtime deferred to EAS build |
+| SUB-03 | core-capability | active | M006/S05 | none | contract (6 web-billing tests); runtime requires configured API keys |
+| SUB-04 | core-capability | active | M006/S04 | M006/S02 | contract (shouldSuppressAd + consent bypass tests); visual deferred to EAS build |
+| SUB-05 | core-capability | active | M006/S01 | M006/S03 | contract (scan-count + gate tests, month rollover); operational deferred to EAS build |
+| SUB-06 | core-capability | active | M006/S03 | M006/S01, M006/S02 | contract (scansRemaining badge render); visual deferred to EAS build |
 | SEO-02 | core-capability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 6 (SUB-01 through SUB-06 — contract verified, operational validation deferred to M006 DoD)
+- Active requirements: 6 (SUB-01 through SUB-06 — contract verified in M006, operational validation deferred to EAS build + configured third-party services)
 - Deferred requirements: 1 (SEO-02)
-- Validated (all milestones complete through M003): 38+
+- Validated (all milestones complete through M005): 38+
 - Unmapped active requirements: 0

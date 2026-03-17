@@ -2449,6 +2449,24 @@
       "toolCalls": 0,
       "assistantMessages": 10,
       "userMessages": 0
+    },
+    {
+      "type": "complete-slice",
+      "id": "M006/S06",
+      "model": "claude-opus-4-6",
+      "startedAt": 1773785456021,
+      "finishedAt": 1773785556996,
+      "tokens": {
+        "input": 8,
+        "output": 4718,
+        "cacheRead": 230891,
+        "cacheWrite": 18422,
+        "total": 254039
+      },
+      "cost": 0.34857299999999997,
+      "toolCalls": 0,
+      "assistantMessages": 6,
+      "userMessages": 0
     }
   ]
 }

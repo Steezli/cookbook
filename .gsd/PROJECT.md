@@ -19,10 +19,11 @@ Tech stack: Expo (React Native), TypeScript, Supabase (auth, database, storage, 
 Design system: tokens.ts (39 variables including 15 semantic state/badge tokens), useBreakpoint hook, PageContainer, MobileTabBar, WebSidebar.
 Cross-platform alert utility: src/lib/alert.ts (showAlert/confirmAction) — branches Platform.OS for web compatibility.
 Public browsing with cursor-based pagination and SECURITY DEFINER RPCs.
-Advertising module with platform-branched AdMob/placeholder, ATT permission, GDPR consent gating.
+Advertising module with platform-branched AdMob/placeholder, ATT permission, GDPR consent gating, subscriber suppression.
 SEO: schema.org/Recipe JSON-LD + OG/Twitter Card meta tags.
 Multi-recipe scan: edge function splits 1 photo → N drafts; multi-draft review UI with batch save.
 Shared scan types: src/features/scan/types.ts (7 types — ParsedRecipe, ParsedIngredient, FieldConfidence, etc.).
+Subscription: SubscriptionProvider + useSubscription() hook; RevenueCat native SDK + @revenuecat/purchases-js web; server-side scan count via Supabase RPC; PaywallPlaceholder with dynamic RevenueCatUI/Stripe checkout.
 
 ## Capability Contract
 
@@ -42,4 +43,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 _(empty)_
 
 ---
-*Last updated: 2026-03-17 after M006/S06 completion*
+*Last updated: 2026-03-17 after M006 completion*
