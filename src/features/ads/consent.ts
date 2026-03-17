@@ -59,7 +59,8 @@ const VALID_STORED_STATUSES: ReadonlySet<string> = new Set([
  *   Falls back to 'unavailable' if the SDK is not present.
  * - Web: reads from AsyncStorage. Returns 'unknown' if no value stored.
  */
-export async function getConsentStatus(): Promise<ConsentStatus> {
+export async function getConsentStatus(options?: { isSubscriber?: boolean }): Promise<ConsentStatus> {
+  if (options?.isSubscriber) return Promise.resolve('not_required');
   if (Platform.OS === 'web') {
     return getWebConsentStatus();
   }
@@ -74,7 +75,8 @@ export async function getConsentStatus(): Promise<ConsentStatus> {
  * - Web: returns 'required' to signal the UI should show the custom consent banner.
  *   (The banner calls setWebConsentStatus() when the user decides.)
  */
-export async function requestConsent(): Promise<ConsentStatus> {
+export async function requestConsent(options?: { isSubscriber?: boolean }): Promise<ConsentStatus> {
+  if (options?.isSubscriber) return Promise.resolve('not_required');
   if (Platform.OS === 'web') {
     return requestWebConsent();
   }

@@ -450,3 +450,26 @@ describe('ConsentStatus type', () => {
     expect(new Set(allStatuses).size).toBe(5);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Subscriber consent bypass (contract tests — failing until T02 adds the param)
+// ---------------------------------------------------------------------------
+
+describe('subscriber consent bypass', () => {
+  it('getConsentStatus({ isSubscriber: true }) resolves to "not_required"', async () => {
+    const status = await getConsentStatus({ isSubscriber: true });
+    expect(status).toBe('not_required');
+  });
+
+  it('requestConsent({ isSubscriber: true }) resolves to "not_required"', async () => {
+    const status = await requestConsent({ isSubscriber: true });
+    expect(status).toBe('not_required');
+  });
+
+  it('getConsentStatus({ isSubscriber: false }) does NOT immediately return "not_required" (proceeds normally)', async () => {
+    setPlatform('web');
+    // No prior consent stored → should return 'unknown' (normal path), not 'not_required'
+    const status = await getConsentStatus({ isSubscriber: false });
+    expect(status).not.toBe('not_required');
+  });
+});

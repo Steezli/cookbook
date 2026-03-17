@@ -413,3 +413,15 @@
 - **Decision:** Create `PaywallPlaceholder.tsx` as the web + native paywall surface for S03. Native path: dynamic import `react-native-purchases-ui` with `presentPaywallIfNeeded`; fallback to `showAlert`. Web path: `showAlert` "Coming Soon" stub (replaced in S05).
 - **Why:** Native RevenueCatUI requires EAS build — not available in local dev. Dynamic import with fallback (established S02/AdBanner pattern) allows the component to compile and partially function in all environments. Web placeholder is intentionally minimal — S05 replaces it with real Stripe checkout.
 - **Trade-off:** Web subscribe button is non-functional until S05. Clearly documented as placeholder.
+
+## M006/S04: Ad Suppression for Subscribers
+
+### shouldSuppressAd pure helper exported from AdBanner for Jest testability
+- **Decision:** Export `shouldSuppressAd(isLoading: boolean, isSubscriber: boolean): boolean` as a named pure function from `AdBanner.tsx`, separate from the React component.
+- **Why:** Follows the project's established pattern (pure config/consent functions tested without React renderer). The existing `AdBanner.test.ts` deliberately avoids React rendering — testing the suppression guard as a pure boolean function is consistent with that approach and avoids adding a React renderer dependency.
+- **Trade-off:** Small API surface expansion; negligible since the function is tiny and the pattern is already established.
+
+### isSubscriber optional parameter on consent functions over internal hook call
+- **Decision:** Add `options?: { isSubscriber?: boolean }` to `getConsentStatus` and `requestConsent` rather than having `consent.ts` import `useSubscription()` directly.
+- **Why:** `consent.ts` is a pure async module outside React. Importing a React hook would create a module-level React dependency, break testability in Jest node environment, and couple two otherwise-independent modules. The optional parameter is backward-compatible (existing callers pass no arguments).
+- **Trade-off:** Callers must thread `isSubscriber` when they want the bypass. In practice, only `NativeAdBanner`'s consent useEffect would pass this — and since subscriber suppression already short-circuits at the `AdBanner` wrapper level before `NativeAdBanner` renders, the parameter is primarily a defense-in-depth mechanism and test contract.

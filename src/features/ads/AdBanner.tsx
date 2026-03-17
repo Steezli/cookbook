@@ -19,10 +19,19 @@
 import React, { useEffect, useState } from 'react';
 import { Platform, View, Text, StyleSheet } from 'react-native';
 
+import { useSubscription } from '@/features/subscriptions/SubscriptionContext';
 import { getBannerSize, getBannerAdUnitId, getAdPlatform } from './config';
 import type { AdBannerSize } from './config';
 import { getConsentStatus, requestConsent, canShowPersonalizedAds } from './consent';
 import type { ConsentStatus } from './consent';
+
+/**
+ * Pure helper — returns true when the ad should be suppressed for a subscriber.
+ * Guards against layout shift by requiring isLoading to be false first.
+ */
+export function shouldSuppressAd(isLoading: boolean, isSubscriber: boolean): boolean {
+  return !isLoading && isSubscriber;
+}
 
 export interface AdBannerProps {
   /** Override the computed banner size (for testing or custom layouts) */
@@ -37,6 +46,9 @@ export interface AdBannerProps {
  * - Web: always renders a styled placeholder
  */
 export function AdBanner({ size: sizeProp, testID }: AdBannerProps) {
+  const { isLoading, isSubscriber } = useSubscription();
+  if (!isLoading && isSubscriber) return null;
+
   const platform = getAdPlatform();
   const size = sizeProp ?? getBannerSize();
 

@@ -63,7 +63,7 @@ This milestone is complete only when all are true:
 - [x] **S03: Scan Gating + Paywall** `risk:medium` `depends:[S02]`
   > After this: A free user hitting their 3-scan limit sees the RevenueCat paywall on iOS/Android and a custom paywall on web; `createMultiPhotoScanJob` throws `ScanLimitError` when limit is reached; scan upload screen shows remaining scans for free users.
 
-- [ ] **S04: Ad Suppression for Subscribers** `risk:low` `depends:[S02]`
+- [x] **S04: Ad Suppression for Subscribers** `risk:low` `depends:[S02]`
   > After this: `AdBanner` calls `useSubscription()` and returns null for active subscribers — ad suppression is immediate on purchase without app restart; GDPR consent flow is skipped for subscribers; verified via Jest and manual walkthrough.
 
 - [ ] **S05: Web Billing via Stripe** `risk:medium` `depends:[S03]`
