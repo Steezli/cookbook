@@ -4,13 +4,10 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  Share,
   Text,
   TextInput,
   View,
 } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import * as Linking from "expo-linking";
 
 import { showAlert, confirmAction } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
@@ -160,54 +157,37 @@ export default function FamilyDetailScreen() {
 
     setIsInviting(true);
     try {
-      const { data, error } = await supabase.rpc("create_family_invite", {
+      const { data, error } = await supabase.rpc("send_family_invite", {
         p_family_id: familyId,
         p_email: email,
       });
-      if (error) {
-        const status = (error as unknown as { code?: string })?.code;
-        if (status === "P0002") {
-          showAlert("Not found", "You don't have access to this family.");
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
-      const row = Array.isArray(data)
-        ? (data[0] as { token: string } | undefined)
-        : undefined;
-      const token = row?.token;
+      const result = data as string;
       setInviteEmail("");
-      void refresh();
 
-      if (token) {
-        const inviteUrl = Linking.createURL(`/invite/${token}`);
-        await shareInviteLink(inviteUrl);
-      } else {
-        showAlert("Invite created", "Invite was created.");
+      switch (result) {
+        case "sent":
+          showAlert("Invite sent", `An invite has been sent to ${email}. They'll see it in their Family tab.`);
+          void refresh();
+          break;
+        case "no_account":
+          showAlert("No account found", `${email} doesn't have a Cookbook account yet. Ask them to sign up first.`);
+          break;
+        case "already_member":
+          showAlert("Already a member", `${email} is already in this family.`);
+          break;
+        case "already_invited":
+          showAlert("Already invited", `${email} already has a pending invite to this family.`);
+          break;
+        default:
+          showAlert("Invite sent", "Invite created.");
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to create invite";
       showAlert("Invite failed", msg);
     } finally {
       setIsInviting(false);
-    }
-  }
-
-  async function shareInviteLink(inviteUrl: string) {
-    try {
-      await Share.share({
-        message: `Join my family on Cookbook! ${inviteUrl}`,
-        url: inviteUrl,
-      });
-    } catch {
-      // Share dismissed or failed — fall back to clipboard
-      try {
-        await Clipboard.setStringAsync(inviteUrl);
-        showAlert("Link copied", "Invite link copied to clipboard.");
-      } catch {
-        showAlert("Invite created", `Share this link: ${inviteUrl}`);
-      }
     }
   }
 
@@ -719,8 +699,7 @@ export default function FamilyDetailScreen() {
               color: textTertiary,
             }}
           >
-            An invite link will be generated. Share it via the native share
-            sheet or copy to clipboard.
+            Enter their email address. They'll need a Cookbook account to receive the invite.
           </Text>
         </View>
 

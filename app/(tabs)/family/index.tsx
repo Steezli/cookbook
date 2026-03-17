@@ -27,6 +27,7 @@ import {
   fontFamilyDisplay,
   fontSize2xl,
   fontSizeBase,
+  fontSizeLg,
   fontSizeSm,
   radiusMd,
   shadowSm,
@@ -41,16 +42,26 @@ type Family = {
   member_count?: number;
 };
 
+type PendingInvite = {
+  id: string;
+  family_id: string;
+  family_name: string;
+  created_at: string;
+};
+
 export default function FamiliesHomeScreen() {
   const { session, isLoading } = useSession();
   const userId = session?.user.id ?? null;
+  const userEmail = session?.user.email ?? null;
   const { breakpoint } = useBreakpoint();
 
   const [families, setFamilies] = useState<Family[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [familyName, setFamilyName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [respondingInvite, setRespondingInvite] = useState<string | null>(null);
 
   const isAuthed = useMemo(() => Boolean(userId), [userId]);
   const isMobile = breakpoint === "mobile";
@@ -59,12 +70,36 @@ export default function FamiliesHomeScreen() {
     if (!isAuthed) return;
     setIsRefreshing(true);
     try {
-      const { data, error } = await supabase
-        .from("families")
-        .select("id,name")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setFamilies((data ?? []) as Family[]);
+      const [familyResult, inviteResult] = await Promise.all([
+        supabase
+          .from("families")
+          .select("id,name")
+          .order("created_at", { ascending: false }),
+        userEmail
+          ? supabase
+              .from("family_invites")
+              .select("id, family_id, created_at, families(name)")
+              .eq("email", userEmail.toLowerCase())
+              .is("accepted_at", null)
+              .is("revoked_at", null)
+              .gt("expires_at", new Date().toISOString())
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (familyResult.error) throw familyResult.error;
+      setFamilies((familyResult.data ?? []) as Family[]);
+
+      if (!inviteResult.error && inviteResult.data) {
+        setPendingInvites(
+          (inviteResult.data as any[]).map((inv) => ({
+            id: inv.id,
+            family_id: inv.family_id,
+            family_name: inv.families?.name ?? "Unknown",
+            created_at: inv.created_at,
+          }))
+        );
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load families";
       showAlert("Error", msg);
@@ -107,6 +142,40 @@ export default function FamiliesHomeScreen() {
       showAlert("Create family failed", msg);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function onAcceptInvite(inviteId: string) {
+    setRespondingInvite(inviteId);
+    try {
+      const { data, error } = await supabase.rpc("accept_invite_by_id", {
+        p_invite_id: inviteId,
+      });
+      if (error) throw error;
+      showAlert("Joined!", "You've joined the family.");
+      void refresh();
+      if (data) router.push(`/family/${data}`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to accept invite";
+      showAlert("Error", msg);
+    } finally {
+      setRespondingInvite(null);
+    }
+  }
+
+  async function onDeclineInvite(inviteId: string) {
+    setRespondingInvite(inviteId);
+    try {
+      const { error } = await supabase.rpc("decline_invite", {
+        p_invite_id: inviteId,
+      });
+      if (error) throw error;
+      setPendingInvites((prev) => prev.filter((inv) => inv.id !== inviteId));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to decline invite";
+      showAlert("Error", msg);
+    } finally {
+      setRespondingInvite(null);
     }
   }
 
@@ -312,6 +381,100 @@ export default function FamiliesHomeScreen() {
               {isSubmitting ? "Creating..." : "Create"}
             </Text>
           </Pressable>
+        </View>
+      )}
+
+      {/* Pending Invites */}
+      {pendingInvites.length > 0 && (
+        <View style={{ marginBottom: 16 }}>
+          <Text
+            style={{
+              fontFamily: fontFamilyBodyBold,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+              marginBottom: 12,
+            }}
+          >
+            Pending Invites
+          </Text>
+          {pendingInvites.map((invite) => (
+            <View
+              key={invite.id}
+              style={{
+                backgroundColor: bgCard,
+                borderRadius: radiusMd,
+                padding: 16,
+                marginBottom: 10,
+                ...shadowSm,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: fontFamilyBodyBold,
+                  fontSize: fontSizeBase,
+                  color: textPrimary,
+                }}
+              >
+                {invite.family_name}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  marginTop: 4,
+                  marginBottom: 12,
+                }}
+              >
+                You've been invited to join this family
+              </Text>
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={() => onAcceptInvite(invite.id)}
+                  disabled={respondingInvite === invite.id}
+                  style={({ pressed }) => ({
+                    backgroundColor: accentBlue,
+                    borderRadius: radiusMd,
+                    paddingVertical: 8,
+                    paddingHorizontal: 20,
+                    opacity: pressed || respondingInvite === invite.id ? 0.7 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeSm,
+                      color: white,
+                    }}
+                  >
+                    {respondingInvite === invite.id ? "Joining..." : "Accept"}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => onDeclineInvite(invite.id)}
+                  disabled={respondingInvite === invite.id}
+                  style={({ pressed }) => ({
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                    borderRadius: radiusMd,
+                    paddingVertical: 8,
+                    paddingHorizontal: 20,
+                    opacity: pressed || respondingInvite === invite.id ? 0.7 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeSm,
+                      color: textSecondary,
+                    }}
+                  >
+                    Decline
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
         </View>
       )}
 
