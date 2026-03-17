@@ -6,6 +6,7 @@
 // Accent colors
 // ---------------------------------------------------------------------------
 export const accentBlue = '#007AFF';
+export const accentBlueDark = '#0066DD';
 export const accentCoral = '#FF6B6B';
 export const accentGreen = '#22C55E';
 export const accentWarm = '#E8784E';

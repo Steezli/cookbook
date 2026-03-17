@@ -60,7 +60,7 @@ This milestone is complete only when all are true:
 - [x] **S02: RevenueCat SDK + Subscription Context** `risk:high` `depends:[S01]`
   > After this: `useSubscription()` hook returns `{ isSubscriber, scanCount, scansRemaining }` — RevenueCat initialized in the session provider with dynamic import + fallback (same pattern as AdMob), subscription state tested with mock SDK, TypeScript compiles clean locally.
 
-- [ ] **S03: Scan Gating + Paywall** `risk:medium` `depends:[S02]`
+- [x] **S03: Scan Gating + Paywall** `risk:medium` `depends:[S02]`
   > After this: A free user hitting their 3-scan limit sees the RevenueCat paywall on iOS/Android and a custom paywall on web; `createMultiPhotoScanJob` throws `ScanLimitError` when limit is reached; scan upload screen shows remaining scans for free users.
 
 - [ ] **S04: Ad Suppression for Subscribers** `risk:low` `depends:[S02]`

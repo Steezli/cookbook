@@ -7,6 +7,7 @@ export interface ScanUploadOptions {
   maxHeight?: number;
   quality?: number;
   enableCompression?: boolean;
+  isSubscriber?: boolean;
 }
 
 export interface ScanUploadResult {
@@ -100,7 +101,8 @@ export async function uploadScanPhotosWithValidation(
       maxWidth: options.maxWidth || 2048,
       maxHeight: options.maxHeight || 2048,
       quality: options.quality || 0.85,
-      enableCompression: options.enableCompression !== false
+      enableCompression: options.enableCompression !== false,
+      isSubscriber: options.isSubscriber
     });
 
     return {

@@ -396,3 +396,20 @@
 - **Decision:** `Purchases.configure()` lives in `session.tsx`'s `onAuthStateChange` handler, not inside `SubscriptionProvider`. A `purchasesConfiguredRef` prevents double-initialization across multiple auth events.
 - **Why:** session.tsx already has the auth event loop and fires before SubscriptionProvider's useEffect runs with a user ID. This eliminates the initialization race condition. SubscriptionProvider only manages entitlement query state, not SDK lifecycle.
 - **Trade-off:** SDK lifecycle is split across two files; mitigated by clear comments and the established ensureProfile precedent in session.tsx.
+
+## M006/S03: Scan Gating + Paywall
+
+### isSubscriber parameter over hook call in service layer
+- **Decision:** `createMultiPhotoScanJob` accepts `options?: { isSubscriber?: boolean }` rather than accessing React context directly.
+- **Why:** Service layer functions are plain async functions outside React. Passing `isSubscriber` as a parameter keeps the function testable in Jest without context infrastructure. The scan screen (which has context access) passes the value down.
+- **Trade-off:** `isSubscriber` must be threaded through `ScanUploadOptions` → `uploadScanPhotos` → `createMultiPhotoScanJob`. Defaults to `false` at every level — safe/conservative.
+
+### ScanLimitError caught before generic error path in handleUpload
+- **Decision:** In `handleUpload`'s catch block, check `instanceof ScanLimitError` first and set `paywallVisible = true` rather than setting `uploadResult` error state.
+- **Why:** Generic error UI is wrong for a limit-reached scenario — the user needs the paywall, not an error message. Explicit `instanceof` check before the fallthrough ensures the paywall fires on limit, generic error fires on everything else.
+- **Trade-off:** Scan screen catch block has two branches; both branches are clearly typed.
+
+### PaywallPlaceholder component with dynamic import for RevenueCatUI
+- **Decision:** Create `PaywallPlaceholder.tsx` as the web + native paywall surface for S03. Native path: dynamic import `react-native-purchases-ui` with `presentPaywallIfNeeded`; fallback to `showAlert`. Web path: `showAlert` "Coming Soon" stub (replaced in S05).
+- **Why:** Native RevenueCatUI requires EAS build — not available in local dev. Dynamic import with fallback (established S02/AdBanner pattern) allows the component to compile and partially function in all environments. Web placeholder is intentionally minimal — S05 replaces it with real Stripe checkout.
+- **Trade-off:** Web subscribe button is non-functional until S05. Clearly documented as placeholder.

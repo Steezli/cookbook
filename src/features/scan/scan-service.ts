@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { incrementScanCount } from "@/features/subscriptions/scan-count";
 
 export type ScanJob = {
   id: string;
@@ -14,13 +15,33 @@ export type ScanJob = {
   max_retries: number;
 };
 
-export async function createMultiPhotoScanJob(photoUrls: string[]): Promise<ScanJob> {
+export interface CreateMultiPhotoScanJobOptions {
+  userId: string;
+  photoUris: string[];
+  isSubscriber?: boolean;
+}
+
+export async function createMultiPhotoScanJob(
+  optionsOrPhotoUrls: CreateMultiPhotoScanJobOptions | string[]
+): Promise<ScanJob> {
+  // Normalise: support legacy string[] call-site and new options object
+  const photoUrls = Array.isArray(optionsOrPhotoUrls)
+    ? optionsOrPhotoUrls
+    : optionsOrPhotoUrls.photoUris;
+  const isSubscriber = Array.isArray(optionsOrPhotoUrls)
+    ? undefined
+    : optionsOrPhotoUrls.isSubscriber;
+
   if (photoUrls.length === 0) {
     throw new Error('At least one photo URL is required');
   }
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+
+  if (!isSubscriber) {
+    await incrementScanCount(user.id);
+  }
 
   const { data, error } = await supabase
     .from('scan_jobs')

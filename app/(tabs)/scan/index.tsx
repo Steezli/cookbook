@@ -16,6 +16,9 @@ import { PageContainer } from '@/components/nav/PageContainer';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import { uploadScanPhotosWithValidation, ScanUploadResult } from '@/features/scan/scan-upload';
 import { RecentScans } from '@/features/scan/RecentScans';
+import { useSubscription } from '@/features/subscriptions/SubscriptionContext';
+import { ScanLimitError } from '@/features/scan/errors';
+import { PaywallPlaceholder } from '@/features/subscriptions/PaywallPlaceholder';
 import {
   fontFamilyDisplay,
   fontFamilyBody,
@@ -48,6 +51,9 @@ export default function ScanUploadScreen() {
   const { breakpoint } = useBreakpoint();
   const isMobile = breakpoint === 'mobile';
   const isWeb = Platform.OS === 'web';
+
+  const { isSubscriber, scansRemaining, isLoading: subscriptionLoading, restorePurchases } = useSubscription();
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -181,7 +187,7 @@ export default function ScanUploadScreen() {
         };
       });
 
-      const result = await uploadScanPhotosWithValidation(files);
+      const result = await uploadScanPhotosWithValidation(files, { isSubscriber });
       setUploadResult(result);
 
       if (result.success && result.jobId) {
@@ -190,6 +196,10 @@ export default function ScanUploadScreen() {
         router.push(`/scan/draft/${result.jobId}`);
       }
     } catch (error) {
+      if (error instanceof ScanLimitError) {
+        setPaywallVisible(true);
+        return;
+      }
       setUploadResult({
         success: false,
         photoUrls: [],
@@ -233,6 +243,20 @@ export default function ScanUploadScreen() {
         >
           Upload photos of a recipe to automatically extract ingredients and instructions
         </Text>
+
+        {/* Remaining scans badge for free users */}
+        {!isSubscriber && !subscriptionLoading && scansRemaining <= 3 && scansRemaining > 0 && (
+          <Text
+            style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeSm,
+              color: textSecondary,
+              marginBottom: 16,
+            }}
+          >
+            {scansRemaining} scan{scansRemaining !== 1 ? 's' : ''} remaining this month
+          </Text>
+        )}
 
         {/* Main content: upload + recent scans */}
         <View
@@ -666,6 +690,7 @@ export default function ScanUploadScreen() {
 
         </View>{/* end main content row/column */}
       </ScrollView>
+      <PaywallPlaceholder visible={paywallVisible} onDismiss={() => setPaywallVisible(false)} />
     </PageContainer>
   );
 }

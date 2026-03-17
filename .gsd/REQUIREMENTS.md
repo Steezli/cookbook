@@ -153,8 +153,8 @@ _(No active requirements — all M003 requirements validated.)_
 - Source: user
 - Primary owning slice: M006
 - Supporting slices: none
-- Validation: unmapped
-- Notes: Promoted from deferred. Tracks photo uploads (not recipe extractions) since one photo can yield multiple recipes.
+- Validation: contract verified (Jest); operational validation deferred to M006 DoD (EAS build + device)
+- Notes: Promoted from deferred. Tracks photo uploads (not recipe extractions) since one photo can yield multiple recipes. S03 proves gate logic in createMultiPhotoScanJob; isSubscriber bypass tested.
 
 ### SUB-02 — Paywall UI displayed when non-subscriber hits scan limit
 - Class: core-capability
@@ -164,8 +164,8 @@ _(No active requirements — all M003 requirements validated.)_
 - Source: user
 - Primary owning slice: M006
 - Supporting slices: none
-- Validation: unmapped
-- Notes: Promoted from deferred. Using RevenueCat's built-in paywall UI initially.
+- Validation: contract verified (Jest + component exists); RevenueCatUI rendering deferred to M006 DoD (EAS build); web Stripe checkout deferred to S05
+- Notes: Promoted from deferred. PaywallPlaceholder component shipped in S03; native RevenueCatUI dynamic import wired; web subscribe stub replaced in S05.
 
 ### SUB-03 — Web subscription checkout via RevenueCat Web Billing / Stripe
 - Class: core-capability
@@ -196,7 +196,7 @@ _(No active requirements — all M003 requirements validated.)_
 - Source: user
 - Primary owning slice: M006
 - Supporting slices: none
-- Validation: unmapped
+- Validation: contract verified (Jest gate tests at count=1, 2, 3); month rollover + failed-scan exclusion tested in S01; operational validation deferred to M006 DoD
 
 ### SUB-06 — Scan count tracking and remaining scans display
 - Class: core-capability
@@ -206,7 +206,7 @@ _(No active requirements — all M003 requirements validated.)_
 - Source: user
 - Primary owning slice: M006
 - Supporting slices: none
-- Validation: unmapped
+- Validation: contract verified (scansRemaining badge render condition present in scan screen); visual/live validation deferred to M006 DoD
 
 ### SEO-02 — Server-rendered public recipe pages for SEO crawlers
 - Class: core-capability
@@ -243,14 +243,17 @@ _(No active requirements — all M003 requirements validated.)_
 | QA-10 | quality-attribute | validated | M003/S05 | all | S05 AUDIT-REPORT |
 | QA-11 | quality-attribute | validated | M003/S01 | none | S01 UAT |
 | QA-12 | quality-attribute | validated | M003/S01 | none | S01 UAT |
-| SUB-01 | core-capability | deferred | M004 | none | unmapped |
-| SUB-02 | core-capability | deferred | M004 | none | unmapped |
-| SUB-03 | core-capability | deferred | M004 | none | unmapped |
+| SUB-01 | core-capability | active | M006 | M006/S01, M006/S02, M006/S03 | contract (Jest); operational deferred M006 DoD |
+| SUB-02 | core-capability | active | M006 | M006/S03 | contract (component + catch wiring); runtime deferred M006 DoD |
+| SUB-03 | core-capability | active | M006/S05 | none | unmapped — S05 |
+| SUB-04 | core-capability | active | M006/S04 | none | unmapped — S04 |
+| SUB-05 | core-capability | active | M006 | M006/S01, M006/S03 | contract (Jest gate tests); operational deferred M006 DoD |
+| SUB-06 | core-capability | active | M006 | M006/S03 | contract (badge render wired); visual deferred M006 DoD |
 | SEO-02 | core-capability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Deferred requirements: 4 (SUB-01, SUB-02, SUB-03, SEO-02)
+- Active requirements: 6 (SUB-01 through SUB-06 — contract verified, operational validation deferred to M006 DoD)
+- Deferred requirements: 1 (SEO-02)
 - Validated (all milestones complete through M003): 38+
 - Unmapped active requirements: 0

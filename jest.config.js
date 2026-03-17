@@ -9,6 +9,7 @@ module.exports = {
     '^react-native$': '<rootDir>/__mocks__/react-native.js',
     '^react-native-safe-area-context$': '<rootDir>/__mocks__/react-native-safe-area-context.js',
     '^react-native-purchases$': '<rootDir>/__mocks__/react-native-purchases.js',
+    '^react-native-purchases-ui$': '<rootDir>/__mocks__/react-native-purchases-ui.js',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
