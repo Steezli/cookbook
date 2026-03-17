@@ -106,6 +106,9 @@ export default function FamilyDetailScreen() {
           .from("family_invites")
           .select("id,email,expires_at,revoked_at,accepted_at")
           .eq("family_id", familyId)
+          .is("accepted_at", null)
+          .is("revoked_at", null)
+          .gt("expires_at", new Date().toISOString())
           .order("created_at", { ascending: false }),
       ]);
 
@@ -723,18 +726,6 @@ export default function FamilyDetailScreen() {
               Pending Invites
             </Text>
             {invites.map((inv) => {
-              const status = inv.revoked_at
-                ? "revoked"
-                : inv.accepted_at
-                  ? "accepted"
-                  : "pending";
-              const statusColor =
-                status === "pending"
-                  ? accentBlue
-                  : status === "accepted"
-                    ? accentGreen
-                    : textTertiary;
-
               return (
                 <View
                   key={inv.id}
@@ -759,15 +750,14 @@ export default function FamilyDetailScreen() {
                       style={{
                         fontFamily: fontFamilyBody,
                         fontSize: fontSizeXs,
-                        color: statusColor,
+                        color: accentBlue,
                         marginTop: 2,
-                        textTransform: "capitalize",
                       }}
                     >
-                      {status}
+                      pending
                     </Text>
                   </View>
-                  {isAdmin && status === "pending" && (
+                  {isAdmin && (
                     <Pressable
                       onPress={() => onRevokeInvite(inv.id)}
                       style={({ pressed }) => ({
