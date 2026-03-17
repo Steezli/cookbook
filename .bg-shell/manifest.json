@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "0652be78",
+    "label": "expo-web",
+    "command": "cd /Users/elinicholson/development/cookbook && npx expo start --web --port 8081",
+    "cwd": "/Users/elinicholson/development/cookbook",
+    "startedAt": 1773791148386,
+    "processType": "server",
+    "group": null,
+    "readyPattern": null,
+    "readyPort": 8081,
+    "pid": 65429
+  }
+]
