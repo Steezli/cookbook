@@ -106,9 +106,6 @@ export default function FamilyDetailScreen() {
           .from("family_invites")
           .select("id,email,expires_at,revoked_at,accepted_at")
           .eq("family_id", familyId)
-          .is("accepted_at", null)
-          .is("revoked_at", null)
-          .gt("expires_at", new Date().toISOString())
           .order("created_at", { ascending: false }),
       ]);
 
@@ -204,6 +201,35 @@ export default function FamilyDetailScreen() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to revoke invite";
       showAlert("Revoke failed", msg);
+    }
+  }
+
+  async function onReinvite(email: string) {
+    if (!familyId) return;
+    setIsInviting(true);
+    try {
+      const { data, error } = await supabase.rpc("send_family_invite", {
+        p_family_id: familyId,
+        p_email: email,
+      });
+      if (error) throw error;
+      if (data === "sent") {
+        showAlert("Invite sent", `${email} has been reinvited.`);
+        void refresh();
+      } else if (data === "no_account") {
+        showAlert("No account", `${email} no longer has an account.`);
+      } else if (data === "already_member") {
+        showAlert("Already a member", `${email} is already in this family.`);
+        void refresh();
+      } else if (data === "already_invited") {
+        showAlert("Already invited", `${email} already has a pending invite.`);
+        void refresh();
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to reinvite";
+      showAlert("Reinvite failed", msg);
+    } finally {
+      setIsInviting(false);
     }
   }
 
@@ -706,85 +732,192 @@ export default function FamilyDetailScreen() {
           </Text>
         </View>
 
-        {/* Pending Invites */}
-        {invites.length > 0 && (
-          <View
-            style={{
-              backgroundColor: bgCard,
-              borderRadius: radiusMd,
-              padding: 16,
-              gap: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: fontFamilyBodyBold,
-                fontSize: fontSizeLg,
-                color: textPrimary,
-              }}
-            >
-              Pending Invites
-            </Text>
-            {invites.map((inv) => {
-              return (
+        {/* Invites */}
+        {(() => {
+          const memberEmails = new Set(
+            members.map((m) => m.profiles?.email?.toLowerCase()).filter(Boolean)
+          );
+          const now = new Date().toISOString();
+          const pending = invites.filter(
+            (inv) => !inv.accepted_at && !inv.revoked_at && inv.expires_at > now
+          );
+          // Past invites: declined, expired, or accepted-then-left — dedupe by email,
+          // only show if not currently a member and no pending invite exists
+          const pendingEmails = new Set(pending.map((inv) => inv.email.toLowerCase()));
+          const pastByEmail = new Map<string, InviteRow>();
+          for (const inv of invites) {
+            const email = inv.email.toLowerCase();
+            if (pendingEmails.has(email) || memberEmails.has(email)) continue;
+            if (inv.accepted_at || inv.revoked_at || inv.expires_at <= now) {
+              if (!pastByEmail.has(email)) pastByEmail.set(email, inv);
+            }
+          }
+          const reinvitable = Array.from(pastByEmail.values());
+
+          return (
+            <>
+              {pending.length > 0 && (
                 <View
-                  key={inv.id}
                   style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingVertical: 8,
+                    backgroundColor: bgCard,
+                    borderRadius: radiusMd,
+                    padding: 16,
+                    gap: 8,
                   }}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyBold,
+                      fontSize: fontSizeLg,
+                      color: textPrimary,
+                    }}
+                  >
+                    Pending Invites
+                  </Text>
+                  {pending.map((inv) => (
+                    <View
+                      key={inv.id}
                       style={{
-                        fontFamily: fontFamilyBodyMedium,
-                        fontSize: fontSizeSm,
-                        color: textPrimary,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingVertical: 8,
                       }}
                     >
-                      {inv.email}
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: fontFamilyBody,
-                        fontSize: fontSizeXs,
-                        color: accentBlue,
-                        marginTop: 2,
-                      }}
-                    >
-                      pending
-                    </Text>
-                  </View>
-                  {isAdmin && (
-                    <Pressable
-                      onPress={() => onRevokeInvite(inv.id)}
-                      style={({ pressed }) => ({
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: radiusMd,
-                        borderWidth: 1,
-                        borderColor: accentCoral,
-                        opacity: pressed ? 0.7 : 1,
-                      })}
-                    >
-                      <Text
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontFamily: fontFamilyBodyMedium,
+                            fontSize: fontSizeSm,
+                            color: textPrimary,
+                          }}
+                        >
+                          {inv.email}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: fontFamilyBody,
+                            fontSize: fontSizeXs,
+                            color: accentBlue,
+                            marginTop: 2,
+                          }}
+                        >
+                          pending
+                        </Text>
+                      </View>
+                      {isAdmin && (
+                        <Pressable
+                          onPress={() => onRevokeInvite(inv.id)}
+                          style={({ pressed }) => ({
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: radiusMd,
+                            borderWidth: 1,
+                            borderColor: accentCoral,
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBody,
+                              fontSize: fontSizeXs,
+                              color: accentCoral,
+                            }}
+                          >
+                            Revoke
+                          </Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {isAdmin && reinvitable.length > 0 && (
+                <View
+                  style={{
+                    backgroundColor: bgCard,
+                    borderRadius: radiusMd,
+                    padding: 16,
+                    gap: 8,
+                    marginTop: pending.length > 0 ? 12 : 0,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyBold,
+                      fontSize: fontSizeLg,
+                      color: textPrimary,
+                    }}
+                  >
+                    Past Invites
+                  </Text>
+                  {reinvitable.map((inv) => {
+                    const label = inv.revoked_at
+                      ? "declined"
+                      : inv.accepted_at
+                        ? "left"
+                        : "expired";
+                    return (
+                      <View
+                        key={inv.id}
                         style={{
-                          fontFamily: fontFamilyBody,
-                          fontSize: fontSizeXs,
-                          color: accentCoral,
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          paddingVertical: 8,
                         }}
                       >
-                        Revoke
-                      </Text>
-                    </Pressable>
-                  )}
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBodyMedium,
+                              fontSize: fontSizeSm,
+                              color: textPrimary,
+                            }}
+                          >
+                            {inv.email}
+                          </Text>
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBody,
+                              fontSize: fontSizeXs,
+                              color: textTertiary,
+                              marginTop: 2,
+                            }}
+                          >
+                            {label}
+                          </Text>
+                        </View>
+                        <Pressable
+                          onPress={() => onReinvite(inv.email)}
+                          disabled={isInviting}
+                          style={({ pressed }) => ({
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: radiusMd,
+                            backgroundColor: accentBlue,
+                            opacity: pressed || isInviting ? 0.7 : 1,
+                          })}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fontFamilyBody,
+                              fontSize: fontSizeXs,
+                              color: white,
+                            }}
+                          >
+                            Reinvite
+                          </Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
                 </View>
-              );
-            })}
-          </View>
-        )}
+              )}
+            </>
+          );
+        })()}
 
         {/* Admin Controls / Leave */}
         <View
