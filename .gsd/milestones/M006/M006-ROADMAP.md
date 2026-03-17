@@ -66,7 +66,7 @@ This milestone is complete only when all are true:
 - [x] **S04: Ad Suppression for Subscribers** `risk:low` `depends:[S02]`
   > After this: `AdBanner` calls `useSubscription()` and returns null for active subscribers — ad suppression is immediate on purchase without app restart; GDPR consent flow is skipped for subscribers; verified via Jest and manual walkthrough.
 
-- [ ] **S05: Web Billing via Stripe** `risk:medium` `depends:[S03]`
+- [x] **S05: Web Billing via Stripe** `risk:medium` `depends:[S03]`
   > After this: Web users can complete a Stripe test-mode checkout via `@revenuecat/purchases-js`, entitlement is immediately reflected in `useSubscription()`, and the web paywall screen shows the correct price and subscribe button.
 
 - [ ] **S06: Setup Guides + Promotional Entitlements** `risk:low` `depends:[S05]`

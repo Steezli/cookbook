@@ -25,6 +25,7 @@
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@google-cloud/vision": "^5.3.4",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@revenuecat/purchases-js": "^1.29.0",
     "@supabase/supabase-js": "^2.49.1",
     "expo": "^54.0.33",
     "expo-apple-authentication": "~8.0.8",

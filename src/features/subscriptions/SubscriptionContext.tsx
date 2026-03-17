@@ -15,6 +15,7 @@ export type SubscriptionContextValue = {
   scansRemaining: number;
   isLoading: boolean;
   restorePurchases: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
 };
 
 const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
@@ -56,7 +57,7 @@ const DEFAULT_STATE = {
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const { session } = useSession();
 
-  const [state, setState] = useState<Omit<SubscriptionContextValue, 'restorePurchases'>>({
+  const [state, setState] = useState<Omit<SubscriptionContextValue, 'restorePurchases' | 'refreshSubscription'>>({
     ...DEFAULT_STATE,
     isLoading: Platform.OS !== 'web',
   });
@@ -64,10 +65,39 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const listenerRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // Web: no SDK, return defaults immediately
     if (Platform.OS === 'web') {
-      setState({ ...DEFAULT_STATE });
-      return;
+      const userId = session?.user?.id;
+      if (!userId) {
+        setState({ ...DEFAULT_STATE });
+        return;
+      }
+
+      let cancelled = false;
+
+      async function loadWebState() {
+        try {
+          const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_WEB_API_KEY ?? '';
+          const { initializeWebBilling, getWebCustomerInfo } = await import('@/features/subscriptions/web-billing');
+          await initializeWebBilling(apiKey, userId!);
+          if (cancelled) return;
+          const [customerInfo, count] = await Promise.all([
+            getWebCustomerInfo(),
+            getScanCount(userId!),
+          ]);
+          if (cancelled) return;
+          const computed = computeSubscriptionState(customerInfo, count);
+          setState({ ...computed, isLoading: false });
+        } catch (err) {
+          if (!cancelled) {
+            console.warn('[SubscriptionProvider] web SDK failed:', err instanceof Error ? err.message : String(err));
+            setState({ ...DEFAULT_STATE });
+          }
+        }
+      }
+
+      setState(s => ({ ...s, isLoading: true }));
+      loadWebState();
+      return () => { cancelled = true; };
     }
 
     const userId = session?.user?.id;
@@ -132,15 +162,46 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [session?.user?.id]);
 
   async function restorePurchases(): Promise<void> {
-    const mod = await import('react-native-purchases');
-    const Purchases = mod.default;
-    const customerInfo = await Purchases.restorePurchases();
-    const count = session?.user?.id ? await getScanCount(session.user.id) : 0;
-    const computed = computeSubscriptionState(customerInfo, count);
-    setState({ ...computed, isLoading: false });
+    if (Platform.OS !== 'web') {
+      const mod = await import('react-native-purchases');
+      const Purchases = mod.default;
+      const customerInfo = await Purchases.restorePurchases();
+      const count = session?.user?.id ? await getScanCount(session.user.id) : 0;
+      const computed = computeSubscriptionState(customerInfo, count);
+      setState({ ...computed, isLoading: false });
+    } else {
+      const userId = session?.user?.id;
+      const { getWebCustomerInfo } = await import('@/features/subscriptions/web-billing');
+      const customerInfo = await getWebCustomerInfo();
+      const count = userId ? await getScanCount(userId) : 0;
+      const computed = computeSubscriptionState(customerInfo, count);
+      setState({ ...computed, isLoading: false });
+    }
   }
 
-  const value: SubscriptionContextValue = { ...state, restorePurchases };
+  async function refreshSubscription(): Promise<void> {
+    if (Platform.OS === 'web') {
+      const userId = session?.user?.id;
+      const { getWebCustomerInfo } = await import('@/features/subscriptions/web-billing');
+      const customerInfo = await getWebCustomerInfo();
+      const count = userId ? await getScanCount(userId) : 0;
+      const computed = computeSubscriptionState(customerInfo, count);
+      setState({ ...computed, isLoading: false });
+    } else {
+      const userId = session?.user?.id;
+      const mod = await import('react-native-purchases').catch(() => null);
+      if (!mod) return;
+      const Purchases = mod.default;
+      const [customerInfo, count] = await Promise.all([
+        Purchases.getCustomerInfo(),
+        userId ? getScanCount(userId) : Promise.resolve(0),
+      ]);
+      const computed = computeSubscriptionState(customerInfo, count);
+      setState({ ...computed, isLoading: false });
+    }
+  }
+
+  const value: SubscriptionContextValue = { ...state, restorePurchases, refreshSubscription };
 
   return (
     <SubscriptionContext.Provider value={value}>

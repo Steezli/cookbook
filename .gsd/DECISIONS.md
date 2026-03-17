@@ -425,3 +425,20 @@
 - **Decision:** Add `options?: { isSubscriber?: boolean }` to `getConsentStatus` and `requestConsent` rather than having `consent.ts` import `useSubscription()` directly.
 - **Why:** `consent.ts` is a pure async module outside React. Importing a React hook would create a module-level React dependency, break testability in Jest node environment, and couple two otherwise-independent modules. The optional parameter is backward-compatible (existing callers pass no arguments).
 - **Trade-off:** Callers must thread `isSubscriber` when they want the bypass. In practice, only `NativeAdBanner`'s consent useEffect would pass this — and since subscriber suppression already short-circuits at the `AdBanner` wrapper level before `NativeAdBanner` renders, the parameter is primarily a defense-in-depth mechanism and test contract.
+
+## M006/S05: Web Billing via Stripe
+
+### Dynamic import for @revenuecat/purchases-js in SubscriptionContext web branch
+- **Decision:** Use dynamic `import('@/features/subscriptions/web-billing')` inside the web branch `useEffect` and inside `PaywallPlaceholder.tsx` handlers, rather than a static top-level import.
+- **Why:** Consistent with the native `react-native-purchases` dynamic import pattern already in the context. Keeps the web-billing module (which includes Stripe.js dependencies) out of native bundles and avoids module-resolution issues in the Deno/EAS build environment.
+- **Trade-off:** Slightly more complex handler code; identical pattern to the established AdMob/RevenueCatUI approach — no new precedent.
+
+### refreshSubscription() on SubscriptionContextValue for post-checkout sync
+- **Decision:** Add `refreshSubscription(): Promise<void>` to `SubscriptionContextValue` so `PaywallPlaceholder` can trigger a post-checkout entitlement re-fetch without accessing the SDK directly.
+- **Why:** The web SDK has no `addCustomerInfoUpdateListener` — entitlement state must be re-fetched after purchase. Exposing `refreshSubscription` on the context keeps the SDK access centralized in `SubscriptionContext.tsx` and keeps the paywall component dependency-free from the billing module.
+- **Trade-off:** Small addition to context API; consistent with existing `restorePurchases` pattern.
+
+### web restorePurchases maps to getCustomerInfo() refresh
+- **Decision:** On web, `restorePurchases` calls `getWebCustomerInfo()` + state update (no RevenueCat/Stripe restore concept). The paywall's Restore button on web triggers a `refreshSubscription()` call with a "Subscriptions Refreshed" confirmation alert.
+- **Why:** Web Billing via Stripe has no "restore purchases" flow (it's an App Store concept). Re-fetching CustomerInfo achieves the same goal: confirming current subscription status. Mapping web restore to a CustomerInfo refresh is the correct, non-confusing behavior.
+- **Trade-off:** Web restore UX differs from native (no "checking..." state machine); acceptable since web subscriptions are managed directly via Stripe, not through a platform store.

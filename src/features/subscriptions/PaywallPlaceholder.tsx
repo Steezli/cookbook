@@ -3,6 +3,7 @@ import { Modal, View, Text, Pressable, Platform } from 'react-native';
 import { X, Check, RefreshCw } from 'lucide-react-native';
 import { showAlert } from '@/lib/alert';
 import { useSubscription } from '@/features/subscriptions/SubscriptionContext';
+import { useSession } from '@/features/auth/session';
 import {
   fontFamilyDisplay,
   fontFamilyBody,
@@ -40,7 +41,8 @@ const FEATURES = [
 ];
 
 export function PaywallPlaceholder({ visible, onDismiss }: PaywallPlaceholderProps) {
-  const { restorePurchases } = useSubscription();
+  const { restorePurchases, refreshSubscription } = useSubscription();
+  const { session } = useSession();
 
   async function handleSubscribe() {
     if (Platform.OS !== 'web') {
@@ -62,14 +64,31 @@ export function PaywallPlaceholder({ visible, onDismiss }: PaywallPlaceholderPro
         showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
       }
     } else {
-      showAlert('Coming Soon', 'Web subscriptions coming soon!');
+      try {
+        const { startWebCheckout } = await import('@/features/subscriptions/web-billing');
+        const userEmail = session?.user?.email ?? undefined;
+        const result = await startWebCheckout(userEmail);
+        if (result !== null) {
+          await refreshSubscription();
+          onDismiss();
+        }
+        // result === null means UserCancelledError — do nothing (silent)
+      } catch (err) {
+        showAlert('Subscription Error', 'Could not complete checkout. Please try again.');
+      }
     }
   }
 
   async function handleRestore() {
     try {
-      await restorePurchases();
-      onDismiss();
+      if (Platform.OS !== 'web') {
+        await restorePurchases();
+        onDismiss();
+      } else {
+        await refreshSubscription();
+        showAlert('Subscriptions Refreshed', 'Your subscription status has been updated.');
+        onDismiss();
+      }
     } catch {
       showAlert('Restore Failed', 'Could not restore purchases. Please try again.');
     }

@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M006 — Subscriptions
-**Phase:** S04 complete — starting S05
+**Phase:** S05 complete — starting S06 (Setup Guides + Promotional Entitlements)
 **Last Updated:** 2026-03-17
 
 ## Milestone History
@@ -14,7 +14,7 @@
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
-- Tests: 634 passing, 31 suites
+- Tests: 640 passing, 32 suites
 - Zero `: any` types in src/features/ and src/lib/ (non-test, non-.d.ts)
 - Health endpoint: GET /health returns 200
 - E2E: 30/30 API tests pass
