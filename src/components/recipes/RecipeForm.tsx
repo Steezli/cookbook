@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ChevronDown, ChevronUp, X } from 'lucide-react-native';
 import { showAlert } from '@/lib/alert';
+import { supabase } from '@/lib/supabase';
 import { PageContainer } from '@/components/nav/PageContainer';
 import { deleteRecipePhoto, type RecipePhoto } from '@/features/recipes/photos';
 import { parseIngredient } from '@/features/units/parser';
@@ -128,6 +129,24 @@ export function RecipeForm({
   const [visibility, setVisibility] = useState<RecipeVisibility>(
     initialValues?.visibility ?? 'private'
   );
+
+  // Family picker
+  const [familyId, setFamilyId] = useState<string | null>(initialValues?.family_id ?? null);
+  const [userFamilies, setUserFamilies] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('families')
+      .select('id,name')
+      .order('name')
+      .then(({ data }) => {
+        if (data) setUserFamilies(data as { id: string; name: string }[]);
+        // Auto-select first family if editing with family visibility and no family set
+        if (data?.length === 1 && !familyId && visibility === 'family') {
+          setFamilyId(data[0].id);
+        }
+      });
+  }, []);
 
   // Story & Tags
   const [sourceStory, setSourceStory] = useState(initialValues?.source_story ?? '');
@@ -258,6 +277,10 @@ export function RecipeForm({
       return;
     }
 
+    if (visibility === 'family' && !familyId) {
+      return;
+    }
+
     const recipeIngredients: RecipeIngredient[] = ingredients.map((ing, i) => {
       const base = { text: ing.text, sort_order: i };
       if (ing.parsed) {
@@ -279,6 +302,7 @@ export function RecipeForm({
       ingredients: recipeIngredients as NonEmptyArray<RecipeIngredient>,
       steps: steps.map((text, i) => ({ text, sort_order: i })) as NonEmptyArray<{ text: string; sort_order: number }>,
       visibility,
+      family_id: visibility === 'family' ? familyId : null,
       servings: servings ? parseInt(servings, 10) : undefined,
       prep_time_minutes: prepTime ? parseInt(prepTime, 10) : undefined,
       cook_time_minutes: cookTime ? parseInt(cookTime, 10) : undefined,
@@ -293,7 +317,8 @@ export function RecipeForm({
   const titleMissing = !title.trim();
   const ingredientsTooFew = ingredients.length < 2;
   const stepsMissing = steps.length < 1;
-  const hasErrors = titleMissing || ingredientsTooFew || stepsMissing;
+  const familyMissing = visibility === 'family' && !familyId;
+  const hasErrors = titleMissing || ingredientsTooFew || stepsMissing || familyMissing;
   const isDisabled = isSubmitting || hasErrors;
 
   const allPhotos = [
@@ -610,7 +635,11 @@ export function RecipeForm({
             {(['private', 'family', 'public'] as RecipeVisibility[]).map(v => (
               <Pressable
                 key={v}
-                onPress={() => setVisibility(v)}
+                onPress={() => {
+                  setVisibility(v);
+                  if (v !== 'family') setFamilyId(null);
+                  else if (userFamilies.length === 1) setFamilyId(userFamilies[0].id);
+                }}
                 style={{
                   paddingHorizontal: 16,
                   paddingVertical: 8,
@@ -633,6 +662,42 @@ export function RecipeForm({
               </Pressable>
             ))}
           </View>
+          {visibility === 'family' && (
+            <View style={{ marginTop: 10 }}>
+              {userFamilies.length === 0 ? (
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
+                  You're not in any families yet. Create or join a family first.
+                </Text>
+              ) : (
+                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                  {userFamilies.map(f => (
+                    <Pressable
+                      key={f.id}
+                      onPress={() => setFamilyId(f.id)}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 8,
+                        borderRadius: radiusPill,
+                        backgroundColor: familyId === f.id ? accentBlue : bgCard,
+                        borderWidth: 1,
+                        borderColor: familyId === f.id ? accentBlue : borderDefault,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: fontFamilyBodyMedium,
+                          fontSize: fontSizeSm,
+                          color: familyId === f.id ? white : textSecondary,
+                        }}
+                      >
+                        {f.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Section 8: Story */}
@@ -727,6 +792,9 @@ export function RecipeForm({
             )}
             {stepsMissing && (
               <Text style={summaryItemStyle}>• At least 1 step is required</Text>
+            )}
+            {familyMissing && (
+              <Text style={summaryItemStyle}>• Please select a family for family-visible recipes</Text>
             )}
           </View>
         )}
