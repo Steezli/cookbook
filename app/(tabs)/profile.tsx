@@ -9,8 +9,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Pencil, X, Check, ExternalLink } from "lucide-react-native";
+import { Platform } from "react-native";
 import { showAlert } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
+import { useSubscription } from "@/features/subscriptions/SubscriptionContext";
+import { PaywallPlaceholder } from "@/features/subscriptions/PaywallPlaceholder";
 import { supabase } from "@/lib/supabase";
 import { getUnitPreference, setUnitPreference } from "@/features/units/api";
 import type { UnitSystem } from "@/features/units/types";
@@ -18,6 +21,7 @@ import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { PageContainer } from "@/components/nav/PageContainer";
 import {
   accentBlue,
+  accentBlueDark,
   accentCoral,
   accentWarm,
   bgCard,
@@ -35,6 +39,8 @@ import {
   radiusMd,
   radiusPill,
   shadowSm,
+  statusReadyBg,
+  statusReadyText,
   textPrimary,
   textSecondary,
   textTertiary,
@@ -57,6 +63,15 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { session, isLoading: sessionLoading } = useSession();
   const { breakpoint } = useBreakpoint();
+
+  const {
+    isSubscriber,
+    scansRemaining,
+    isLoading: subscriptionLoading,
+    restorePurchases,
+    refreshSubscription,
+  } = useSubscription();
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [unitPref, setUnitPrefState] = useState<UnitSystem>("imperial");
@@ -548,6 +563,171 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </View>
+
+        {/* Subscription Section */}
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeSm,
+            color: textTertiary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+          }}
+        >
+          Subscription
+        </Text>
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            marginBottom: 24,
+            ...shadowSm,
+          }}
+        >
+          {subscriptionLoading ? (
+            <ActivityIndicator size="small" color={accentBlue} />
+          ) : (
+            <>
+              {/* Plan badge */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: isSubscriber ? 0 : 12,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBody,
+                      fontSize: fontSizeBase,
+                      color: textPrimary,
+                    }}
+                  >
+                    Current Plan
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: isSubscriber ? statusReadyBg : bgPage,
+                      paddingHorizontal: 10,
+                      paddingVertical: 3,
+                      borderRadius: radiusPill,
+                      borderWidth: isSubscriber ? 0 : 1,
+                      borderColor: borderDefault,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyMedium,
+                        fontSize: fontSizeSm,
+                        color: isSubscriber ? statusReadyText : textSecondary,
+                      }}
+                    >
+                      {isSubscriber ? "Premium" : "Free"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Free tier details */}
+              {!isSubscriber && (
+                <>
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBody,
+                      fontSize: fontSizeSm,
+                      color: textSecondary,
+                      marginBottom: 14,
+                    }}
+                  >
+                    {scansRemaining > 0
+                      ? `${scansRemaining} photo scan${scansRemaining !== 1 ? "s" : ""} remaining this month`
+                      : "No scans remaining this month"}
+                  </Text>
+
+                  {/* Upgrade button */}
+                  <Pressable
+                    onPress={() => setPaywallVisible(true)}
+                    style={{
+                      backgroundColor: accentBlue,
+                      paddingVertical: 12,
+                      borderRadius: radiusMd,
+                      alignItems: "center",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBodyMedium,
+                        fontSize: fontSizeBase,
+                        color: white,
+                      }}
+                    >
+                      Upgrade to Premium — $3.99/month
+                    </Text>
+                  </Pressable>
+
+                  {/* Restore purchases */}
+                  <Pressable
+                    onPress={async () => {
+                      try {
+                        if (Platform.OS === "web") {
+                          await refreshSubscription();
+                        } else {
+                          await restorePurchases();
+                        }
+                        showAlert(
+                          "Purchases Restored",
+                          "Your subscription status has been refreshed."
+                        );
+                      } catch (e) {
+                        showAlert(
+                          "Restore Failed",
+                          e instanceof Error ? e.message : "Could not restore purchases."
+                        );
+                      }
+                    }}
+                    style={{ alignItems: "center", paddingVertical: 6 }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: fontFamilyBody,
+                        fontSize: fontSizeSm,
+                        color: accentBlueDark,
+                      }}
+                    >
+                      Restore Purchases
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+
+              {/* Subscriber info */}
+              {isSubscriber && (
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: textSecondary,
+                    marginTop: 8,
+                  }}
+                >
+                  Unlimited scans · Ad-free experience
+                </Text>
+              )}
+            </>
+          )}
+        </View>
+
+        {paywallVisible && (
+          <PaywallPlaceholder
+            visible={paywallVisible}
+            onDismiss={() => setPaywallVisible(false)}
+          />
+        )}
 
         {/* Legal Section */}
         <Text
