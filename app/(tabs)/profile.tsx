@@ -587,137 +587,164 @@ export default function ProfileScreen() {
           }}
         >
           {subscriptionLoading ? (
-            <ActivityIndicator size="small" color={accentBlue} />
-          ) : (
+            <ActivityIndicator size="small" color={accentWarm} />
+          ) : isSubscriber ? (
             <>
-              {/* Plan badge */}
+              {/* Subscriber state */}
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: isSubscriber ? 0 : 12,
+                  gap: 10,
+                  marginBottom: 10,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Current Plan
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: statusReadyBg,
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: radiusPill,
+                  }}
+                >
                   <Text
                     style={{
-                      fontFamily: fontFamilyBody,
-                      fontSize: fontSizeBase,
-                      color: textPrimary,
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeSm,
+                      color: statusReadyText,
                     }}
                   >
-                    Current Plan
+                    Premium
                   </Text>
-                  <View
-                    style={{
-                      backgroundColor: isSubscriber ? statusReadyBg : bgPage,
-                      paddingHorizontal: 10,
-                      paddingVertical: 3,
-                      borderRadius: radiusPill,
-                      borderWidth: isSubscriber ? 0 : 1,
-                      borderColor: borderDefault,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: fontFamilyBodyMedium,
-                        fontSize: fontSizeSm,
-                        color: isSubscriber ? statusReadyText : textSecondary,
-                      }}
-                    >
-                      {isSubscriber ? "Premium" : "Free"}
-                    </Text>
-                  </View>
                 </View>
               </View>
-
-              {/* Free tier details */}
-              {!isSubscriber && (
-                <>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                }}
+              >
+                Unlimited scans · Ad-free experience
+              </Text>
+            </>
+          ) : (
+            <>
+              {/* Free tier state */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Current Plan
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: bgPage,
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: radiusPill,
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                  }}
+                >
                   <Text
                     style={{
-                      fontFamily: fontFamilyBody,
+                      fontFamily: fontFamilyBodyMedium,
                       fontSize: fontSizeSm,
                       color: textSecondary,
-                      marginBottom: 14,
                     }}
                   >
-                    {scansRemaining > 0
-                      ? `${scansRemaining} photo scan${scansRemaining !== 1 ? "s" : ""} remaining this month`
-                      : "No scans remaining this month"}
+                    Free
                   </Text>
+                </View>
+              </View>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  marginBottom: 16,
+                }}
+              >
+                {scansRemaining > 0
+                  ? `${scansRemaining} of 3 photo scans remaining this month`
+                  : "No scans remaining this month"}
+              </Text>
 
-                  {/* Upgrade button */}
-                  <Pressable
-                    onPress={() => setPaywallVisible(true)}
-                    style={{
-                      backgroundColor: accentBlue,
-                      paddingVertical: 12,
-                      borderRadius: radiusMd,
-                      alignItems: "center",
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: fontFamilyBodyMedium,
-                        fontSize: fontSizeBase,
-                        color: white,
-                      }}
-                    >
-                      Upgrade to Premium — $3.99/month
-                    </Text>
-                  </Pressable>
+              {/* Upgrade button — uses app CTA color */}
+              <Pressable
+                onPress={() => setPaywallVisible(true)}
+                style={{
+                  backgroundColor: accentWarm,
+                  paddingVertical: 14,
+                  borderRadius: radiusMd,
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: white,
+                  }}
+                >
+                  Upgrade to Premium — $3.99/mo
+                </Text>
+              </Pressable>
 
-                  {/* Restore purchases */}
-                  <Pressable
-                    onPress={async () => {
-                      try {
-                        if (Platform.OS === "web") {
-                          await refreshSubscription();
-                        } else {
-                          await restorePurchases();
-                        }
-                        showAlert(
-                          "Purchases Restored",
-                          "Your subscription status has been refreshed."
-                        );
-                      } catch (e) {
-                        showAlert(
-                          "Restore Failed",
-                          e instanceof Error ? e.message : "Could not restore purchases."
-                        );
-                      }
-                    }}
-                    style={{ alignItems: "center", paddingVertical: 6 }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: fontFamilyBody,
-                        fontSize: fontSizeSm,
-                        color: accentBlueDark,
-                      }}
-                    >
-                      Restore Purchases
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-
-              {/* Subscriber info */}
-              {isSubscriber && (
+              {/* Restore purchases */}
+              <Pressable
+                onPress={async () => {
+                  try {
+                    if (Platform.OS === "web") {
+                      await refreshSubscription();
+                    } else {
+                      await restorePurchases();
+                    }
+                    showAlert(
+                      "Purchases Restored",
+                      "Your subscription status has been refreshed."
+                    );
+                  } catch (e) {
+                    showAlert(
+                      "Restore Failed",
+                      e instanceof Error ? e.message : "Could not restore purchases."
+                    );
+                  }
+                }}
+                style={{ alignItems: "center", paddingVertical: 8 }}
+              >
                 <Text
                   style={{
                     fontFamily: fontFamilyBody,
                     fontSize: fontSizeSm,
-                    color: textSecondary,
-                    marginTop: 8,
+                    color: accentWarm,
                   }}
                 >
-                  Unlimited scans · Ad-free experience
+                  Restore Purchases
                 </Text>
-              )}
+              </Pressable>
             </>
           )}
         </View>
