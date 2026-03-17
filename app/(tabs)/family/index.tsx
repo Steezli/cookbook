@@ -1,5 +1,5 @@
-import { Link, router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { Link, router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -78,6 +78,15 @@ export default function FamiliesHomeScreen() {
       void refresh();
     }
   }, [isLoading, isAuthed]);
+
+  // Refresh on screen focus (e.g. after deleting a family and navigating back)
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoading && isAuthed) {
+        void refresh();
+      }
+    }, [isLoading, isAuthed])
+  );
 
   async function onCreateFamily() {
     const name = familyName.trim();
