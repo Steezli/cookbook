@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import * as Linking from "expo-linking";
 
 import { showAlert, confirmAction } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
@@ -180,7 +181,7 @@ export default function FamilyDetailScreen() {
       void refresh();
 
       if (token) {
-        const inviteUrl = `/invite/${token}`;
+        const inviteUrl = Linking.createURL(`/invite/${token}`);
         await shareInviteLink(inviteUrl);
       } else {
         showAlert("Invite created", "Invite was created.");
