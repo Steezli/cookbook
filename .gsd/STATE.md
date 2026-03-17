@@ -1,8 +1,8 @@
 # GSD State
 
-**Active Milestone:** M005 — Technical Hardening ✅
-**Phase:** milestone-complete
-**Last Updated:** 2026-03-14
+**Active Milestone:** M006 — Subscriptions (queued, not yet started)
+**Phase:** ready-to-plan
+**Last Updated:** 2026-03-17
 
 ## Milestone History
 - **M001:** ✅ Migration — complete
@@ -10,6 +10,7 @@
 - **M003:** ✅ Quality Audit & Cleanup — complete
 - **M004:** ✅ QOL & Bug Fixes — complete
 - **M005:** ✅ Technical Hardening — complete (S01 ✅, S02 ✅, S03 ✅, S04 ✅, S05 ✅)
+- **M006:** ⏳ Subscriptions — queued
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
