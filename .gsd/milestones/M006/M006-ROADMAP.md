@@ -69,7 +69,7 @@ This milestone is complete only when all are true:
 - [x] **S05: Web Billing via Stripe** `risk:medium` `depends:[S03]`
   > After this: Web users can complete a Stripe test-mode checkout via `@revenuecat/purchases-js`, entitlement is immediately reflected in `useSubscription()`, and the web paywall screen shows the correct price and subscribe button.
 
-- [ ] **S06: Setup Guides + Promotional Entitlements** `risk:low` `depends:[S05]`
+- [x] **S06: Setup Guides + Promotional Entitlements** `risk:low` `depends:[S05]`
   > After this: `docs/subscription-setup.md` covers step-by-step RevenueCat, App Store Connect, Google Play Console, and Stripe configuration; promotional entitlement process documented; EAS env var setup documented; milestone acceptance verified end-to-end on device.
 
 ## Boundary Map

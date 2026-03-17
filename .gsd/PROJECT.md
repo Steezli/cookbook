@@ -10,7 +10,7 @@ Families can save and share treasured recipes (like Grandma's) without losing co
 
 ## Current State
 
-Four milestones complete (M001–M004), M005 in progress (S01–S04 done, S05 remaining). Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating, cooking walkthrough ingredient highlighting, smart liquid/dry unit conversions, dynamic scan timeout, full-screen iOS scanner. 602 tests across 28 suites. Zero TypeScript errors. Zero `: any` in feature/lib code. M005/S01 hardened: search injection-safe, scan retry logic correct, backfillIngredients non-mutating, photo reorder atomic, CORS tightened, password validation strengthened. M005/S02 optimized: photo queries use DISTINCT ON RPC (no N+1), tags filter empty arrays at DB level, comments paginated with Load More, deprecated getRecipes() removed, parser logic single-sourced with automated sync script. M005/S03 type-hardened: Supabase types generated and integrated, zero `any` in feature code, web scan upload reports failures, ensureProfile logs errors, /health endpoint added, NonEmptyArray enforcement on recipe inputs. M005/S04 cleaned: OAuth redirect handling consolidated (3→1), ~254 lines of noise comments removed, auth/error patterns standardized across all API modules.
+Six milestones complete (M001–M006). Full-stack cross-platform app with AI-powered photo scanning, privacy-controlled family spaces, responsive design system, public recipe browsing, advertising integration, multi-recipe scan, SEO structured data, GDPR consent gating, cooking walkthrough ingredient highlighting, smart liquid/dry unit conversions, dynamic scan timeout, full-screen iOS scanner. Freemium subscription model: 3 free photo scans per calendar month, unlimited for $3.99/month subscribers via RevenueCat (native) and Stripe Web Billing (web). Ad suppression for subscribers. Paywall UI on scan limit. Server-side scan count tracking with atomic Postgres RPC. 640 tests across 32 suites. Zero TypeScript errors. Zero `: any` in feature/lib code.
 
 ## Architecture / Key Patterns
 
@@ -34,12 +34,12 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M002: Production Polish — Multi-recipe scan, SEO structured data, production ad config, GDPR consent, UX polish
 - [x] M003: Quality Audit & Cleanup — Scan code consolidation, dead code removal, form focus chaining, cross-platform alert fix, scan UI polish, logging cleanup, full app audit
 - [x] M004: QOL & Bug Fixes — Ingredient highlighting in cooking walkthrough, smart liquid/dry unit conversions, multi-image scan timeout fix, iOS full-screen scanner
-- [ ] M005: Technical Hardening — Security fixes, data integrity, performance, code deduplication, type safety, error handling, end-to-end verification (S01 ✅, S02 ✅, S03 ✅, S04 ✅)
-- [ ] M006: Subscriptions — RevenueCat integration, freemium scan gating (3/month free), paywall UI, ad-free for subscribers, web billing via Stripe (S01 ✅, S02 ✅, S03 ✅, S04–S06 pending)
+- [x] M005: Technical Hardening — Security fixes, data integrity, performance, code deduplication, type safety, error handling, end-to-end verification
+- [x] M006: Subscriptions — RevenueCat integration, freemium scan gating (3/month free), paywall UI, ad-free for subscribers, web billing via Stripe, setup documentation
 
 ## Backlog
 
 _(empty)_
 
 ---
-*Last updated: 2026-03-17 after M006/S03 completion*
+*Last updated: 2026-03-17 after M006/S06 completion*

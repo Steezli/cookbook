@@ -1,7 +1,7 @@
 # GSD State
 
 **Active Milestone:** M006 — Subscriptions
-**Phase:** S05 complete — starting S06 (Setup Guides + Promotional Entitlements)
+**Phase:** M006 complete — all 6 slices shipped, DoD operational verification remaining
 **Last Updated:** 2026-03-17
 
 ## Milestone History
@@ -10,7 +10,7 @@
 - **M003:** ✅ Quality Audit & Cleanup — complete
 - **M004:** ✅ QOL & Bug Fixes — complete
 - **M005:** ✅ Technical Hardening — complete (S01 ✅, S02 ✅, S03 ✅, S04 ✅, S05 ✅)
-- **M006:** 🔄 Subscriptions — in progress (S01 ✅, S02 ✅, S03 ✅, S04 ✅, S05–S06 pending; 4/6 complete)
+- **M006:** ✅ Subscriptions — all slices complete (S01 ✅, S02 ✅, S03 ✅, S04 ✅, S05 ✅, S06 ✅)
 
 ## Codebase Health
 - TypeScript: `npx tsc --noEmit` exits 0
@@ -23,3 +23,9 @@
 
 ## Blockers
 - None
+
+## M006 DoD Remaining
+- EAS build + device testing (3-scan limit, subscriber no-ads)
+- Stripe test-mode checkout on web
+- Promotional entitlement grant via RevenueCat dashboard
+- Purchase restoration on new device
