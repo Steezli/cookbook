@@ -375,6 +375,11 @@
 - **Why:** `AdBanner` needs subscriber state deep in the component tree without touching every intermediate component. Context is the established pattern for cross-cutting app state (same approach as `SessionProvider`).
 - **Trade-off:** Components that call `useSubscription()` must be inside `SubscriptionProvider`. `SubscriptionProvider` wraps the root layout.
 
+### M006/S01 verification strategy: contract proof via Jest with mocked RPC
+- **Decision:** S01 is verified entirely by Jest tests mocking `supabase.rpc` and `supabase.from` — no real DB call, no EAS build. The migration is written and deployable but not applied to remote until milestone DoD.
+- **Why:** The slice has no native build requirements. Jest contract proof is sufficient to unblock S02/S03. Remote migration deployment is gated on the full milestone, not S01 completion.
+- **Trade-off:** `database.types.ts` will not include `user_scan_counts` until the migration is applied to remote; `(supabase.rpc as Function)` cast is used until then per established pattern.
+
 ### Slice order: Supabase infrastructure → SDK integration → gating → ads → web billing → docs
 - **Decision:** Build in the order: S01 (Supabase scan count), S02 (RevenueCat SDK + context), S03 (scan gating + paywall), S04 (ad suppression), S05 (web billing), S06 (docs + verification).
 - **Why:** Server-side infrastructure is testable in Jest and has no native build requirement — proves the business logic before touching the SDK. RevenueCat SDK integration is the highest technical risk (EAS build requirement) and is addressed second. Each subsequent slice has a stable foundation.

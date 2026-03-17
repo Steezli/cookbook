@@ -54,7 +54,7 @@ This milestone is complete only when all are true:
 
 ## Slices
 
-- [ ] **S01: Supabase Scan Count Infrastructure** `risk:high` `depends:[]`
+- [x] **S01: Supabase Scan Count Infrastructure** `risk:high` `depends:[]`
   > After this: A free user's scan count is tracked server-side with an atomic Postgres RPC — enforced by Jest tests proving count increments, limit detection, and month rollover work correctly. The migration is deployable and types regenerated.
 
 - [ ] **S02: RevenueCat SDK + Subscription Context** `risk:high` `depends:[S01]`
