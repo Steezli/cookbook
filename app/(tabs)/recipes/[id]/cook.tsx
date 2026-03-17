@@ -64,7 +64,7 @@ export default function CookScreen() {
   const [unitPreference, setUnitPreference] = useState<'imperial' | 'metric'>('imperial');
   const [showAllIngredients, setShowAllIngredients] = useState(false);
 
-  const flatListRef = useRef<FlatList<RecipeStep>>(null);
+  const flatListRef = useRef<FlatList<RecipeStep | string>>(null);
 
   useEffect(() => {
     async function loadRecipe() {
@@ -159,10 +159,10 @@ export default function CookScreen() {
   const contentPadding = isWeb ? 40 : isTablet ? 32 : 24;
 
   // Render a single step page
-  const renderStepPage = ({ item: step, index }: { item: RecipeStep; index: number }) => {
-    const stepIngredientIndices = extractStepIngredients(step.text, recipe.ingredients);
+  const renderStepPage = ({ item: step, index }: { item: RecipeStep | string; index: number }) => {
+    const stepIngredientIndices = extractStepIngredients(typeof step === 'string' ? step : step.text, recipe.ingredients);
     const stepIngredients = stepIngredientIndices.map(i => recipe.ingredients[i]);
-    const textSegments = highlightStepIngredients(step.text, stepIngredients);
+    const textSegments = highlightStepIngredients(typeof step === 'string' ? step : step.text, stepIngredients);
 
     return (
       <View style={{ width: Dimensions.get('window').width, flex: 1 }}>

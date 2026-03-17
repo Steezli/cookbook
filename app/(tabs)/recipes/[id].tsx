@@ -466,7 +466,7 @@ export default function RecipeDetailScreen() {
                 lineHeight: 24,
               }}
             >
-              {step.text}
+              {typeof step === 'string' ? step : step.text}
             </Text>
           </View>
         ))}

@@ -481,16 +481,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "emailInput",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -500,16 +511,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "passInput",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Enter your password"
+                      "content": "Enter your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -532,9 +554,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "loginBtn",
+                  "x": 0,
+                  "y": 207,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 146.5,
+                      "y": 14
                     }
                   }
                 },
@@ -580,9 +606,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "signupBtn",
+                  "x": 0,
+                  "y": 304,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 113,
+                      "y": 14
                     }
                   }
                 }
@@ -672,16 +702,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -691,16 +732,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tPass",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Enter your password"
+                      "content": "Enter your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -723,9 +775,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "tLoginBtn",
+                  "x": 0,
+                  "y": 207,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 155.5,
+                      "y": 14
                     }
                   }
                 },
@@ -771,9 +827,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "tSignup",
+                  "x": 0,
+                  "y": 304,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 122,
+                      "y": 14
                     }
                   }
                 }
@@ -900,16 +960,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -919,16 +990,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wPass",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Enter your password"
+                      "content": "Enter your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -951,9 +1033,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "wLoginBtn",
+                  "x": 0,
+                  "y": 207,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 175.5,
+                      "y": 14
                     }
                   }
                 },
@@ -999,9 +1085,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "wSignup",
+                  "x": 0,
+                  "y": 304,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 142,
+                      "y": 14
                     }
                   }
                 }
@@ -1115,7 +1205,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "width": "fill_container",
-              "name": "searchInst"
+              "name": "searchInst",
+              "x": 24,
+              "y": 0,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             }
           ]
         },
@@ -1604,14 +1706,50 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "homeAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 813,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         },
         {
           "id": "xIihp",
           "type": "ref",
           "ref": "uG42q",
           "width": "fill_container",
-          "name": "homeTabBar"
+          "name": "homeTabBar",
+          "x": 0,
+          "y": 863,
+          "descendants": {
+            "1y2SX": {
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 107.5,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 183,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 258.5,
+              "y": 22
+            },
+            "7imka": {
+              "x": 334,
+              "y": 22
+            }
+          }
         }
       ]
     },
@@ -1719,7 +1857,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "width": "fill_container",
-              "name": "tSearch"
+              "name": "tSearch",
+              "x": 32,
+              "y": 0,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             }
           ]
         },
@@ -2297,14 +2447,50 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "homeAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 764,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         },
         {
           "id": "gLP6F",
           "type": "ref",
           "ref": "uG42q",
           "width": "fill_container",
-          "name": "tTabBar"
+          "name": "tTabBar",
+          "x": 0,
+          "y": 854,
+          "descendants": {
+            "1y2SX": {
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 202,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 372,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 542,
+              "y": 22
+            },
+            "7imka": {
+              "x": 712,
+              "y": 22
+            }
+          }
         }
       ]
     },
@@ -2595,7 +2781,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "homeAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 384,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -2658,7 +2856,19 @@
                       "type": "ref",
                       "ref": "gjLVJ",
                       "width": 320,
-                      "name": "wSearch"
+                      "name": "wSearch",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "mgPVr": {
+                          "x": 18,
+                          "y": 15
+                        },
+                        "WlRoD": {
+                          "x": 48,
+                          "y": 14
+                        }
+                      }
                     },
                     {
                       "type": "frame",
@@ -2688,9 +2898,13 @@
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "wAddBtn",
+                      "width": "fit_content",
+                      "x": 396,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "New Recipe"
+                          "content": "New Recipe",
+                          "x": 24,
+                          "y": 14
                         }
                       }
                     }
@@ -4327,7 +4541,19 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "detailAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 1501,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         },
         {
           "type": "frame",
@@ -4354,9 +4580,13 @@
               "ref": "e6YJk",
               "width": "fill_container",
               "name": "editBtn",
+              "x": 24,
+              "y": 16,
               "descendants": {
                 "kbOKj": {
-                  "content": "Edit"
+                  "content": "Edit",
+                  "x": 68,
+                  "y": 14
                 }
               }
             },
@@ -4366,9 +4596,13 @@
               "ref": "T8SBH",
               "width": "fill_container",
               "name": "cookBtn",
+              "x": 201,
+              "y": 16,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Start Cooking"
+                  "content": "Start Cooking",
+                  "x": 32,
+                  "y": 14
                 }
               }
             }
@@ -5382,9 +5616,12 @@
                       "ref": "T8SBH",
                       "width": "fill_container",
                       "name": "tCookBtn",
+                      "x": 0,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Start Cooking"
+                          "content": "Start Cooking",
+                          "x": 89.5,
+                          "y": 14
                         }
                       }
                     },
@@ -5394,9 +5631,13 @@
                       "ref": "e6YJk",
                       "width": "fill_container",
                       "name": "tEditBtn",
+                      "x": 0,
+                      "y": 60,
                       "descendants": {
                         "kbOKj": {
-                          "content": "Edit Recipe"
+                          "content": "Edit Recipe",
+                          "x": 98.5,
+                          "y": 14
                         }
                       }
                     }
@@ -5411,7 +5652,19 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "detailAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 1307,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         }
       ]
     },
@@ -5597,7 +5850,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "detailAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 252,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -6387,9 +6652,12 @@
                           "ref": "T8SBH",
                           "width": "fill_container",
                           "name": "wCookBtn",
+                          "x": 0,
                           "descendants": {
                             "6X7YQ": {
-                              "content": "Start Cooking"
+                              "content": "Start Cooking",
+                              "x": 31.5,
+                              "y": 14
                             }
                           }
                         },
@@ -6399,9 +6667,13 @@
                           "ref": "e6YJk",
                           "width": "fill_container",
                           "name": "wEditBtn",
+                          "x": 176,
+                          "y": 0,
                           "descendants": {
                             "kbOKj": {
-                              "content": "Edit"
+                              "content": "Edit",
+                              "x": 67.5,
+                              "y": 14
                             }
                           }
                         }
@@ -6729,12 +7001,21 @@
               "ref": "wOMol",
               "width": "fill_container",
               "name": "titleInput",
+              "height": "fit_content",
+              "x": 24,
+              "y": 224,
               "descendants": {
                 "XGS8C": {
                   "content": "Recipe Title"
                 },
+                "cbZT5": {
+                  "width": "fill_container",
+                  "y": 23
+                },
                 "pV87n": {
-                  "content": "e.g., Grandma's Apple Pie"
+                  "content": "e.g., Grandma's Apple Pie",
+                  "x": 16,
+                  "y": 14
                 }
               }
             },
@@ -7217,12 +7498,21 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "servInput",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Servings"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "pV87n": {
-                      "content": "8"
+                      "content": "8",
+                      "x": 16,
+                      "y": 14
                     }
                   }
                 },
@@ -7232,12 +7522,21 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "prepInput",
+                  "height": "fit_content",
+                  "x": 177,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Prep time"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "pV87n": {
-                      "content": "30 min"
+                      "content": "30 min",
+                      "x": 16,
+                      "y": 14
                     }
                   }
                 }
@@ -7249,12 +7548,21 @@
               "ref": "wOMol",
               "width": "fill_container",
               "name": "tagsInput",
+              "height": "fit_content",
+              "x": 24,
+              "y": 879,
               "descendants": {
                 "XGS8C": {
                   "content": "Tags"
                 },
+                "cbZT5": {
+                  "width": "fill_container",
+                  "y": 23
+                },
                 "pV87n": {
-                  "content": "dessert, baking, family"
+                  "content": "dessert, baking, family",
+                  "x": 16,
+                  "y": 14
                 }
               }
             },
@@ -7264,9 +7572,13 @@
               "ref": "T8SBH",
               "width": "fill_container",
               "name": "saveBtn",
+              "x": 24,
+              "y": 970,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Save Recipe"
+                  "content": "Save Recipe",
+                  "x": 127,
+                  "y": 14
                 }
               }
             }
@@ -7277,7 +7589,19 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "createAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 1096,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         }
       ]
     },
@@ -7424,12 +7748,21 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tTitleIn",
+                  "height": "fit_content",
+                  "x": 28,
+                  "y": 248,
                   "descendants": {
                     "XGS8C": {
                       "content": "Recipe Title"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "pV87n": {
-                      "content": "e.g., Grandma's Apple Pie"
+                      "content": "e.g., Grandma's Apple Pie",
+                      "x": 16,
+                      "y": 14
                     }
                   }
                 },
@@ -7610,12 +7943,21 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "tServIn",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Servings"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "pV87n": {
-                          "content": "8"
+                          "content": "8",
+                          "x": 16,
+                          "y": 14
                         }
                       }
                     },
@@ -7625,12 +7967,21 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "tPrepIn",
+                      "height": "fit_content",
+                      "x": 158.66666666666666,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Prep time"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "pV87n": {
-                          "content": "30 min"
+                          "content": "30 min",
+                          "x": 16,
+                          "y": 14
                         }
                       }
                     },
@@ -7640,12 +7991,21 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "tCookIn",
+                      "height": "fit_content",
+                      "x": 317.3333333333333,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Cook time"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "pV87n": {
-                          "content": "1 hr"
+                          "content": "1 hr",
+                          "x": 16,
+                          "y": 14
                         }
                       }
                     }
@@ -7657,9 +8017,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "tSaveBtn",
+                  "x": 28,
+                  "y": 631,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Save Recipe"
+                      "content": "Save Recipe",
+                      "x": 188,
+                      "y": 14
                     }
                   }
                 }
@@ -7672,7 +8036,19 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "createAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 801,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         }
       ]
     },
@@ -7858,7 +8234,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "createAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 252,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -7902,9 +8290,14 @@
                       "type": "ref",
                       "ref": "e6YJk",
                       "name": "wCancelBtn",
+                      "width": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "kbOKj": {
-                          "content": "Cancel"
+                          "content": "Cancel",
+                          "x": 24,
+                          "y": 14
                         }
                       }
                     },
@@ -7913,9 +8306,13 @@
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "wSaveBtn",
+                      "width": "fit_content",
+                      "x": 111,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Save Recipe"
+                          "content": "Save Recipe",
+                          "x": 24,
+                          "y": 14
                         }
                       }
                     }
@@ -7994,12 +8391,21 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "wTitleIn",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 260,
                       "descendants": {
                         "XGS8C": {
                           "content": "Recipe Title"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "pV87n": {
-                          "content": "e.g., Grandma's Apple Pie"
+                          "content": "e.g., Grandma's Apple Pie",
+                          "x": 16,
+                          "y": 14
                         }
                       }
                     },
@@ -8190,12 +8596,21 @@
                           "ref": "wOMol",
                           "width": "fill_container",
                           "name": "wServIn",
+                          "height": "fit_content",
+                          "x": 0,
+                          "y": 0,
                           "descendants": {
                             "XGS8C": {
                               "content": "Servings"
                             },
+                            "cbZT5": {
+                              "width": "fill_container",
+                              "y": 23
+                            },
                             "pV87n": {
-                              "content": "8"
+                              "content": "8",
+                              "x": 16,
+                              "y": 14
                             }
                           }
                         },
@@ -8205,12 +8620,21 @@
                           "ref": "wOMol",
                           "width": "fill_container",
                           "name": "wPrepIn",
+                          "height": "fit_content",
+                          "x": 124,
+                          "y": 0,
                           "descendants": {
                             "XGS8C": {
                               "content": "Prep"
                             },
+                            "cbZT5": {
+                              "width": "fill_container",
+                              "y": 23
+                            },
                             "pV87n": {
-                              "content": "30 min"
+                              "content": "30 min",
+                              "x": 16,
+                              "y": 14
                             }
                           }
                         },
@@ -8220,12 +8644,21 @@
                           "ref": "wOMol",
                           "width": "fill_container",
                           "name": "wCookIn",
+                          "height": "fit_content",
+                          "x": 248,
+                          "y": 0,
                           "descendants": {
                             "XGS8C": {
                               "content": "Cook"
                             },
+                            "cbZT5": {
+                              "width": "fill_container",
+                              "y": 23
+                            },
                             "pV87n": {
-                              "content": "1 hr"
+                              "content": "1 hr",
+                              "x": 16,
+                              "y": 14
                             }
                           }
                         }
@@ -8237,12 +8670,21 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "wTagsIn",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 169,
                       "descendants": {
                         "XGS8C": {
                           "content": "Tags"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "pV87n": {
-                          "content": "dessert, baking, family"
+                          "content": "dessert, baking, family",
+                          "x": 16,
+                          "y": 14
                         }
                       }
                     }
@@ -8257,8 +8699,8 @@
     {
       "type": "frame",
       "id": "nxJB5",
-      "x": 0,
-      "y": 9370,
+      "x": 2850,
+      "y": 0,
       "name": "Scan Recipe - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -8373,9 +8815,14 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "uploadBtn",
+                  "width": "fit_content",
+                  "x": 107,
+                  "y": 177,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Take Photo"
+                      "content": "Take Photo",
+                      "x": 24,
+                      "y": 14
                     }
                   }
                 }
@@ -8618,7 +9065,19 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "scanAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 730,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         },
         {
           "id": "37moP",
@@ -8626,12 +9085,30 @@
           "ref": "uG42q",
           "width": "fill_container",
           "name": "scanTabBar",
+          "x": 0,
+          "y": 780,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 107.5,
+              "y": 22
             },
             "YckAV": {
-              "fill": "$accent-warm"
+              "fill": "$accent-warm",
+              "x": 183,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 258.5,
+              "y": 22
+            },
+            "7imka": {
+              "x": 334,
+              "y": 22
             }
           }
         }
@@ -8640,8 +9117,8 @@
     {
       "type": "frame",
       "id": "i1j4s",
-      "x": 440,
-      "y": 9370,
+      "x": 3290,
+      "y": 0,
       "name": "Scan Recipe - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -8755,9 +9232,14 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "stUpBtn",
+                  "width": "fit_content",
+                  "x": 132,
+                  "y": 253,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Take Photo"
+                      "content": "Take Photo",
+                      "x": 24,
+                      "y": 14
                     }
                   }
                 }
@@ -9000,7 +9482,19 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "scanAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 562,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         },
         {
           "id": "k7q1a",
@@ -9008,12 +9502,30 @@
           "ref": "uG42q",
           "width": "fill_container",
           "name": "stTabBar",
+          "x": 0,
+          "y": 652,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 202,
+              "y": 22
             },
             "YckAV": {
-              "fill": "$accent-warm"
+              "fill": "$accent-warm",
+              "x": 372,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 542,
+              "y": 22
+            },
+            "7imka": {
+              "x": 712,
+              "y": 22
             }
           }
         }
@@ -9022,8 +9534,8 @@
     {
       "type": "frame",
       "id": "KhQLK",
-      "x": 1260,
-      "y": 9370,
+      "x": 4110,
+      "y": 0,
       "name": "Scan Recipe - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -9271,7 +9783,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "scanAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 340,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -9327,9 +9851,14 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "headerBtn",
+                  "width": "fit_content",
+                  "x": 953,
+                  "y": 4,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Upload Image"
+                      "content": "Upload Image",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "upload"
@@ -9417,9 +9946,13 @@
                               "type": "ref",
                               "ref": "T8SBH",
                               "name": "uploadBtn1",
+                              "width": "fit_content",
+                              "x": 0,
                               "descendants": {
                                 "6X7YQ": {
-                                  "content": "Take Photo"
+                                  "content": "Take Photo",
+                                  "x": 24,
+                                  "y": 14
                                 },
                                 "SWbRl": {
                                   "iconFontName": "camera"
@@ -9431,9 +9964,14 @@
                               "type": "ref",
                               "ref": "e6YJk",
                               "name": "uploadBtn2",
+                              "width": "fit_content",
+                              "x": 140,
+                              "y": 0,
                               "descendants": {
                                 "kbOKj": {
-                                  "content": "Browse Files"
+                                  "content": "Browse Files",
+                                  "x": 24,
+                                  "y": 14
                                 }
                               }
                             }
@@ -9967,8 +10505,8 @@
     {
       "type": "frame",
       "id": "xJ1l2",
-      "x": 0,
-      "y": 12774,
+      "x": 2850,
+      "y": 3404,
       "name": "Family Management - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -10089,9 +10627,14 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "inviteBtn",
+                  "width": "fit_content",
+                  "x": 106,
+                  "y": 144,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Send Invite"
+                      "content": "Send Invite",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "send"
@@ -10479,7 +11022,19 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "famAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 710,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         },
         {
           "id": "BRh0j",
@@ -10487,12 +11042,30 @@
           "ref": "uG42q",
           "name": "famTabBar",
           "width": "fill_container",
+          "x": 0,
+          "y": 760,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 107.5,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 183,
+              "y": 22
             },
             "GTcHv": {
-              "fill": "$accent-warm"
+              "fill": "$accent-warm",
+              "x": 258.5,
+              "y": 22
+            },
+            "7imka": {
+              "x": 334,
+              "y": 22
             }
           }
         }
@@ -10501,8 +11074,8 @@
     {
       "type": "frame",
       "id": "Yi34A",
-      "x": 440,
-      "y": 12774,
+      "x": 3290,
+      "y": 3404,
       "name": "Family Management - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -10556,9 +11129,14 @@
               "type": "ref",
               "ref": "T8SBH",
               "name": "headerBtn",
+              "width": "fit_content",
+              "x": 582,
+              "y": 23,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Invite Member"
+                  "content": "Invite Member",
+                  "x": 24,
+                  "y": 14
                 },
                 "SWbRl": {
                   "iconFontName": "user-plus"
@@ -11019,7 +11597,19 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "famAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 850,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         },
         {
           "id": "hUitF",
@@ -11027,12 +11617,30 @@
           "ref": "uG42q",
           "name": "famTabBar",
           "width": "fill_container",
+          "x": 0,
+          "y": 940,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 202,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 372,
+              "y": 22
             },
             "GTcHv": {
-              "fill": "$accent-warm"
+              "fill": "$accent-warm",
+              "x": 542,
+              "y": 22
+            },
+            "7imka": {
+              "x": 712,
+              "y": 22
             }
           }
         }
@@ -11041,8 +11649,8 @@
     {
       "type": "frame",
       "id": "lfdFG",
-      "x": 1260,
-      "y": 12774,
+      "x": 4110,
+      "y": 3404,
       "name": "Family Management - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -11255,7 +11863,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "famAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 296,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -11311,9 +11931,14 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "headerBtn",
+                  "width": "fit_content",
+                  "x": 946,
+                  "y": 4,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Invite Member"
+                      "content": "Invite Member",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "user-plus"
@@ -11849,15 +12474,24 @@
                           "ref": "wOMol",
                           "width": "fill_container",
                           "name": "inviteInput",
+                          "height": "fit_content",
+                          "x": 24,
+                          "y": 164,
                           "descendants": {
                             "XGS8C": {
                               "content": "Email Address"
+                            },
+                            "cbZT5": {
+                              "width": "fill_container",
+                              "y": 23
                             },
                             "BNFKJ": {
                               "iconFontName": "mail"
                             },
                             "pV87n": {
-                              "content": "Enter email..."
+                              "content": "Enter email...",
+                              "x": 16,
+                              "y": 14
                             }
                           }
                         },
@@ -11867,9 +12501,13 @@
                           "ref": "T8SBH",
                           "width": "fill_container",
                           "name": "inviteBtn",
+                          "x": 24,
+                          "y": 251,
                           "descendants": {
                             "6X7YQ": {
-                              "content": "Send Invitation"
+                              "content": "Send Invitation",
+                              "x": 90.5,
+                              "y": 14
                             },
                             "SWbRl": {
                               "iconFontName": "send"
@@ -12034,8 +12672,8 @@
     {
       "type": "frame",
       "id": "GZxnL",
-      "x": 0,
-      "y": 11350,
+      "x": 2850,
+      "y": 1980,
       "name": "Collections - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -12082,7 +12720,19 @@
           "type": "ref",
           "ref": "gjLVJ",
           "name": "colSearch",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 63,
+          "descendants": {
+            "mgPVr": {
+              "x": 18,
+              "y": 15
+            },
+            "WlRoD": {
+              "x": 48,
+              "y": 14
+            }
+          }
         },
         {
           "type": "frame",
@@ -12377,7 +13027,19 @@
           "type": "ref",
           "ref": "ELaEI",
           "name": "colAd",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 710,
+          "descendants": {
+            "w8t8k": {
+              "x": 157,
+              "y": 18
+            },
+            "bi5ef": {
+              "x": 177,
+              "y": 18.5
+            }
+          }
         },
         {
           "id": "AC7qo",
@@ -12385,9 +13047,29 @@
           "ref": "uG42q",
           "name": "colTabBar",
           "width": "fill_container",
+          "x": 0,
+          "y": 760,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 107.5,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 183,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 258.5,
+              "y": 22
+            },
+            "7imka": {
+              "x": 334,
+              "y": 22
             }
           }
         }
@@ -12396,8 +13078,8 @@
     {
       "type": "frame",
       "id": "lu2C5",
-      "x": 440,
-      "y": 11350,
+      "x": 3290,
+      "y": 1980,
       "name": "Collections - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -12451,9 +13133,14 @@
               "type": "ref",
               "ref": "T8SBH",
               "name": "headerBtn",
+              "width": "fit_content",
+              "x": 577,
+              "y": 23,
               "descendants": {
                 "6X7YQ": {
-                  "content": "New Collection"
+                  "content": "New Collection",
+                  "x": 24,
+                  "y": 14
                 },
                 "SWbRl": {
                   "iconFontName": "plus"
@@ -12477,7 +13164,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "name": "colSearch",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 32,
+              "y": 0,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             }
           ]
         },
@@ -12884,7 +13583,19 @@
           "type": "ref",
           "ref": "jKjFi",
           "name": "colAdT",
-          "width": "fill_container"
+          "width": "fill_container",
+          "x": 0,
+          "y": 850,
+          "descendants": {
+            "5hz7q": {
+              "x": 341,
+              "y": 37
+            },
+            "XXhRa": {
+              "x": 365,
+              "y": 38
+            }
+          }
         },
         {
           "id": "MIAZK",
@@ -12892,9 +13603,29 @@
           "ref": "uG42q",
           "name": "colTabBar",
           "width": "fill_container",
+          "x": 0,
+          "y": 940,
           "descendants": {
             "1y2SX": {
-              "fill": "$text-disabled"
+              "fill": "$text-disabled",
+              "x": 32,
+              "y": 22
+            },
+            "LhFHH": {
+              "x": 202,
+              "y": 22
+            },
+            "YckAV": {
+              "x": 372,
+              "y": 22
+            },
+            "GTcHv": {
+              "x": 542,
+              "y": 22
+            },
+            "7imka": {
+              "x": 712,
+              "y": 22
             }
           }
         }
@@ -12903,8 +13634,8 @@
     {
       "type": "frame",
       "id": "jCxEd",
-      "x": 1260,
-      "y": 11350,
+      "x": 4110,
+      "y": 1980,
       "name": "Collections - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -13117,7 +13848,19 @@
               "type": "ref",
               "ref": "jKjFi",
               "name": "colAdW",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 24,
+              "y": 296,
+              "descendants": {
+                "5hz7q": {
+                  "x": 63,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 87,
+                  "y": 38
+                }
+              }
             }
           ]
         },
@@ -13180,16 +13923,32 @@
                       "type": "ref",
                       "ref": "gjLVJ",
                       "width": 300,
-                      "name": "searchBar"
+                      "name": "searchBar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "mgPVr": {
+                          "x": 18,
+                          "y": 15
+                        },
+                        "WlRoD": {
+                          "x": 48,
+                          "y": 14
+                        }
+                      }
                     },
                     {
                       "id": "DD8EL",
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "headerBtn",
+                      "width": "fit_content",
+                      "x": 312,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "New Collection"
+                          "content": "New Collection",
+                          "x": 24,
+                          "y": 14
                         },
                         "SWbRl": {
                           "iconFontName": "plus"
@@ -13759,8 +14518,8 @@
     {
       "type": "frame",
       "id": "W2Egl",
-      "x": 0,
-      "y": 13948,
+      "x": 2850,
+      "y": 4578,
       "name": "Public Browse - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -13823,9 +14582,14 @@
                   "type": "ref",
                   "ref": "e6YJk",
                   "name": "signInBtn",
+                  "width": "fit_content",
+                  "x": 245,
+                  "y": 0,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 24,
+                      "y": 14
                     }
                   }
                 }
@@ -13836,7 +14600,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "width": "fill_container",
-              "name": "searchBar"
+              "name": "searchBar",
+              "x": 24,
+              "y": 80,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             },
             {
               "type": "frame",
@@ -14245,7 +15021,19 @@
                   "id": "f0DgD",
                   "type": "ref",
                   "ref": "ELaEI",
-                  "name": "ad"
+                  "name": "ad",
+                  "x": 11,
+                  "y": 4,
+                  "descendants": {
+                    "w8t8k": {
+                      "x": 122,
+                      "y": 18
+                    },
+                    "bi5ef": {
+                      "x": 142,
+                      "y": 18.5
+                    }
+                  }
                 }
               ]
             },
@@ -14404,8 +15192,8 @@
     {
       "type": "frame",
       "id": "BRMdb",
-      "x": 440,
-      "y": 13948,
+      "x": 3290,
+      "y": 4578,
       "name": "Public Browse - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -14475,16 +15263,32 @@
                       "type": "ref",
                       "ref": "gjLVJ",
                       "width": 320,
-                      "name": "searchBar"
+                      "name": "searchBar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "mgPVr": {
+                          "x": 18,
+                          "y": 15
+                        },
+                        "WlRoD": {
+                          "x": 48,
+                          "y": 14
+                        }
+                      }
                     },
                     {
                       "id": "K4B47",
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "signInBtn",
+                      "width": "fit_content",
+                      "x": 332,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Sign In"
+                          "content": "Sign In",
+                          "x": 24,
+                          "y": 14
                         },
                         "SWbRl": {
                           "iconFontName": "log-in"
@@ -15043,7 +15847,19 @@
                   "id": "MI4ZH",
                   "type": "ref",
                   "ref": "jKjFi",
-                  "name": "adRef"
+                  "name": "adRef",
+                  "x": -12,
+                  "y": 4,
+                  "descendants": {
+                    "5hz7q": {
+                      "x": 321,
+                      "y": 37
+                    },
+                    "XXhRa": {
+                      "x": 345,
+                      "y": 38
+                    }
+                  }
                 }
               ]
             }
@@ -15054,8 +15870,8 @@
     {
       "type": "frame",
       "id": "mnXHr",
-      "x": 1260,
-      "y": 13948,
+      "x": 4110,
+      "y": 4578,
       "name": "Public Browse - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -15110,7 +15926,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "width": 480,
-              "name": "centerSearch"
+              "name": "centerSearch",
+              "x": 427,
+              "y": 16,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             },
             {
               "type": "frame",
@@ -15124,9 +15952,14 @@
                   "type": "ref",
                   "ref": "e6YJk",
                   "name": "signInBtn",
+                  "width": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 24,
+                      "y": 14
                     }
                   }
                 },
@@ -15135,9 +15968,13 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "signUpBtn",
+                  "width": "fit_content",
+                  "x": 109,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Get Started"
+                      "content": "Get Started",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "arrow-right"
@@ -15722,7 +16559,19 @@
                   "id": "76BrH",
                   "type": "ref",
                   "ref": "jKjFi",
-                  "name": "adRef"
+                  "name": "adRef",
+                  "x": 308,
+                  "y": 8,
+                  "descendants": {
+                    "5hz7q": {
+                      "x": 321,
+                      "y": 37
+                    },
+                    "XXhRa": {
+                      "x": 345,
+                      "y": 38
+                    }
+                  }
                 }
               ]
             }
@@ -15733,8 +16582,8 @@
     {
       "type": "frame",
       "id": "T4lPX",
-      "x": 0,
-      "y": 15122,
+      "x": 2850,
+      "y": 5752,
       "name": "Public Recipe Detail - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -15795,9 +16644,14 @@
               "type": "ref",
               "ref": "e6YJk",
               "name": "navRight",
+              "width": "fit_content",
+              "x": 273,
+              "y": 10,
               "descendants": {
                 "kbOKj": {
-                  "content": "Sign In"
+                  "content": "Sign In",
+                  "x": 24,
+                  "y": 14
                 }
               }
             }
@@ -16175,9 +17029,14 @@
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "ctaBtn",
+                      "width": "fit_content",
+                      "x": 71,
+                      "y": 93,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Create Free Account"
+                          "content": "Create Free Account",
+                          "x": 24,
+                          "y": 14
                         },
                         "SWbRl": {
                           "iconFontName": "arrow-right"
@@ -16202,7 +17061,19 @@
                       "id": "9jGN7",
                       "type": "ref",
                       "ref": "ELaEI",
-                      "name": "adBanner"
+                      "name": "adBanner",
+                      "x": 11,
+                      "y": 4,
+                      "descendants": {
+                        "w8t8k": {
+                          "x": 122,
+                          "y": 18
+                        },
+                        "bi5ef": {
+                          "x": 142,
+                          "y": 18.5
+                        }
+                      }
                     }
                   ]
                 }
@@ -16213,7 +17084,19 @@
               "type": "ref",
               "ref": "ELaEI",
               "name": "pubDetailAd",
-              "width": "fill_container"
+              "width": "fill_container",
+              "x": 0,
+              "y": 921,
+              "descendants": {
+                "w8t8k": {
+                  "x": 157,
+                  "y": 18
+                },
+                "bi5ef": {
+                  "x": 177,
+                  "y": 18.5
+                }
+              }
             }
           ]
         }
@@ -16222,8 +17105,8 @@
     {
       "type": "frame",
       "id": "ofMvO",
-      "x": 440,
-      "y": 15122,
+      "x": 3290,
+      "y": 5752,
       "name": "Public Recipe Detail - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -16291,16 +17174,32 @@
                   "type": "ref",
                   "ref": "gjLVJ",
                   "width": 260,
-                  "name": "navSearch"
+                  "name": "navSearch",
+                  "x": 0,
+                  "y": 0,
+                  "descendants": {
+                    "mgPVr": {
+                      "x": 18,
+                      "y": 15
+                    },
+                    "WlRoD": {
+                      "x": 48,
+                      "y": 14
+                    }
+                  }
                 },
                 {
                   "id": "fauKs",
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "navSignIn",
+                  "width": "fit_content",
+                  "x": 272,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "log-in"
@@ -16688,9 +17587,14 @@
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "ctaBtn",
+                      "width": "fit_content",
+                      "x": 220,
+                      "y": 106,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Create Free Account"
+                          "content": "Create Free Account",
+                          "x": 24,
+                          "y": 14
                         },
                         "SWbRl": {
                           "iconFontName": "arrow-right"
@@ -16716,7 +17620,19 @@
                       "type": "ref",
                       "ref": "jKjFi",
                       "width": "fill_container",
-                      "name": "adBanner"
+                      "name": "adBanner",
+                      "x": 0,
+                      "y": 8,
+                      "descendants": {
+                        "5hz7q": {
+                          "x": 277,
+                          "y": 37
+                        },
+                        "XXhRa": {
+                          "x": 301,
+                          "y": 38
+                        }
+                      }
                     }
                   ]
                 }
@@ -16726,7 +17642,19 @@
               "id": "L59cR",
               "type": "ref",
               "ref": "jKjFi",
-              "name": "pubDetailAdT"
+              "name": "pubDetailAdT",
+              "x": 20,
+              "y": 1110,
+              "descendants": {
+                "5hz7q": {
+                  "x": 321,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 345,
+                  "y": 38
+                }
+              }
             }
           ]
         }
@@ -16735,8 +17663,8 @@
     {
       "type": "frame",
       "id": "j7aVT",
-      "x": 1260,
-      "y": 15122,
+      "x": 4110,
+      "y": 5752,
       "name": "Public Recipe Detail - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -16797,7 +17725,19 @@
               "type": "ref",
               "ref": "gjLVJ",
               "width": 480,
-              "name": "navCenter"
+              "name": "navCenter",
+              "x": 427,
+              "y": 12,
+              "descendants": {
+                "mgPVr": {
+                  "x": 18,
+                  "y": 15
+                },
+                "WlRoD": {
+                  "x": 48,
+                  "y": 14
+                }
+              }
             },
             {
               "type": "frame",
@@ -16811,9 +17751,14 @@
                   "type": "ref",
                   "ref": "e6YJk",
                   "name": "navSignIn",
+                  "width": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In"
+                      "content": "Sign In",
+                      "x": 24,
+                      "y": 14
                     }
                   }
                 },
@@ -16822,9 +17767,13 @@
                   "type": "ref",
                   "ref": "T8SBH",
                   "name": "navSignUp",
+                  "width": "fit_content",
+                  "x": 109,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Get Started"
+                      "content": "Get Started",
+                      "x": 24,
+                      "y": 14
                     },
                     "SWbRl": {
                       "iconFontName": "arrow-right"
@@ -17262,9 +18211,13 @@
                           "ref": "T8SBH",
                           "width": "fill_container",
                           "name": "ctaBtn",
+                          "x": 20,
+                          "y": 93,
                           "descendants": {
                             "6X7YQ": {
-                              "content": "Create Free Account"
+                              "content": "Create Free Account",
+                              "x": 64,
+                              "y": 14
                             },
                             "SWbRl": {
                               "iconFontName": "arrow-right"
@@ -17322,7 +18275,19 @@
               "id": "AIeaG",
               "type": "ref",
               "ref": "jKjFi",
-              "name": "pubDetailAdW"
+              "name": "pubDetailAdW",
+              "x": 1040,
+              "y": 369,
+              "descendants": {
+                "5hz7q": {
+                  "x": 321,
+                  "y": 37
+                },
+                "XXhRa": {
+                  "x": 345,
+                  "y": 38
+                }
+              }
             }
           ]
         }
@@ -17406,16 +18371,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "mName",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Full Name"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "user"
+                      "iconFontName": "user",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Your full name"
+                      "content": "Your full name",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17425,16 +18401,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "mEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17444,16 +18431,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "mPass",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 174,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Create a password"
+                      "content": "Create a password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17463,16 +18461,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "mConfirm",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 261,
                   "descendants": {
                     "XGS8C": {
                       "content": "Confirm Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Confirm your password"
+                      "content": "Confirm your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17482,9 +18491,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "mBtn",
+                  "x": 0,
+                  "y": 348,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 113,
+                      "y": 14
                     }
                   }
                 },
@@ -17530,9 +18543,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "mLogin",
+                  "x": 0,
+                  "y": 445,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In Instead"
+                      "content": "Sign In Instead",
+                      "x": 117.5,
+                      "y": 14
                     }
                   }
                 }
@@ -17621,16 +18638,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tName",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Full Name"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "user"
+                      "iconFontName": "user",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Your full name"
+                      "content": "Your full name",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17640,16 +18668,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17659,16 +18698,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tPass",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 174,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Create a password"
+                      "content": "Create a password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17678,16 +18728,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "tConfirm",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 261,
                   "descendants": {
                     "XGS8C": {
                       "content": "Confirm Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Confirm your password"
+                      "content": "Confirm your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17697,9 +18758,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "tBtn",
+                  "x": 0,
+                  "y": 348,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 122,
+                      "y": 14
                     }
                   }
                 },
@@ -17745,9 +18810,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "tLogin",
+                  "x": 0,
+                  "y": 445,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In Instead"
+                      "content": "Sign In Instead",
+                      "x": 126.5,
+                      "y": 14
                     }
                   }
                 }
@@ -17874,16 +18943,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wName",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Full Name"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "user"
+                      "iconFontName": "user",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Your full name"
+                      "content": "Your full name",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17893,16 +18973,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17912,16 +19003,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wPass",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 174,
                   "descendants": {
                     "XGS8C": {
                       "content": "Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Create a password"
+                      "content": "Create a password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17931,16 +19033,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "wConfirm",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 261,
                   "descendants": {
                     "XGS8C": {
                       "content": "Confirm Password"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "lock"
+                      "iconFontName": "lock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Confirm your password"
+                      "content": "Confirm your password",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -17950,9 +19063,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "wBtn",
+                  "x": 0,
+                  "y": 348,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Create Account"
+                      "content": "Create Account",
+                      "x": 142,
+                      "y": 14
                     }
                   }
                 },
@@ -17998,9 +19115,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "wLogin",
+                  "x": 0,
+                  "y": 445,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Sign In Instead"
+                      "content": "Sign In Instead",
+                      "x": 146.5,
+                      "y": 14
                     }
                   }
                 }
@@ -18089,16 +19210,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "fmEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -18108,9 +19240,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "fmBtn",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Send Reset Link"
+                      "content": "Send Reset Link",
+                      "x": 113,
+                      "y": 14
                     }
                   }
                 },
@@ -18213,16 +19349,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "ftEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -18232,9 +19379,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "ftBtn",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Send Reset Link"
+                      "content": "Send Reset Link",
+                      "x": 122,
+                      "y": 14
                     }
                   }
                 },
@@ -18374,16 +19525,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "fwEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "you@example.com"
+                      "content": "you@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -18393,9 +19555,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "fwBtn",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Send Reset Link"
+                      "content": "Send Reset Link",
+                      "x": 142,
+                      "y": 14
                     }
                   }
                 },
@@ -18421,8 +19587,8 @@
     {
       "type": "frame",
       "id": "ATwjH",
-      "x": 0,
-      "y": 16296,
+      "x": 2850,
+      "y": 6926,
       "name": "Profile - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -18537,16 +19703,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "pmName",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Display Name"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "user"
+                      "iconFontName": "user",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "Jamie Oliver"
+                      "content": "Jamie Oliver",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -18556,16 +19733,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "pmEmail",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 87,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "jamie@example.com"
+                      "content": "jamie@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -18652,9 +19840,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "pmSave",
+                  "x": 0,
+                  "y": 267,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Save Changes"
+                      "content": "Save Changes",
+                      "x": 120,
+                      "y": 14
                     }
                   }
                 },
@@ -18664,9 +19856,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "pmLogout",
+                  "x": 0,
+                  "y": 331,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Log Out"
+                      "content": "Log Out",
+                      "x": 142.5,
+                      "y": 14
                     }
                   }
                 }
@@ -18679,8 +19875,8 @@
     {
       "type": "frame",
       "id": "4zzbA",
-      "x": 440,
-      "y": 16296,
+      "x": 3290,
+      "y": 6926,
       "name": "Profile - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -18807,16 +20003,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "ptName",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Display Name"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "user"
+                          "iconFontName": "user",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "Jamie Oliver"
+                          "content": "Jamie Oliver",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -18826,16 +20033,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "ptEmail",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 87,
                       "descendants": {
                         "XGS8C": {
                           "content": "Email"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "mail"
+                          "iconFontName": "mail",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "jamie@example.com"
+                          "content": "jamie@example.com",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -18922,9 +20140,13 @@
                       "ref": "T8SBH",
                       "width": "fill_container",
                       "name": "ptSave",
+                      "x": 0,
+                      "y": 267,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Save Changes"
+                          "content": "Save Changes",
+                          "x": 129,
+                          "y": 14
                         }
                       }
                     },
@@ -18934,9 +20156,13 @@
                       "ref": "e6YJk",
                       "width": "fill_container",
                       "name": "ptLogout",
+                      "x": 0,
+                      "y": 331,
                       "descendants": {
                         "kbOKj": {
-                          "content": "Log Out"
+                          "content": "Log Out",
+                          "x": 151.5,
+                          "y": 14
                         }
                       }
                     }
@@ -18951,8 +20177,8 @@
     {
       "type": "frame",
       "id": "yIo0Y",
-      "x": 1260,
-      "y": 16296,
+      "x": 4110,
+      "y": 6926,
       "name": "Profile - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -19086,16 +20312,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "pwName",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Display Name"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "user"
+                          "iconFontName": "user",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "Jamie Oliver"
+                          "content": "Jamie Oliver",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -19105,16 +20342,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "pwEmail",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 87,
                       "descendants": {
                         "XGS8C": {
                           "content": "Email"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "mail"
+                          "iconFontName": "mail",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "jamie@example.com"
+                          "content": "jamie@example.com",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -19201,9 +20449,13 @@
                       "ref": "T8SBH",
                       "width": "fill_container",
                       "name": "pwSave",
+                      "x": 0,
+                      "y": 267,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Save Changes"
+                          "content": "Save Changes",
+                          "x": 141,
+                          "y": 14
                         }
                       }
                     },
@@ -19213,9 +20465,13 @@
                       "ref": "e6YJk",
                       "width": "fill_container",
                       "name": "pwLogout",
+                      "x": 0,
+                      "y": 331,
                       "descendants": {
                         "kbOKj": {
-                          "content": "Log Out"
+                          "content": "Log Out",
+                          "x": 163.5,
+                          "y": 14
                         }
                       }
                     }
@@ -19230,8 +20486,8 @@
     {
       "type": "frame",
       "id": "8ELKy",
-      "x": 0,
-      "y": 17470,
+      "x": 2850,
+      "y": 8100,
       "name": "Invite - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -19470,16 +20726,27 @@
               "ref": "wOMol",
               "width": "fill_container",
               "name": "imEmailInput",
+              "height": "fit_content",
+              "x": 24,
+              "y": 356,
               "descendants": {
                 "XGS8C": {
                   "content": "Email Address"
                 },
+                "cbZT5": {
+                  "width": "fill_container",
+                  "y": 23
+                },
                 "BNFKJ": {
                   "enabled": true,
-                  "iconFontName": "mail"
+                  "iconFontName": "mail",
+                  "x": 16,
+                  "y": 15
                 },
                 "pV87n": {
-                  "content": "family@example.com"
+                  "content": "family@example.com",
+                  "x": 44,
+                  "y": 14
                 }
               }
             },
@@ -19489,9 +20756,13 @@
               "ref": "e6YJk",
               "width": "fill_container",
               "name": "imSendBtn",
+              "x": 24,
+              "y": 451,
               "descendants": {
                 "kbOKj": {
-                  "content": "Send Invite"
+                  "content": "Send Invite",
+                  "x": 130,
+                  "y": 14
                 }
               }
             }
@@ -19502,8 +20773,8 @@
     {
       "type": "frame",
       "id": "PZzLe",
-      "x": 440,
-      "y": 17470,
+      "x": 3290,
+      "y": 8100,
       "name": "Invite - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -19754,16 +21025,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "itEmailInput",
+                  "height": "fit_content",
+                  "x": 40,
+                  "y": 372,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email Address"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "family@example.com"
+                      "content": "family@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -19773,9 +21055,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "itSendBtn",
+                  "x": 40,
+                  "y": 467,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Send Invite"
+                      "content": "Send Invite",
+                      "x": 139,
+                      "y": 14
                     }
                   }
                 }
@@ -19788,8 +21074,8 @@
     {
       "type": "frame",
       "id": "tdNOg",
-      "x": 1260,
-      "y": 17470,
+      "x": 4110,
+      "y": 8100,
       "name": "Invite - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -20047,16 +21333,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "iwEmailInput",
+                  "height": "fit_content",
+                  "x": 48,
+                  "y": 391,
                   "descendants": {
                     "XGS8C": {
                       "content": "Email Address"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "mail"
+                      "iconFontName": "mail",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "family@example.com"
+                      "content": "family@example.com",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -20066,9 +21363,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "iwSendBtn",
+                  "x": 48,
+                  "y": 486,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Send Invite"
+                      "content": "Send Invite",
+                      "x": 171,
+                      "y": 14
                     }
                   }
                 }
@@ -20206,15 +21507,24 @@
               "ref": "wOMol",
               "width": "fill_container",
               "name": "dmRecipe",
+              "height": "fit_content",
+              "x": 24,
+              "y": 224,
               "descendants": {
                 "XGS8C": {
                   "content": "Recipe Title"
+                },
+                "cbZT5": {
+                  "width": "fill_container",
+                  "y": 23
                 },
                 "BNFKJ": {
                   "enabled": false
                 },
                 "pV87n": {
-                  "content": "Grandma's Apple Pie"
+                  "content": "Grandma's Apple Pie",
+                  "x": 16,
+                  "y": 14
                 }
               }
             },
@@ -20280,16 +21590,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "dmPrep",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Prep"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "clock"
+                      "iconFontName": "clock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "30 min"
+                      "content": "30 min",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 },
@@ -20299,16 +21620,27 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "dmCook",
+                  "height": "fit_content",
+                  "x": 177,
+                  "y": 0,
                   "descendants": {
                     "XGS8C": {
                       "content": "Cook"
                     },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
+                    },
                     "BNFKJ": {
                       "enabled": true,
-                      "iconFontName": "clock"
+                      "iconFontName": "clock",
+                      "x": 16,
+                      "y": 15
                     },
                     "pV87n": {
-                      "content": "45 min"
+                      "content": "45 min",
+                      "x": 44,
+                      "y": 14
                     }
                   }
                 }
@@ -20684,9 +22016,13 @@
               "ref": "T8SBH",
               "width": "fill_container",
               "name": "dmSaveBtn",
+              "x": 24,
+              "y": 1027,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Save Recipe"
+                  "content": "Save Recipe",
+                  "x": 127,
+                  "y": 14
                 }
               }
             }
@@ -20828,15 +22164,24 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "dtRecipe",
+                  "height": "fit_content",
+                  "x": 28,
+                  "y": 248,
                   "descendants": {
                     "XGS8C": {
                       "content": "Recipe Title"
+                    },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
                     },
                     "BNFKJ": {
                       "enabled": false
                     },
                     "pV87n": {
-                      "content": "Grandma's Apple Pie"
+                      "content": "Grandma's Apple Pie",
+                      "x": 16,
+                      "y": 14
                     }
                   }
                 },
@@ -20902,16 +22247,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "dtPrep",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Prep"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "clock"
+                          "iconFontName": "clock",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "30 min"
+                          "content": "30 min",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -20921,16 +22277,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "dtCook",
+                      "height": "fit_content",
+                      "x": 238,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Cook"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "clock"
+                          "iconFontName": "clock",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "45 min"
+                          "content": "45 min",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     }
@@ -21306,9 +22673,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "dtSaveBtn",
+                  "x": 28,
+                  "y": 1051,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Save Recipe"
+                      "content": "Save Recipe",
+                      "x": 188,
+                      "y": 14
                     }
                   }
                 }
@@ -21500,9 +22871,13 @@
                       "type": "ref",
                       "ref": "T8SBH",
                       "name": "dwFormSave",
+                      "width": "fit_content",
+                      "x": 464,
                       "descendants": {
                         "6X7YQ": {
-                          "content": "Save Recipe"
+                          "content": "Save Recipe",
+                          "x": 24,
+                          "y": 14
                         }
                       }
                     }
@@ -21554,15 +22929,24 @@
                   "ref": "wOMol",
                   "width": "fill_container",
                   "name": "dwRecipe",
+                  "height": "fit_content",
+                  "x": 0,
+                  "y": 308,
                   "descendants": {
                     "XGS8C": {
                       "content": "Recipe Title"
+                    },
+                    "cbZT5": {
+                      "width": "fill_container",
+                      "y": 23
                     },
                     "BNFKJ": {
                       "enabled": false
                     },
                     "pV87n": {
-                      "content": "Grandma's Apple Pie"
+                      "content": "Grandma's Apple Pie",
+                      "x": 16,
+                      "y": 14
                     }
                   }
                 },
@@ -21579,16 +22963,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "dwPrep",
+                      "height": "fit_content",
+                      "x": 0,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Prep"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "clock"
+                          "iconFontName": "clock",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "30 min"
+                          "content": "30 min",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -21598,16 +22993,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "dwCook",
+                      "height": "fit_content",
+                      "x": 205.33333333333334,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Cook"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "clock"
+                          "iconFontName": "clock",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "45 min"
+                          "content": "45 min",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     },
@@ -21617,16 +23023,27 @@
                       "ref": "wOMol",
                       "width": "fill_container",
                       "name": "dwServ",
+                      "height": "fit_content",
+                      "x": 410.6666666666667,
+                      "y": 0,
                       "descendants": {
                         "XGS8C": {
                           "content": "Servings"
                         },
+                        "cbZT5": {
+                          "width": "fill_container",
+                          "y": 23
+                        },
                         "BNFKJ": {
                           "enabled": true,
-                          "iconFontName": "users"
+                          "iconFontName": "users",
+                          "x": 16,
+                          "y": 15
                         },
                         "pV87n": {
-                          "content": "8"
+                          "content": "8",
+                          "x": 44,
+                          "y": 14
                         }
                       }
                     }
@@ -22005,8 +23422,8 @@
     {
       "type": "frame",
       "id": "bXZNC",
-      "x": 0,
-      "y": 10420,
+      "x": 2850,
+      "y": 1050,
       "name": "Cooking Mode - Mobile (390px)",
       "clip": true,
       "width": 390,
@@ -22264,9 +23681,13 @@
               "ref": "e6YJk",
               "width": "fill_container",
               "name": "prevBtn",
+              "x": 24,
+              "y": 16,
               "descendants": {
                 "kbOKj": {
-                  "content": "Previous"
+                  "content": "Previous",
+                  "x": 51,
+                  "y": 14
                 }
               }
             },
@@ -22276,9 +23697,13 @@
               "ref": "T8SBH",
               "width": "fill_container",
               "name": "nextBtn",
+              "x": 201,
+              "y": 16,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Next Step"
+                  "content": "Next Step",
+                  "x": 46.5,
+                  "y": 14
                 }
               }
             }
@@ -22289,8 +23714,8 @@
     {
       "type": "frame",
       "id": "54JCx",
-      "x": 440,
-      "y": 10420,
+      "x": 3290,
+      "y": 1050,
       "name": "Cooking Mode - Tablet (768px)",
       "clip": true,
       "width": 768,
@@ -22554,9 +23979,13 @@
               "ref": "e6YJk",
               "width": "fill_container",
               "name": "tPrev",
+              "x": 64,
+              "y": 16,
               "descendants": {
                 "kbOKj": {
-                  "content": "Previous"
+                  "content": "Previous",
+                  "x": 124.5,
+                  "y": 14
                 }
               }
             },
@@ -22566,9 +23995,13 @@
               "ref": "T8SBH",
               "width": "fill_container",
               "name": "tNext",
+              "x": 392,
+              "y": 16,
               "descendants": {
                 "6X7YQ": {
-                  "content": "Next Step"
+                  "content": "Next Step",
+                  "x": 120,
+                  "y": 14
                 }
               }
             }
@@ -22579,8 +24012,8 @@
     {
       "type": "frame",
       "id": "rn695",
-      "x": 1260,
-      "y": 10420,
+      "x": 4110,
+      "y": 1050,
       "name": "Cooking Mode - Web (1440px)",
       "clip": true,
       "width": 1440,
@@ -22989,9 +24422,13 @@
                   "ref": "e6YJk",
                   "width": "fill_container",
                   "name": "wPrev",
+                  "x": 80,
+                  "y": 16,
                   "descendants": {
                     "kbOKj": {
-                      "content": "Previous"
+                      "content": "Previous",
+                      "x": 219.5,
+                      "y": 14
                     }
                   }
                 },
@@ -23001,9 +24438,13 @@
                   "ref": "T8SBH",
                   "width": "fill_container",
                   "name": "wNext",
+                  "x": 598,
+                  "y": 16,
                   "descendants": {
                     "6X7YQ": {
-                      "content": "Next Step"
+                      "content": "Next Step",
+                      "x": 215,
+                      "y": 14
                     }
                   }
                 }
@@ -23015,10 +24456,9 @@
     },
     {
       "type": "text",
-      "id": "Qek0E",
+      "id": "o4tD2",
       "x": 0,
       "y": -60,
-      "name": "label1",
       "fill": "#999999",
       "content": "Auth",
       "fontFamily": "Inter",
@@ -23027,10 +24467,9 @@
     },
     {
       "type": "text",
-      "id": "PUCyu",
+      "id": "3ylhW",
       "x": 0,
       "y": 3712,
-      "name": "label2",
       "fill": "#999999",
       "content": "Core",
       "fontFamily": "Inter",
@@ -23039,10 +24478,9 @@
     },
     {
       "type": "text",
-      "id": "GY7LE",
-      "x": 0,
-      "y": 9310,
-      "name": "label3",
+      "id": "cIyOq",
+      "x": 2850,
+      "y": -60,
       "fill": "#999999",
       "content": "Features",
       "fontFamily": "Inter",
@@ -23051,10 +24489,9 @@
     },
     {
       "type": "text",
-      "id": "5X324",
-      "x": 0,
-      "y": 12714,
-      "name": "label4",
+      "id": "tgFFz",
+      "x": 2850,
+      "y": 3344,
       "fill": "#999999",
       "content": "Social / Settings",
       "fontFamily": "Inter",

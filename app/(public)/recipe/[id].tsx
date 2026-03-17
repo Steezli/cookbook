@@ -423,7 +423,7 @@ export default function PublicRecipeDetail() {
                 flex: 1,
               }}
             >
-              {step.text}
+              {typeof step === 'string' ? step : step.text}
             </Text>
           </View>
         ))}

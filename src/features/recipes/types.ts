@@ -28,7 +28,7 @@ export type Recipe = {
   title: string;
   description: string | null;
   ingredients: RecipeIngredient[];
-  steps: RecipeStep[];
+  steps: (RecipeStep | string)[];
   servings: number | null;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;

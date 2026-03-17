@@ -80,14 +80,14 @@ export function generateRecipeJsonLd(
 
   // Ingredients
   if (recipe.ingredients.length > 0) {
-    obj.recipeIngredient = recipe.ingredients.map((i) => i.text);
+    obj.recipeIngredient = recipe.ingredients.map((i) => i.text || i.name || '');
   }
 
   // Instructions
   if (recipe.steps.length > 0) {
     obj.recipeInstructions = recipe.steps.map((s) => ({
       '@type': 'HowToStep',
-      text: s.text,
+      text: typeof s === 'string' ? s : s.text,
     }));
   }
 
