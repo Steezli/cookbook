@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { getUserScanJobs, subscribeToUserJobs, deleteScanJob, ScanJob } from './scan-service';
-import { confirmAction } from '@/lib/alert';
+import { confirmAction, showAlert } from '@/lib/alert';
 import { getScanThumbnailUrl } from './scan-photos';
 import { scanDraftService, ScanDraft } from '@/lib/scan/scan-draft-service';
 import { useSession } from '@/features/auth/session';
@@ -136,9 +136,15 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
   };
 
   const handleRemove = (jobId: string) => {
-    confirmAction('Remove Scan', 'Are you sure you want to remove this scan?', () => {
+    confirmAction('Remove Scan', 'Are you sure you want to remove this scan?', async () => {
+      const previous = jobs;
       setJobs((prev) => prev.filter((job) => job.id !== jobId));
-      deleteScanJob(jobId);
+      try {
+        await deleteScanJob(jobId);
+      } catch {
+        setJobs(previous);
+        showAlert('Error', 'Failed to remove scan. Please try again.');
+      }
     });
   };
 
