@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { useSession } from '@/features/auth/session';
@@ -101,6 +101,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       return () => { cancelled = true; };
     }
 
+    // Clean up any previous listener before starting a new load cycle.
+    // This prevents accumulation when the effect re-runs mid-flight.
+    if (listenerRef.current) {
+      listenerRef.current();
+      listenerRef.current = null;
+    }
+
     const userId = session?.user?.id;
     if (!userId) {
       setState({ ...DEFAULT_STATE });
@@ -162,7 +169,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
   }, [session?.user?.id]);
 
-  async function restorePurchases(): Promise<void> {
+  const restorePurchases = useCallback(async (): Promise<void> => {
     if (Platform.OS !== 'web') {
       const mod = await import('react-native-purchases');
       const Purchases = mod.default;
@@ -178,9 +185,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const computed = computeSubscriptionState(customerInfo, count);
       setState({ ...computed, isLoading: false });
     }
-  }
+  }, [session?.user?.id]);
 
-  async function refreshSubscription(): Promise<void> {
+  const refreshSubscription = useCallback(async (): Promise<void> => {
     if (Platform.OS === 'web') {
       const userId = session?.user?.id;
       const { getWebCustomerInfo } = await import('@/features/subscriptions/web-billing');
@@ -200,9 +207,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const computed = computeSubscriptionState(customerInfo, count);
       setState({ ...computed, isLoading: false });
     }
-  }
+  }, [session?.user?.id]);
 
-  const value: SubscriptionContextValue = { ...state, restorePurchases, refreshSubscription };
+  const value = useMemo<SubscriptionContextValue>(
+    () => ({ ...state, restorePurchases, refreshSubscription }),
+    [state, restorePurchases, refreshSubscription],
+  );
 
   return (
     <SubscriptionContext.Provider value={value}>
