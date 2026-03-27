@@ -16,13 +16,8 @@ web-build/
 expo-env.d.ts
 # @end expo-cli
 
-# ── GSD baseline (auto-generated) ──
-.gsd/activity/
-.gsd/runtime/
-.gsd/worktrees/
-.gsd/auto.lock
-.gsd/metrics.json
-.gsd/STATE.md
+# GSD planning files
+.gsd/
 Thumbs.db
 *.swp
 *.swo
