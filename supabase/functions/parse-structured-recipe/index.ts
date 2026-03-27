@@ -44,9 +44,17 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: 'Server misconfigured: missing required env vars' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl,
+      supabaseAnonKey,
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -55,13 +63,16 @@ serve(async (req) => {
     )
 
     // Update draft status to processing
-    await supabaseClient
+    const { error: statusError } = await supabaseClient
       .from('scan_drafts')
-      .update({ 
+      .update({
         status: 'processing',
         updated_at: new Date().toISOString()
       })
       .eq('id', scanDraftId)
+    if (statusError) {
+      console.warn(`Failed to mark draft ${scanDraftId} as processing:`, statusError)
+    }
 
     // Perform structured parsing
     const parseResult = await recipeParserService.parseOCRText(rawText, {
@@ -203,9 +214,14 @@ serve(async (req) => {
     try {
       const { scanDraftId } = await req.json()
       if (scanDraftId) {
+        const errorSupabaseUrl = Deno.env.get('SUPABASE_URL')
+        const errorAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+        if (!errorSupabaseUrl || !errorAnonKey) {
+          throw new Error('Missing env vars for error status update')
+        }
         const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          errorSupabaseUrl,
+          errorAnonKey,
           {
             global: {
               headers: { Authorization: req.headers.get('Authorization')! },
@@ -213,13 +229,16 @@ serve(async (req) => {
           }
         )
 
-        await supabaseClient
+        const { error: fallbackError } = await supabaseClient
           .from('scan_drafts')
-          .update({ 
+          .update({
             status: 'enhanced', // Use 'enhanced' as fallback status
             updated_at: new Date().toISOString()
           })
           .eq('id', scanDraftId)
+        if (fallbackError) {
+          console.warn(`Failed to update draft ${scanDraftId} fallback status:`, fallbackError)
+        }
       }
     } catch (updateError) {
       console.error('Failed to update draft status:', updateError)

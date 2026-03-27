@@ -21,7 +21,11 @@ let visionClient: ImageAnnotatorClient | null = null
 
 function getVisionClient() {
   if (!visionClient) {
-    const credentials = JSON.parse(Deno.env.get('GOOGLE_CLOUD_CREDENTIALS') || '{}')
+    const credentialsStr = Deno.env.get('GOOGLE_CLOUD_CREDENTIALS')
+    if (!credentialsStr) {
+      throw new Error('Server misconfigured: missing GOOGLE_CLOUD_CREDENTIALS')
+    }
+    const credentials = JSON.parse(credentialsStr)
     visionClient = new ImageAnnotatorClient({ credentials })
   }
   return visionClient
@@ -50,9 +54,17 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: 'Server misconfigured: missing required env vars' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl,
+      supabaseAnonKey,
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -61,13 +73,16 @@ serve(async (req) => {
     )
 
     // Update job status to processing
-    await supabaseClient
+    const { error: statusError } = await supabaseClient
       .from('scan_jobs')
-      .update({ 
+      .update({
         status: 'processing',
         updated_at: new Date().toISOString()
       })
       .eq('id', scanJobId)
+    if (statusError) {
+      console.warn(`Failed to mark job ${scanJobId} as processing:`, statusError)
+    }
 
     // Convert base64 to buffer
     const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
@@ -132,14 +147,17 @@ serve(async (req) => {
     }
 
     // Update job status to completed
-    await supabaseClient
+    const { error: completionError } = await supabaseClient
       .from('scan_jobs')
-      .update({ 
+      .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', scanJobId)
+    if (completionError) {
+      console.error(`Failed to mark job ${scanJobId} as completed:`, completionError)
+    }
 
     const response: OCRResponse = {
       success: true,
@@ -163,9 +181,14 @@ serve(async (req) => {
     try {
       const { scanJobId } = await req.json()
       if (scanJobId) {
+        const errorSupabaseUrl = Deno.env.get('SUPABASE_URL')
+        const errorAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+        if (!errorSupabaseUrl || !errorAnonKey) {
+          throw new Error('Missing env vars for error status update')
+        }
         const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          errorSupabaseUrl,
+          errorAnonKey,
           {
             global: {
               headers: { Authorization: req.headers.get('Authorization')! },
@@ -173,14 +196,17 @@ serve(async (req) => {
           }
         )
 
-        await supabaseClient
+        const { error: failError } = await supabaseClient
           .from('scan_jobs')
-          .update({ 
+          .update({
             status: 'failed',
             error_message: error instanceof Error ? error.message : 'Unknown error',
             updated_at: new Date().toISOString()
           })
           .eq('id', scanJobId)
+        if (failError) {
+          console.warn(`Failed to mark job ${scanJobId} as failed:`, failError)
+        }
       }
     } catch (updateError) {
       console.error('Failed to update job status:', updateError)

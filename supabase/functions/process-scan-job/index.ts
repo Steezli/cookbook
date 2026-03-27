@@ -245,10 +245,15 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(
+        JSON.stringify({ error: 'Server misconfigured: missing required env vars' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const reqBody = await req.json()
     const { jobId, images: inlineImages } = reqBody as {
@@ -274,10 +279,13 @@ serve(async (req) => {
     }
 
     if (job.status === 'queued') {
-      await supabase
+      const { error: statusError } = await supabase
         .from('scan_jobs')
         .update({ status: 'processing', updated_at: new Date().toISOString() })
         .eq('id', jobId)
+      if (statusError) {
+        console.warn(`Failed to mark job ${jobId} as processing:`, statusError)
+      }
     }
 
     try {
@@ -291,13 +299,16 @@ serve(async (req) => {
         // Save images to Storage server-side so users can reference them later
         const savedUrls = await saveInlineImagesToStorage(supabase, job, inlineImages)
         if (savedUrls.length > 0) {
-          await supabase
+          const { error: urlError } = await supabase
             .from('scan_jobs')
             .update({
               photo_url: savedUrls[0],
               photo_urls: savedUrls,
             })
             .eq('id', jobId)
+          if (urlError) {
+            console.warn(`Failed to save photo URLs for job ${jobId}:`, urlError)
+          }
         }
       } else {
         // Web path: fetch images from Storage URLs
@@ -385,7 +396,7 @@ serve(async (req) => {
         console.log(`Inserted draft ${i + 1}/${results.length} for job ${jobId}: "${result.extracted.title || '(untitled)'}"${sourceLabel}`)
       }
 
-      await supabase
+      const { error: completionError } = await supabase
         .from('scan_jobs')
         .update({
           status: 'completed',
@@ -393,6 +404,9 @@ serve(async (req) => {
           error_message: null,
         })
         .eq('id', jobId)
+      if (completionError) {
+        console.error(`Failed to mark job ${jobId} as completed:`, completionError)
+      }
 
       return new Response(
         JSON.stringify({ success: true, jobId, draftCount: results.length }),
@@ -411,7 +425,7 @@ serve(async (req) => {
       if (canRetry) {
         // Re-queue for retry: single atomic update preserving the original error message
         console.log(`Re-queuing job ${jobId} for retry (attempt ${newRetryCount}/${job.max_retries}): ${errorMessage}`)
-        await supabase
+        const { error: retryError } = await supabase
           .from('scan_jobs')
           .update({
             status: 'queued',
@@ -420,10 +434,13 @@ serve(async (req) => {
             retry_count: newRetryCount,
           })
           .eq('id', jobId)
+        if (retryError) {
+          console.error(`Failed to re-queue job ${jobId} for retry:`, retryError)
+        }
       } else {
         // Max retries reached — mark as permanently failed
         console.error(`Job ${jobId} failed permanently after ${newRetryCount} attempt(s): ${errorMessage}`)
-        await supabase
+        const { error: failError } = await supabase
           .from('scan_jobs')
           .update({
             status: 'failed',
@@ -432,6 +449,9 @@ serve(async (req) => {
             retry_count: newRetryCount,
           })
           .eq('id', jobId)
+        if (failError) {
+          console.error(`Failed to mark job ${jobId} as failed:`, failError)
+        }
       }
 
       return new Response(
