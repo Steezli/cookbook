@@ -154,6 +154,14 @@ export function subscribeToJob(
   return channel;
 }
 
+export async function deleteScanJob(jobId: string): Promise<void> {
+  const { error } = await supabase
+    .from('scan_jobs')
+    .delete()
+    .eq('id', jobId);
+  if (error) throw error;
+}
+
 /** Max 3 concurrent jobs per user. */
 export async function checkJobLimit(): Promise<{ canCreate: boolean; activeCount: number }> {
   const { data: { session } } = await supabase.auth.getSession();

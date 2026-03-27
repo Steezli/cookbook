@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { getUserScanJobs, subscribeToUserJobs, ScanJob } from './scan-service';
+import { getUserScanJobs, subscribeToUserJobs, deleteScanJob, ScanJob } from './scan-service';
+import { confirmAction } from '@/lib/alert';
 import { getScanThumbnailUrl } from './scan-photos';
 import { scanDraftService, ScanDraft } from '@/lib/scan/scan-draft-service';
 import { useSession } from '@/features/auth/session';
@@ -134,6 +135,13 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
     }
   };
 
+  const handleRemove = (jobId: string) => {
+    confirmAction('Remove Scan', 'Are you sure you want to remove this scan?', () => {
+      setJobs((prev) => prev.filter((job) => job.id !== jobId));
+      deleteScanJob(jobId);
+    });
+  };
+
   if (loading) {
     return (
       <View style={{ paddingVertical: 24, alignItems: 'center' }}>
@@ -257,6 +265,32 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
               >
                 {formatTimeAgo(job.created_at)}
               </Text>
+
+              {/* Remove button */}
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleRemove(job.id);
+                }}
+                hitSlop={6}
+                style={{
+                  width: 32,
+                  height: 32,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: accentCoral,
+                    fontFamily: fontFamilyBody,
+                    lineHeight: 16,
+                  }}
+                >
+                  ×
+                </Text>
+              </Pressable>
             </Pressable>
           );
         })}
