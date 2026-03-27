@@ -473,7 +473,19 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult[]> {
   const imageContents = await Promise.all(
     imageUrls.map(async (url) => {
       console.log(`Fetching image URL: ${url}`)
-      const response = await fetch(url)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30_000)
+      let response: Response
+      try {
+        response = await fetch(url, { signal: controller.signal })
+      } catch (err) {
+        clearTimeout(timeoutId)
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          throw new Error('Image download timed out after 30s')
+        }
+        throw err
+      }
+      clearTimeout(timeoutId)
       console.log(`Fetch response: ${response.status} ${response.statusText}, content-type: ${response.headers.get('content-type')}`)
       if (!response.ok) {
         const body = await response.text()
@@ -518,30 +530,43 @@ async function processWithClaude(imageUrls: string[]): Promise<ScanResult[]> {
 
   const prompt = buildScanPrompt(imageUrls.length)
 
-  const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 8192,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            ...imageContents,
-            {
-              type: 'text',
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 120_000)
+  let claudeResponse: Response
+  try {
+    claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 8192,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              ...imageContents,
+              {
+                type: 'text',
+                text: prompt,
+              },
+            ],
+          },
+        ],
+      }),
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Claude API timed out after 120s')
+    }
+    throw err
+  }
+  clearTimeout(timeoutId)
 
   if (!claudeResponse.ok) {
     const errorBody = await claudeResponse.text()
@@ -588,30 +613,43 @@ async function processWithClaudeInline(images: InlineImage[]): Promise<ScanResul
 
   const prompt = buildScanPrompt(images.length)
 
-  const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 8192,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            ...imageContents,
-            {
-              type: 'text',
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 120_000)
+  let claudeResponse: Response
+  try {
+    claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 8192,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              ...imageContents,
+              {
+                type: 'text',
+                text: prompt,
+              },
+            ],
+          },
+        ],
+      }),
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Claude API timed out after 120s')
+    }
+    throw err
+  }
+  clearTimeout(timeoutId)
 
   if (!claudeResponse.ok) {
     const errorBody = await claudeResponse.text()

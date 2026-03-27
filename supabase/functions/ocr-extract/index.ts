@@ -79,14 +79,18 @@ serve(async (req) => {
       throw new Error(validation.reason)
     }
 
-    // Perform OCR
+    // Perform OCR with timeout
     const visionClient = getVisionClient()
-    const [result] = await visionClient.textDetection({
+    const visionPromise = visionClient.textDetection({
       image: { content: imageBuffer },
       imageContext: {
         languageHints: ['en'],
       },
     })
+    const visionTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Google Vision timed out after 30s')), 30_000)
+    )
+    const [result] = await Promise.race([visionPromise, visionTimeout]) as Awaited<typeof visionPromise>
 
     const fullTextAnnotation = result.fullTextAnnotation
     
