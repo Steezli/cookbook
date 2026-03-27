@@ -164,7 +164,7 @@ export default function CollectionDetailScreen() {
       async () => {
         try {
           await deleteCollection(collection.id);
-          router.replace('/collections' as any);
+          router.replace('/collections');
         } catch {
           showAlert('Error', 'Failed to delete collection');
         }
@@ -446,7 +446,7 @@ export default function CollectionDetailScreen() {
               <RecipeCard
                 recipe={item}
                 thumbnailUrl={thumbnailMap[item.id]}
-                onPress={() => router.push(`/recipes/${item.id}` as any)}
+                onPress={() => router.push(`/recipes/${item.id}`)}
               />
               {isOwner && (
                 <Pressable

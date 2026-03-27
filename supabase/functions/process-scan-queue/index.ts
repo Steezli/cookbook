@@ -11,8 +11,14 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(
+        JSON.stringify({ error: 'Server misconfigured: missing required env vars' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get next queued job
@@ -79,15 +85,18 @@ serve(async (req) => {
         // Retry with exponential backoff
         const delay = RETRY_DELAYS[Math.min(newRetryCount - 1, RETRY_DELAYS.length - 1)];
         
-        await supabase
+        const { error: retryError } = await supabase
           .from('scan_jobs')
-          .update({ 
+          .update({
             status: 'queued', // Back to queue for retry
             retry_count: newRetryCount,
             error_message: processError.message,
             updated_at: new Date().toISOString()
           })
           .eq('id', job.id);
+        if (retryError) {
+          console.error(`Failed to re-queue job ${job.id} for retry:`, retryError);
+        }
 
         // Schedule retry (using Supabase's deferred execution)
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -104,15 +113,18 @@ serve(async (req) => {
 
       } else {
         // Max retries exceeded - mark as failed
-        await supabase
+        const { error: failError } = await supabase
           .from('scan_jobs')
-          .update({ 
+          .update({
             status: 'failed',
             retry_count: newRetryCount,
             error_message: `Failed after ${job.max_retries} retries: ${processError.message}`,
             updated_at: new Date().toISOString()
           })
           .eq('id', job.id);
+        if (failError) {
+          console.error(`Failed to mark job ${job.id} as failed:`, failError);
+        }
 
         return new Response(
           JSON.stringify({ 

@@ -69,7 +69,7 @@ export default function CreateCollectionScreen() {
         family_id: familyId,
       });
 
-      router.replace(`/collections/${collection.id}` as any);
+      router.replace(`/collections/${collection.id}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to create collection';
       setErrorMsg(msg);

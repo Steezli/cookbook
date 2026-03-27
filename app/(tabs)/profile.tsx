@@ -9,8 +9,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Pencil, X, Check, ExternalLink } from "lucide-react-native";
+import { Platform } from "react-native";
 import { showAlert } from "@/lib/alert";
 import { useSession } from "@/features/auth/session";
+import { useSubscription } from "@/features/subscriptions/SubscriptionContext";
+import { PaywallPlaceholder } from "@/features/subscriptions/PaywallPlaceholder";
 import { supabase } from "@/lib/supabase";
 import { getUnitPreference, setUnitPreference } from "@/features/units/api";
 import type { UnitSystem } from "@/features/units/types";
@@ -18,6 +21,7 @@ import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { PageContainer } from "@/components/nav/PageContainer";
 import {
   accentBlue,
+  accentBlueDark,
   accentCoral,
   accentWarm,
   bgCard,
@@ -35,6 +39,8 @@ import {
   radiusMd,
   radiusPill,
   shadowSm,
+  statusReadyBg,
+  statusReadyText,
   textPrimary,
   textSecondary,
   textTertiary,
@@ -57,6 +63,15 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { session, isLoading: sessionLoading } = useSession();
   const { breakpoint } = useBreakpoint();
+
+  const {
+    isSubscriber,
+    scansRemaining,
+    isLoading: subscriptionLoading,
+    restorePurchases,
+    refreshSubscription,
+  } = useSubscription();
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [unitPref, setUnitPrefState] = useState<UnitSystem>("imperial");
@@ -548,6 +563,246 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </View>
+
+        {/* Subscription Section */}
+        <Text
+          style={{
+            fontFamily: fontFamilyBodyMedium,
+            fontSize: fontSizeSm,
+            color: textTertiary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+          }}
+        >
+          Subscription
+        </Text>
+        <View
+          style={{
+            backgroundColor: bgCard,
+            borderRadius: radiusMd,
+            padding: 16,
+            marginBottom: 24,
+            ...shadowSm,
+          }}
+        >
+          {subscriptionLoading ? (
+            <ActivityIndicator size="small" color={accentWarm} />
+          ) : isSubscriber ? (
+            <>
+              {/* Subscriber state */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Current Plan
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: statusReadyBg,
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: radiusPill,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeSm,
+                      color: statusReadyText,
+                    }}
+                  >
+                    Premium
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  marginBottom: 14,
+                }}
+              >
+                Unlimited scans · Ad-free experience
+              </Text>
+
+              {/* Manage Subscription — opens RevenueCat Customer Center on native */}
+              <Pressable
+                onPress={async () => {
+                  if (Platform.OS === "web") {
+                    showAlert(
+                      "Manage Subscription",
+                      "Please manage your subscription through Stripe at the link in your confirmation email."
+                    );
+                    return;
+                  }
+                  try {
+                    const mod = await import("react-native-purchases-ui").catch(() => null);
+                    if (!mod) {
+                      showAlert(
+                        "Manage Subscription",
+                        "Please manage your subscription in your device Settings."
+                      );
+                      return;
+                    }
+                    const RevenueCatUI = mod.default;
+                    await RevenueCatUI.presentCustomerCenter();
+                  } catch {
+                    showAlert(
+                      "Manage Subscription",
+                      "Please manage your subscription in your device Settings."
+                    );
+                  }
+                }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                  paddingVertical: 12,
+                  borderRadius: radiusMd,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Manage Subscription
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              {/* Free tier state */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: textPrimary,
+                  }}
+                >
+                  Current Plan
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: bgPage,
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: radiusPill,
+                    borderWidth: 1,
+                    borderColor: borderDefault,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fontFamilyBodyMedium,
+                      fontSize: fontSizeSm,
+                      color: textSecondary,
+                    }}
+                  >
+                    Free
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={{
+                  fontFamily: fontFamilyBody,
+                  fontSize: fontSizeSm,
+                  color: textSecondary,
+                  marginBottom: 16,
+                }}
+              >
+                {scansRemaining > 0
+                  ? `${scansRemaining} of 3 photo scans remaining this month`
+                  : "No scans remaining this month"}
+              </Text>
+
+              {/* Upgrade button — uses app CTA color */}
+              <Pressable
+                onPress={() => setPaywallVisible(true)}
+                style={{
+                  backgroundColor: accentWarm,
+                  paddingVertical: 14,
+                  borderRadius: radiusMd,
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBodyMedium,
+                    fontSize: fontSizeBase,
+                    color: white,
+                  }}
+                >
+                  Upgrade to Premium — $3.99/mo
+                </Text>
+              </Pressable>
+
+              {/* Restore purchases */}
+              <Pressable
+                onPress={async () => {
+                  try {
+                    if (Platform.OS === "web") {
+                      await refreshSubscription();
+                    } else {
+                      await restorePurchases();
+                    }
+                    showAlert(
+                      "Purchases Restored",
+                      "Your subscription status has been refreshed."
+                    );
+                  } catch (e) {
+                    showAlert(
+                      "Restore Failed",
+                      e instanceof Error ? e.message : "Could not restore purchases."
+                    );
+                  }
+                }}
+                style={{ alignItems: "center", paddingVertical: 8 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fontFamilyBody,
+                    fontSize: fontSizeSm,
+                    color: accentWarm,
+                  }}
+                >
+                  Restore Purchases
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+
+        {paywallVisible && (
+          <PaywallPlaceholder
+            visible={paywallVisible}
+            onDismiss={() => setPaywallVisible(false)}
+          />
+        )}
 
         {/* Legal Section */}
         <Text

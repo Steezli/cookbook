@@ -111,18 +111,20 @@ export async function uploadScanPhotos(
     maxHeight?: number;
     quality?: number;
     enableCompression?: boolean;
+    isSubscriber?: boolean;
   } = {}
 ): Promise<{ jobId: string; photoUrls: string[] }> {
   const {
     maxWidth = 2048,
     maxHeight = 2048,
     quality = 0.85,
-    enableCompression = true
+    enableCompression = true,
+    isSubscriber
   } = options;
 
   // Native: send base64 inline to edge function (avoids 0-byte Storage bug on iOS)
   if (Platform.OS !== "web") {
-    return uploadScanPhotosInline(files);
+    return uploadScanPhotosInline(files, isSubscriber);
   }
 
   // Web: upload to Storage then invoke edge function
@@ -192,7 +194,7 @@ export async function uploadScanPhotos(
   uploadedPhotos.sort((a, b) => a.index - b.index);
   const photoUrls = uploadedPhotos.map(p => p.photoUrl);
 
-  const job = await createMultiPhotoScanJob(photoUrls);
+  const job = await createMultiPhotoScanJob({ userId: '', photoUris: photoUrls, isSubscriber });
 
   supabase.functions.invoke('process-scan-job', {
     body: { jobId: job.id }
@@ -221,7 +223,8 @@ export async function uploadScanPhotos(
  * images to Storage server-side.
  */
 async function uploadScanPhotosInline(
-  files: { uri: string; name: string; type: string }[]
+  files: { uri: string; name: string; type: string }[],
+  isSubscriber?: boolean
 ): Promise<{ jobId: string; photoUrls: string[] }> {
   const images: Array<{ base64: string; mediaType: string }> = [];
   const failedReads: Array<{ index: number; name: string; error: string }> = [];
@@ -248,7 +251,7 @@ async function uploadScanPhotosInline(
 
   // Placeholder URLs — the edge function replaces them with real Storage URLs
   const placeholderUrls = images.map((_, i) => `inline://photo-${i + 1}`);
-  const job = await createMultiPhotoScanJob(placeholderUrls);
+  const job = await createMultiPhotoScanJob({ userId: '', photoUris: placeholderUrls, isSubscriber });
 
   // Inline jobs can't be retried by the queue worker (no image data), so mark
   // as failed immediately on invocation error rather than leaving them stuck.

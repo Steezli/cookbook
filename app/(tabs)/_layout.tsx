@@ -47,11 +47,11 @@ export default function TabsLayout() {
         }}
       >
         <TabTrigger name="index" href="/" />
-        <TabTrigger name="my-recipes" href={"/recipes" as any} />
-        <TabTrigger name="collections" href={"/collections" as any} />
-        <TabTrigger name="family" href={"/family" as any} />
-        <TabTrigger name="scan" href={"/scan" as any} />
-        <TabTrigger name="profile" href={"/profile" as any} />
+        <TabTrigger name="my-recipes" href="/recipes" />
+        <TabTrigger name="collections" href="/collections" />
+        <TabTrigger name="family" href="/family" />
+        <TabTrigger name="scan" href="/scan" />
+        <TabTrigger name="profile" href="/profile" />
       </TabList>
 
       {/* Web: 260px left sidebar with logo, 6 nav items, cookbook.pen styling */}

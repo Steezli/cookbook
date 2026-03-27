@@ -445,7 +445,7 @@ export default function CookScreen() {
             height: 4,
             backgroundColor: accentWarm,
             borderRadius: 2,
-            width: `${progressPercent}%` as any,
+            width: `${progressPercent}%` as `${number}%`,
           }}
         />
       </View>

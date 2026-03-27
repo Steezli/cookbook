@@ -19,6 +19,7 @@ import { requestTrackingPermission } from "@/features/ads/att";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider } from "@/features/auth/session";
+import { SubscriptionProvider } from "@/features/subscriptions/SubscriptionContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Hold the splash screen until fonts finish loading.
@@ -71,6 +72,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
+        <SubscriptionProvider>
         <ErrorBoundary>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
@@ -80,6 +82,7 @@ export default function RootLayout() {
 
           </Stack>
         </ErrorBoundary>
+        </SubscriptionProvider>
       </SessionProvider>
     </SafeAreaProvider>
   );

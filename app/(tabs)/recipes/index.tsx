@@ -205,7 +205,7 @@ export default function RecipesListScreen() {
 
       {/* My Collections link — mobile entry point to collections (not in tab bar per cookbook.pen spec) */}
       <Pressable
-        onPress={() => router.navigate('/collections' as any)}
+        onPress={() => router.navigate('/collections')}
         style={{
           flexDirection: 'row',
           alignItems: 'center',

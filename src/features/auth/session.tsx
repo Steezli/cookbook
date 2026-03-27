@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Session } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 
 import { supabase } from "@/lib/supabase";
 
@@ -33,6 +34,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const sessionRef = useRef<Session | null>(null);
   const profileEnsuredRef = useRef<string | null>(null);
+  const purchasesConfiguredRef = useRef<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -46,6 +48,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setSession(nextSession ?? null);
         if (nextSession?.user) {
           safeEnsureProfile(nextSession.user.id, nextSession.user.email ?? '');
+          if (nextSession.user.id && Platform.OS !== 'web' && !purchasesConfiguredRef.current) {
+            purchasesConfiguredRef.current = true;
+            configurePurchases(nextSession.user.id);
+          }
         }
       }
     });
@@ -88,6 +94,24 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({ session, isLoading }), [session, isLoading]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+}
+
+async function configurePurchases(userId: string): Promise<void> {
+  try {
+    const mod = await import('react-native-purchases');
+    const Purchases = mod.default;
+
+    if (__DEV__) {
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+    }
+
+    Purchases.configure({
+      apiKey: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY ?? '',
+      appUserID: userId,
+    });
+  } catch (err) {
+    console.warn('[SessionProvider] configurePurchases failed:', err instanceof Error ? err.message : String(err));
+  }
 }
 
 async function ensureProfile(userId: string, email: string) {

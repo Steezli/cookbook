@@ -18,6 +18,15 @@
 import { getBannerSize, getAdPlatform, getBannerAdUnitId, BANNER_SIZE_MOBILE, BANNER_SIZE_WEB } from '../config';
 import { canShowPersonalizedAds } from '../consent';
 import type { ConsentStatus } from '../consent';
+import { shouldSuppressAd } from '../AdBanner';
+
+// ---------------------------------------------------------------------------
+// Mock SubscriptionContext
+// ---------------------------------------------------------------------------
+
+jest.mock('@/features/subscriptions/SubscriptionContext', () => ({
+  useSubscription: jest.fn(),
+}));
 
 // ---------------------------------------------------------------------------
 // Mock Platform
@@ -32,6 +41,13 @@ jest.mock('react-native', () => ({
       return undefined;
     },
   }),
+  StyleSheet: {
+    create: (styles: Record<string, unknown>) => styles,
+    flatten: (style: unknown) => style,
+  },
+  View: 'View',
+  Text: 'Text',
+  ActivityIndicator: 'ActivityIndicator',
 }));
 
 function setPlatform(os: string) {
@@ -197,5 +213,26 @@ describe('consent-gated ad personalization', () => {
       const personalizedStatuses = ALL_STATUSES.filter(canShowPersonalizedAds);
       expect(personalizedStatuses).toEqual(['obtained']);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// shouldSuppressAd helper (contract tests — failing until T02 exports it)
+// ---------------------------------------------------------------------------
+
+describe('shouldSuppressAd helper', () => {
+  it('returns true when loaded and subscriber (suppress ad)', () => {
+    // isLoading=false, isSubscriber=true → suppress
+    expect(shouldSuppressAd(false, true)).toBe(true);
+  });
+
+  it('returns false when loading even if subscriber (avoid layout shift)', () => {
+    // isLoading=true, isSubscriber=true → do not suppress yet
+    expect(shouldSuppressAd(true, true)).toBe(false);
+  });
+
+  it('returns false when loaded but not a subscriber (show ad)', () => {
+    // isLoading=false, isSubscriber=false → do not suppress
+    expect(shouldSuppressAd(false, false)).toBe(false);
   });
 });
