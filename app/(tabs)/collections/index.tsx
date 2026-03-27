@@ -68,7 +68,7 @@ export default function CollectionsListScreen() {
   function renderCollectionCard({ item }: { item: CollectionWithRecipeCount }) {
     return (
       <Pressable
-        onPress={() => router.push(`/collections/${item.id}` as any)}
+        onPress={() => router.push(`/collections/${item.id}`)}
         style={{
           flex: numColumns > 1 ? 1 : undefined,
           backgroundColor: bgCard,
@@ -138,7 +138,7 @@ export default function CollectionsListScreen() {
         </Text>
         {session && (
           <Pressable
-            onPress={() => router.push('/collections/create' as any)}
+            onPress={() => router.push('/collections/create')}
             style={{
               backgroundColor: accentBlue,
               borderRadius: radiusMd,
@@ -192,7 +192,7 @@ export default function CollectionsListScreen() {
           </Text>
           {session && (
             <Pressable
-              onPress={() => router.push('/collections/create' as any)}
+              onPress={() => router.push('/collections/create')}
               style={{
                 backgroundColor: accentBlue,
                 borderRadius: radiusMd,

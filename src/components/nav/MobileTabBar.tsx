@@ -37,7 +37,7 @@ export function MobileTabBar() {
 
       {/* Scan: navigates to the scan tab */}
       <Pressable
-        onPress={() => router.navigate("/scan" as any)}
+        onPress={() => router.navigate("/scan")}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         accessibilityRole="button"
         accessibilityLabel="Scan recipe"

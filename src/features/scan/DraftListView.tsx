@@ -289,7 +289,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           )}
         </View>
         <View style={{ height: 8, backgroundColor: borderDefault, borderRadius: 4, overflow: 'hidden' }}>
-          <View style={{ height: '100%', width: `${progressPercent}%` as any, backgroundColor: progress.allSaved ? accentGreen : accentBlue, borderRadius: 4 }} />
+          <View style={{ height: '100%', width: `${progressPercent}%` as `${number}%`, backgroundColor: progress.allSaved ? accentGreen : accentBlue, borderRadius: 4 }} />
         </View>
         {showSaveAll && !progress.allSaved && (
           <Pressable

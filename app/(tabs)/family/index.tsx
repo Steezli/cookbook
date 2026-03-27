@@ -95,7 +95,7 @@ export default function FamiliesHomeScreen() {
 
       if (!inviteResult.error && inviteResult.data) {
         setPendingInvites(
-          (inviteResult.data as any[]).map((inv) => ({
+          (inviteResult.data as { id: string; family_id: string; created_at: string; families: { name: string } | null }[]).map((inv) => ({
             id: inv.id,
             family_id: inv.family_id,
             family_name: inv.families?.name ?? "Unknown",

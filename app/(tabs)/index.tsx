@@ -100,15 +100,15 @@ export default function HomeScreen() {
   }, [loadData]);
 
   const navigateToRecipes = () => {
-    router.push('/recipes' as any);
+    router.push('/recipes');
   };
 
   const navigateToRecipe = (id: string) => {
-    router.push(`/recipes/${id}` as any);
+    router.push(`/recipes/${id}`);
   };
 
   const navigateToCreate = () => {
-    router.push('/recipes/create' as any);
+    router.push('/recipes/create');
   };
 
   if (isLoading) {

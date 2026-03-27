@@ -16,7 +16,7 @@ export default function CreateRecipeScreen() {
       for (let i = 0; i < newPhotos.length; i++) {
         await uploadRecipePhoto(recipe.id, newPhotos[i], i);
       }
-      router.replace(`/recipes/${recipe.id}` as any);
+      router.replace(`/recipes/${recipe.id}`);
     } catch (err: any) {
       showAlert('Error', err.message ?? 'Failed to create recipe');
     } finally {
