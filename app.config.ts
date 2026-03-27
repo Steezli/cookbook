@@ -22,7 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'Berven',
   slug: 'berven',
   scheme: 'berven',
-  version: '0.1.0',
+  version: '0.1.1',
   icon: './assets/icon.png',
   splash: {
     image: './assets/splash.png',
