@@ -138,17 +138,29 @@ export function RecipeForm({
   const [userFamilies, setUserFamilies] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    supabase
-      .from('families')
-      .select('id,name')
-      .order('name')
-      .then(({ data }) => {
-        if (data) setUserFamilies(data as { id: string; name: string }[]);
-        // Auto-select first family if editing with family visibility and no family set
-        if (data?.length === 1 && !familyId && visibility === 'family') {
-          setFamilyId(data[0].id);
-        }
-      });
+    async function loadFamilies() {
+      const { data, error } = await supabase
+        .from('families')
+        .select('id,name')
+        .order('name');
+
+      if (error) {
+        console.warn('Failed to load families:', error.message);
+        return;
+      }
+
+      if (data) setUserFamilies(data as { id: string; name: string }[]);
+      // Auto-select first family if editing with family visibility and no family set.
+      // Uses initial values intentionally — the visibility toggle handler (line 644)
+      // handles auto-select for user-driven changes after mount.
+      if (data?.length === 1 && !familyId && visibility === 'family') {
+        setFamilyId(data[0].id);
+      }
+    }
+
+    loadFamilies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs once on mount;
+    // familyId/visibility are read at their initial values for the auto-select check
   }, []);
 
   // Story & Tags
