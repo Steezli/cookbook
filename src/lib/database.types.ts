@@ -971,6 +971,21 @@ export type Database = {
     Functions: {
       accept_family_invite: { Args: { p_token: string }; Returns: string }
       accept_invite_by_id: { Args: { p_invite_id: string }; Returns: string }
+      convert_draft_to_recipe: {
+        Args: {
+          p_draft_id: string
+          p_user_id: string
+          p_title: string
+          p_description?: string | null
+          p_ingredients?: Json
+          p_steps?: Json
+          p_prep_time_minutes?: number | null
+          p_cook_time_minutes?: number | null
+          p_servings?: number | null
+          p_tags?: string[]
+        }
+        Returns: string
+      }
       calculate_draft_confidence: {
         Args: { draft_id: string }
         Returns: {

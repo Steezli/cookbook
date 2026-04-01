@@ -38,7 +38,7 @@ describe('displayIngredient', () => {
         { text: '2 cups all-purpose flour', sort_order: 0 },
         'imperial'
       );
-      expect(result).toBe('2 cup all-purpose flour');
+      expect(result).toBe('2 cups all-purpose flour');
     });
 
     it('handles fractions', () => {
@@ -90,7 +90,7 @@ describe('displayIngredient', () => {
         },
         'imperial'
       );
-      expect(result).toBe('2 cup flour');
+      expect(result).toBe('2 cups flour');
     });
   });
 });

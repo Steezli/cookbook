@@ -102,9 +102,12 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
             draftCount: jobDrafts.length,
           };
         })
-        // Hide completed scans — they've already generated drafts so the
-        // scan entry is no longer useful. Keep queued/processing/failed.
-        .filter((job) => job.status !== 'completed')
+        // Hide completed scans that have pending drafts — the user can
+        // access those from the Pending Drafts section instead.
+        // Keep completed scans with NO drafts (all drafts were already
+        // converted/deleted) so the user still sees them briefly, and
+        // keep queued/processing/failed scans.
+        .filter((job) => !(job.status === 'completed' && job.draftCount > 0))
         .slice(0, limit);
 
       setJobs(merged);

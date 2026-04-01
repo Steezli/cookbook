@@ -113,17 +113,12 @@ function PendingDrafts({ drafts, isMobile }: { drafts: ScanDraft[]; isMobile: bo
               {draft.recipe.category || 'Recipe'} · {ingredientCount} ingredients · {instructionCount} steps
             </Text>
 
-            {/* Status badge + action */}
+            {/* Status badge + action hint */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ backgroundColor: statusBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill }}>
                 <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusText }}>{statusLabel}</Text>
               </View>
-              <Pressable
-                onPress={() => router.push(`/scan/draft/${draft.jobId}`)}
-                style={{ backgroundColor: accentBlue, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 }}
-              >
-                <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>Review & Save</Text>
-              </Pressable>
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentBlue }}>Review & Save →</Text>
             </View>
           </Pressable>
         );

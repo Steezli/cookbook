@@ -71,8 +71,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savedDraftIds, setSavedDraftIds] = useState<Set<string>>(new Set());
-  const [originalTotal, setOriginalTotal] = useState(0);
-  const [convertedCount, setConvertedCount] = useState(0);
+  const [initialTotal, setInitialTotal] = useState<number | null>(null);
 
   // Batch state
   const [batchSaving, setBatchSaving] = useState(false);
@@ -105,7 +104,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
         ]);
         if (cancelled) return;
         setPhotoUrls(photos.filter((u: string) => !u.startsWith('inline://')).map((u: string) => u.startsWith('http') ? u : getScanPhotoUrl(u)));
-        if (draftResults.length > 0) { setDrafts(draftResults); setOriginalTotal(draftResults.length); setLoading(false); return; }
+        if (draftResults.length > 0) { setDrafts(draftResults); setInitialTotal(t => t ?? draftResults.length); setLoading(false); return; }
 
         timeoutId = setTimeout(() => { unsubscribe(); if (!cancelled) { setError('Processing is taking longer than expected.'); setLoading(false); } }, 120000);
 
@@ -113,14 +112,14 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           if (cancelled) return;
           if (job.status === 'completed') {
             unsubscribe();
-            try { const r = await scanDraftService.getDraftsByJobId(jobId, userId); if (!cancelled) { setDrafts(r); setOriginalTotal(r.length); setLoading(false); } }
+            try { const r = await scanDraftService.getDraftsByJobId(jobId, userId); if (!cancelled) { setDrafts(r); setInitialTotal(t => t ?? r.length); setLoading(false); } }
             catch (err) { if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed'); setLoading(false); } }
           } else if (job.status === 'failed') { unsubscribe(); if (!cancelled) { setError('Scan processing failed.'); setLoading(false); } }
         });
 
         pollIntervalId = setInterval(async () => {
           if (cancelled) return;
-          try { const p = await scanDraftService.getDraftsByJobId(jobId, userId); if (p.length > 0 && !cancelled) { unsubscribe(); setDrafts(p); setOriginalTotal(p.length); setLoading(false); } } catch {}
+          try { const p = await scanDraftService.getDraftsByJobId(jobId, userId); if (p.length > 0 && !cancelled) { unsubscribe(); setDrafts(p); setInitialTotal(t => t ?? p.length); setLoading(false); } } catch {}
         }, 4000);
       } catch (err) { if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed'); setLoading(false); } }
     };
@@ -141,14 +140,13 @@ export function DraftListView({ jobId }: DraftListViewProps) {
 
   const handleDraftConverted = (recipeId: string, draftId?: string) => {
     if (draftId) setSavedDraftIds(prev => new Set(prev).add(draftId));
-    setConvertedCount(c => c + 1);
     refreshDrafts();
   };
 
   // Batch save
   const handleSaveAll = async () => {
     if (!userId || batchSaving) return;
-    const unsaved = drafts.filter(d => !savedDraftIds.has(d.id) && d.status !== 'ready');
+    const unsaved = drafts.filter(d => !savedDraftIds.has(d.id));
     if (unsaved.length === 0) return;
     setBatchSaving(true);
     setBatchProgress({ current: 0, total: unsaved.length });
@@ -165,7 +163,6 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           tags: [],
         });
         setSavedDraftIds(prev => new Set(prev).add(unsaved[i].id));
-        setConvertedCount(c => c + 1);
       } catch {}
     }
     setBatchSaving(false);
@@ -173,9 +170,12 @@ export function DraftListView({ jobId }: DraftListViewProps) {
     refreshDrafts();
   };
 
-  // Computed
+  // Computed — derive progress from DB state, not ephemeral counters.
+  // initialTotal is set once on first load; saved = initialTotal - remaining drafts.
+  const total = initialTotal ?? drafts.length;
+  const saved = Math.max(0, total - drafts.length);
   const currentDraft = drafts[currentIndex] ?? null;
-  const allSaved = originalTotal > 0 && convertedCount >= originalTotal;
+  const allSaved = total > 0 && drafts.length === 0;
 
   // --- Loading / Error ---
   if (loading) {
@@ -200,13 +200,12 @@ export function DraftListView({ jobId }: DraftListViewProps) {
 
   // --- Progress bar ---
   const ProgressBar = () => {
-    const displayTotal = originalTotal || drafts.length;
-    const pct = displayTotal > 0 ? (convertedCount / displayTotal) * 100 : 0;
+    const pct = total > 0 ? (saved / total) * 100 : 0;
     return (
       <View style={{ backgroundColor: bgCard, borderRadius: radiusMd, padding: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary }}>
-            {allSaved ? 'All recipes saved!' : `${convertedCount} of ${displayTotal} recipes saved`}
+            {allSaved ? 'All recipes saved!' : `${saved} of ${total} recipes saved`}
           </Text>
           {allSaved && <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓ Complete</Text>}
         </View>
@@ -236,7 +235,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       }
       return (
         <View style={{ flex: 1 }}>
-          <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); setConvertedCount(c => c + 1); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
+          <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
         </View>
       );
     }
@@ -334,7 +333,7 @@ export function DraftListView({ jobId }: DraftListViewProps) {
           isEditing ? (
             <DraftEditor draft={currentDraft} onCancel={() => setIsEditing(false)} onConverted={(id) => handleDraftConverted(id, currentDraft.id)} />
           ) : (
-            <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); setConvertedCount(c => c + 1); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
+            <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
           )
         )}
       </View>

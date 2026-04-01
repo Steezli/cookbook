@@ -429,11 +429,19 @@ export class ScanDraftService {
         source_story: null,
       }
 
-      const { data, error } = await supabase
-        .from('recipes')
-        .insert(insertData)
-        .select('id')
-        .single()
+      // Atomic: insert recipe + delete draft in a single DB transaction via RPC
+      const { data, error } = await supabase.rpc('convert_draft_to_recipe', {
+        p_draft_id: draftId,
+        p_user_id: userId,
+        p_title: insertData.title,
+        p_description: insertData.description,
+        p_ingredients: toJson(ingredients),
+        p_steps: toJson(steps),
+        p_prep_time_minutes: insertData.prep_time_minutes,
+        p_cook_time_minutes: insertData.cook_time_minutes,
+        p_servings: insertData.servings,
+        p_tags: insertData.tags || [],
+      })
 
       if (error) {
         throw new Error(`Failed to create recipe from draft: ${error.message}`)
@@ -443,9 +451,7 @@ export class ScanDraftService {
         throw new Error('No data returned from recipe creation')
       }
 
-      await this.deleteDraft(draftId, userId)
-
-      return { recipeId: data.id }
+      return { recipeId: data as string }
 
     } catch (error) {
       throw new Error(`Failed to convert draft to recipe: ${error instanceof Error ? error.message : 'Unknown error'}`)

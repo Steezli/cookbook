@@ -118,34 +118,37 @@ describe('Unit Conversions', () => {
   });
 
   describe('formatAmount', () => {
-    it('rounds to whole number', () => {
-      expect(formatAmount(2.10000)).toBe('2');
-    });
-
-    it('handles whole numbers', () => {
+    it('formats whole numbers', () => {
+      expect(formatAmount(3)).toBe('3');
       expect(formatAmount(3.00)).toBe('3');
+      expect(formatAmount(2.02)).toBe('2');
     });
 
-    it('rounds up from .5', () => {
+    it('rounds to whole number by default (metric style)', () => {
       expect(formatAmount(2.5)).toBe('3');
-    });
-
-    it('rounds down below .5', () => {
       expect(formatAmount(2.456)).toBe('2');
-    });
-
-    it('shows one decimal for small amounts', () => {
-      expect(formatAmount(0.5)).toBe('0.5');
-    });
-
-    it('rounds metric conversions to whole numbers', () => {
       expect(formatAmount(236.588)).toBe('237');
       expect(formatAmount(473.176)).toBe('473');
     });
 
-    it('handles very small amounts', () => {
-      const result = formatAmount(0.05);
-      expect(result).toBe('0.1');
+    it('uses vulgar fractions when useFractions is true (imperial style)', () => {
+      expect(formatAmount(0.5, true)).toBe('½');
+      expect(formatAmount(0.25, true)).toBe('¼');
+      expect(formatAmount(0.75, true)).toBe('¾');
+      expect(formatAmount(0.333, true)).toBe('⅓');
+      expect(formatAmount(0.667, true)).toBe('⅔');
+    });
+
+    it('formats mixed numbers with fractions (imperial style)', () => {
+      expect(formatAmount(2.5, true)).toBe('2 ½');
+      expect(formatAmount(1.25, true)).toBe('1 ¼');
+      expect(formatAmount(1.75, true)).toBe('1 ¾');
+      expect(formatAmount(2.333, true)).toBe('2 ⅓');
+    });
+
+    it('falls back to rounding when fraction is unrecognizable', () => {
+      expect(formatAmount(2.456, true)).toBe('2');
+      expect(formatAmount(3.17, true)).toBe('3');
     });
   });
 
@@ -206,6 +209,7 @@ describe('Unit Conversions', () => {
   describe('displayAmount', () => {
     it('converts and displays cup to ml for metric preference (liquid)', () => {
       const result = displayAmount(1, 'cup', 'metric', '1 cup milk', 'milk');
+      // 1 cup = 236.588 ml → rounds to "237ml milk"
       expect(result).toContain('237');
       expect(result).toContain('ml');
       expect(result).toContain('milk');
@@ -238,7 +242,7 @@ describe('Unit Conversions', () => {
     it('converts ml to cup for imperial preference', () => {
       const result = displayAmount(500, 'ml', 'imperial', '500ml flour');
       expect(result).toContain('2');
-      expect(result).toContain('cup');
+      expect(result).toContain('cups');
       expect(result).toContain('flour');
       // Should NOT contain original measurement in parentheses
       expect(result).not.toContain('(');
@@ -252,7 +256,7 @@ describe('Unit Conversions', () => {
 
     it('standardizes display when preference matches stored system', () => {
       const result = displayAmount(2, 'cup', 'imperial', '2 cups flour');
-      expect(result).toBe('2 cup flour');
+      expect(result).toBe('2 cups flour');
     });
 
     it('standardizes metric display when preference matches', () => {
@@ -262,13 +266,14 @@ describe('Unit Conversions', () => {
 
     it('converts oz to g for metric preference', () => {
       const result = displayAmount(8, 'oz', 'metric', '8 oz cheese');
+      // 8 oz = 226.796g → rounds to "227g cheese"
       expect(result).toContain('227');
       expect(result).toContain('g');
     });
 
     it('converts grams to cups for dry ingredients in imperial mode', () => {
       const result = displayAmount(250, 'g', 'imperial', '250g flour', 'flour');
-      expect(result).toContain('cup');
+      expect(result).toContain('cups');
     });
 
     it('backward compatible — works without ingredientName param', () => {

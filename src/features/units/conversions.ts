@@ -285,14 +285,35 @@ const CANONICAL_UNIT: Record<string, string> = {
   milligrams: 'mg',
 };
 
-/** Resolve any unit variant to its canonical display form. */
-function canonicalUnit(unit: string): string {
+/** Units that have a distinct plural form (word-length units only). */
+const PLURAL_UNITS: Record<string, string> = {
+  cup: 'cups',
+  pint: 'pints',
+  quart: 'quarts',
+  gallon: 'gallons',
+};
+
+/** Resolve any unit variant to its canonical display form, pluralizing word-length units. */
+function canonicalUnit(unit: string, amount?: number): string {
   const normalized = unit === 'T.' || unit === 'T' ? 'tbsp' : unit.toLowerCase();
-  return CANONICAL_UNIT[normalized] || unit;
+  const canonical = CANONICAL_UNIT[normalized] || unit;
+  // Pluralize word-length units when amount > 1 (standard recipe convention)
+  if (amount !== undefined && amount > 1) {
+    const plural = PLURAL_UNITS[canonical];
+    if (plural) return plural;
+  }
+  return canonical;
 }
 
-/** Units that are written without a space after the number (250g, 10ml). */
-const COMPACT_UNITS = new Set(['g', 'kg', 'mg', 'ml', 'L', 'oz', 'lb']);
+/** Units that are written without a space after the number (250g, 10ml).
+ *  Only metric abbreviations — imperial units always use a space (2 oz, 1 lb). */
+const COMPACT_UNITS = new Set(['g', 'kg', 'mg', 'ml', 'L']);
+
+/** Imperial units — these use vulgar fractions (½, ¼) instead of decimals. */
+const IMPERIAL_UNITS = new Set([
+  'tsp', 'tbsp', 'fl oz', 'cup', 'cups', 'pint', 'pints',
+  'quart', 'quarts', 'gallon', 'gallons', 'oz', 'lb',
+]);
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -441,14 +462,47 @@ export function getTargetUnit(unit: string, preference: UnitSystem): string {
   return unit;
 }
 
-export function formatAmount(num: number): string {
-  // For very small amounts, show one decimal
-  if (num > 0 && num < 1) {
-    const rounded = Math.round(num * 10) / 10;
-    if (rounded === 0) return '< 1';
-    return rounded.toString();
+/** Common fraction lookup — maps decimal to Unicode vulgar fraction. */
+const FRACTION_MAP: [number, string][] = [
+  [0.125, '⅛'],
+  [0.25,  '¼'],
+  [0.333, '⅓'],
+  [0.375, '⅜'],
+  [0.5,   '½'],
+  [0.625, '⅝'],
+  [0.667, '⅔'],
+  [0.75,  '¾'],
+  [0.875, '⅞'],
+];
+
+/**
+ * Format a numeric amount for display.
+ *
+ * @param num - The numeric amount
+ * @param useFractions - When true, use vulgar fractions (½, ¼, ¾) for imperial.
+ *                       When false (metric), round to whole numbers.
+ */
+export function formatAmount(num: number, useFractions = false): string {
+  if (num === 0) return '0';
+
+  const whole = Math.floor(num);
+  const frac = num - whole;
+
+  // Pure whole number
+  if (frac < 0.05) return Math.round(num).toString();
+  // Close enough to next whole number (e.g. 2.96)
+  if (frac > 0.95) return (whole + 1).toString();
+
+  // For imperial: try to match a common fraction
+  if (useFractions) {
+    for (const [value, symbol] of FRACTION_MAP) {
+      if (Math.abs(frac - value) < 0.03) {
+        return whole > 0 ? `${whole} ${symbol}` : symbol;
+      }
+    }
   }
-  // Round to nearest whole number for larger amounts
+
+  // No matching fraction or metric — round to whole
   return Math.round(num).toString();
 }
 
@@ -593,8 +647,9 @@ function formatStandardDisplay(
   originalText: string
 ): string {
   const ingredientName = extractIngredientFromText(originalText);
-  const formattedAmount = formatAmount(amount);
-  const displayUnit = canonicalUnit(normalizedUnit);
+  const displayUnit = canonicalUnit(normalizedUnit, amount);
+  const useFractions = IMPERIAL_UNITS.has(displayUnit);
+  const formattedAmount = formatAmount(amount, useFractions);
   const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
   return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
 }
@@ -611,8 +666,9 @@ function formatConvertedDisplay(
   originalText: string
 ): string {
   const ingredientName = extractIngredientFromText(originalText);
-  const formattedAmount = formatAmount(convertedAmount);
-  const displayUnit = canonicalUnit(targetUnit);
+  const displayUnit = canonicalUnit(targetUnit, convertedAmount);
+  const useFractions = IMPERIAL_UNITS.has(displayUnit);
+  const formattedAmount = formatAmount(convertedAmount, useFractions);
   const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
   return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
 }

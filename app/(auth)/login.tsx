@@ -51,7 +51,7 @@ export default function LoginScreen() {
     // Read DOM values as fallback when React state is empty.
     let loginEmail = email;
     let loginPassword = password;
-    if (Platform.OS === 'web' && (!loginEmail || !loginPassword)) {
+    if (Platform.OS === 'web' && typeof document !== 'undefined' && (!loginEmail || !loginPassword)) {
       const emailEl = document.getElementById('email') as HTMLInputElement | null;
       const passEl = document.getElementById('password') as HTMLInputElement | null;
       if (emailEl?.value) loginEmail = emailEl.value;

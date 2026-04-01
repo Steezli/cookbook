@@ -1071,9 +1071,9 @@ export default function RecipeDetailScreen() {
               alignItems: "flex-start",
             }}
           >
-            {/* Left column: hero image + gallery */}
-            <View style={{ flex: 1 }}>
-              {photos.length > 0 && (
+            {/* Left column: hero image + gallery (only if photos exist) */}
+            {photos.length > 0 && (
+              <View style={{ flex: 1 }}>
                 <View
                   style={{
                     borderRadius: radiusMd,
@@ -1082,11 +1082,11 @@ export default function RecipeDetailScreen() {
                 >
                   {renderHeroImage()}
                 </View>
-              )}
-              {renderPhotoGallery()}
-            </View>
+                {renderPhotoGallery()}
+              </View>
+            )}
 
-            {/* Right column: all recipe content */}
+            {/* Recipe content — full width if no photos, right column otherwise */}
             <View style={{ flex: 1 }}>{renderRecipeContent()}</View>
           </View>
         ) : (
