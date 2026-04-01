@@ -228,6 +228,73 @@ const METRIC_WEIGHT_PREFERRED: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Canonical display units — maps every accepted variant to a single standard
+// abbreviation. Output is always one of these canonical forms.
+// ---------------------------------------------------------------------------
+const CANONICAL_UNIT: Record<string, string> = {
+  // Volume – imperial
+  tsp: 'tsp',
+  'tsp.': 'tsp',
+  't.': 'tsp',
+  teaspoon: 'tsp',
+  teaspoons: 'tsp',
+  tbsp: 'tbsp',
+  'tbsp.': 'tbsp',
+  tablespoon: 'tbsp',
+  tablespoons: 'tbsp',
+  'fl oz': 'fl oz',
+  cup: 'cup',
+  cups: 'cup',
+  c: 'cup',
+  'c.': 'cup',
+  pint: 'pint',
+  pints: 'pint',
+  'pt.': 'pint',
+  quart: 'quart',
+  quarts: 'quart',
+  'qt.': 'quart',
+  gallon: 'gallon',
+  gallons: 'gallon',
+  'gal.': 'gallon',
+  // Volume – metric
+  ml: 'ml',
+  milliliter: 'ml',
+  milliliters: 'ml',
+  l: 'L',
+  liter: 'L',
+  liters: 'L',
+  // Weight – imperial
+  oz: 'oz',
+  ounce: 'oz',
+  ounces: 'oz',
+  lb: 'lb',
+  lbs: 'lb',
+  'lbs.': 'lb',
+  'lb.': 'lb',
+  pound: 'lb',
+  pounds: 'lb',
+  // Weight – metric
+  g: 'g',
+  gram: 'g',
+  grams: 'g',
+  kg: 'kg',
+  kilogram: 'kg',
+  kilograms: 'kg',
+  mg: 'mg',
+  milligram: 'mg',
+  milligrams: 'mg',
+};
+
+/** Resolve any unit variant to its canonical display form. */
+function canonicalUnit(unit: string): string {
+  const normalized = unit === 'T.' || unit === 'T' ? 'tbsp' : unit.toLowerCase();
+  return CANONICAL_UNIT[normalized] || unit;
+}
+
+/** Units that are written without a space after the number (250g, 10ml). */
+const COMPACT_UNITS = new Set(['g', 'kg', 'mg', 'ml', 'L', 'oz', 'lb']);
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -425,7 +492,8 @@ export function displayAmount(
     (preference === 'imperial' && isMetricUnit);
 
   if (!needsConversion) {
-    return safeOriginal;
+    // No conversion needed, but still standardize the display format
+    return formatStandardDisplay(amount, normalized, safeOriginal);
   }
 
   // Extract ingredient name from original text if not provided
@@ -516,16 +584,35 @@ function extractIngredientFromText(text: string): string {
 }
 
 /**
- * Format a converted display string.
- * Shows: "250 g (2 cups) flour"
+ * Format a non-converted ingredient with standardized unit display.
+ * "2 Cups flour" → "2 cups flour", "250 grams sugar" → "250g sugar"
+ */
+function formatStandardDisplay(
+  amount: number,
+  normalizedUnit: string,
+  originalText: string
+): string {
+  const ingredientName = extractIngredientFromText(originalText);
+  const formattedAmount = formatAmount(amount);
+  const displayUnit = canonicalUnit(normalizedUnit);
+  const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
+  return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
+}
+
+/**
+ * Format a converted display string with canonical units.
+ * Shows: "250g flour", "2 cups flour"
  */
 function formatConvertedDisplay(
   convertedAmount: number,
   targetUnit: string,
-  originalAmount: number,
-  originalUnit: string,
+  _originalAmount: number,
+  _originalUnit: string,
   originalText: string
 ): string {
   const ingredientName = extractIngredientFromText(originalText);
-  return `${formatAmount(convertedAmount)} ${targetUnit} (${originalAmount} ${originalUnit}) ${ingredientName}`.trim();
+  const formattedAmount = formatAmount(convertedAmount);
+  const displayUnit = canonicalUnit(targetUnit);
+  const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
+  return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
 }

@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import Head from 'expo-router/head';
-import { UtensilsCrossed } from 'lucide-react-native';
 
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import { SITE_NAME, SITE_URL } from '@/lib/site-config';
@@ -36,8 +35,6 @@ import {
   fontFamilyBodyBold,
   fontFamilyBodyMedium,
   fontFamilyDisplayBold,
-  noPhotoBg,
-  noPhotoIcon,
   radiusMd,
   radiusPill,
   radiusSm,
@@ -180,34 +177,18 @@ export default function PublicRecipeDetail() {
   const heroRadius = breakpoint === 'web' ? radiusMd : 0;
 
   function renderHero() {
-    if (heroUrl) {
-      return (
-        <Image
-          source={{ uri: heroUrl }}
-          style={{
-            width: '100%',
-            height: heroHeight,
-            borderRadius: heroRadius,
-            overflow: 'hidden',
-          }}
-          resizeMode="cover"
-        />
-      );
-    }
+    if (!heroUrl) return null;
     return (
-      <View
+      <Image
+        source={{ uri: heroUrl }}
         style={{
           width: '100%',
           height: heroHeight,
-          backgroundColor: noPhotoBg,
           borderRadius: heroRadius,
           overflow: 'hidden',
-          alignItems: 'center',
-          justifyContent: 'center',
         }}
-      >
-        <UtensilsCrossed size={48} color={noPhotoIcon} />
-      </View>
+        resizeMode="cover"
+      />
     );
   }
 

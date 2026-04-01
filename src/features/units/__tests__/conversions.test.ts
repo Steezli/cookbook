@@ -239,8 +239,9 @@ describe('Unit Conversions', () => {
       const result = displayAmount(500, 'ml', 'imperial', '500ml flour');
       expect(result).toContain('2');
       expect(result).toContain('cup');
-      expect(result).toContain('500 ml');
       expect(result).toContain('flour');
+      // Should NOT contain original measurement in parentheses
+      expect(result).not.toContain('(');
     });
 
     it('returns original text for unconvertible units', () => {
@@ -249,12 +250,12 @@ describe('Unit Conversions', () => {
       expect(result).toBe(original);
     });
 
-    it('shows just amount and unit when preference matches stored system', () => {
+    it('standardizes display when preference matches stored system', () => {
       const result = displayAmount(2, 'cup', 'imperial', '2 cups flour');
-      expect(result).toBe('2 cups flour');
+      expect(result).toBe('2 cup flour');
     });
 
-    it('shows just amount and unit when preference matches metric stored', () => {
+    it('standardizes metric display when preference matches', () => {
       const result = displayAmount(500, 'ml', 'metric', '500ml flour');
       expect(result).toBe('500ml flour');
     });
@@ -274,7 +275,7 @@ describe('Unit Conversions', () => {
       const result = displayAmount(2, 'cup', 'metric', '2 cups flour');
       // Should still produce a valid conversion (either g or ml based on text extraction)
       expect(result).not.toBe('2 cups flour');
-      expect(result).toContain('2 cup');
+      expect(result).toContain('flour');
     });
   });
 });

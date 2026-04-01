@@ -1,14 +1,10 @@
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
-import { UtensilsCrossed } from 'lucide-react-native';
-
 import type { Recipe } from '@/features/recipes/types';
 import { formatMetadataLine, getVisibilityColor } from '@/components/recipes/recipeCardUtils';
 import {
   bgCard,
   fontFamilyBody,
-  noPhotoBg,
-  noPhotoIcon,
   fontFamilyBodyMedium,
   fontFamilyDisplay,
   fontSizeBase,
@@ -56,25 +52,13 @@ export function RecipeCard({ recipe, thumbnailUrl, onPress, style }: RecipeCardP
         style,
       ]}
     >
-      {/* 180px image area */}
-      {thumbnailUrl ? (
+      {/* Image — only render when a thumbnail exists */}
+      {thumbnailUrl && (
         <Image
           source={{ uri: thumbnailUrl }}
           style={{ width: '100%', height: 180 }}
           resizeMode="cover"
         />
-      ) : (
-        <View
-          style={{
-            width: '100%',
-            height: 180,
-            backgroundColor: noPhotoBg,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <UtensilsCrossed size={32} color={noPhotoIcon} />
-        </View>
       )}
 
       {/* Content area */}

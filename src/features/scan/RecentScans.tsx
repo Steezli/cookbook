@@ -93,14 +93,19 @@ export function RecentScans({ limit = 5 }: { limit?: number }) {
         }
       }
 
-      const merged: ScanWithDraft[] = scanJobs.slice(0, limit).map((job) => {
-        const jobDrafts = draftsByJobId.get(job.id) || [];
-        return {
-          ...job,
-          draft: jobDrafts[0] || null,
-          draftCount: jobDrafts.length,
-        };
-      });
+      const merged: ScanWithDraft[] = scanJobs
+        .map((job) => {
+          const jobDrafts = draftsByJobId.get(job.id) || [];
+          return {
+            ...job,
+            draft: jobDrafts[0] || null,
+            draftCount: jobDrafts.length,
+          };
+        })
+        // Hide completed scans — they've already generated drafts so the
+        // scan entry is no longer useful. Keep queued/processing/failed.
+        .filter((job) => job.status !== 'completed')
+        .slice(0, limit);
 
       setJobs(merged);
     } catch {
