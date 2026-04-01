@@ -113,13 +113,56 @@ const DRY_GRAMS_PER_CUP: Record<string, number> = {
   'cocoa powder': 86,
   'cocoa': 86,
 
-  // Other dry
+  // Spices & seasonings (ground unless noted)
   'salt': 288,
+  'kosher salt': 241,
+  'sea salt': 288,
+  'black pepper': 116,
+  'pepper': 116,
+  'white pepper': 116,
+  'cardamom': 100,
+  'ground cardamom': 100,
+  'cumin': 120,
+  'ground cumin': 120,
+  'cinnamon': 125,
+  'ground cinnamon': 125,
+  'ginger': 96,
+  'ground ginger': 96,
+  'nutmeg': 112,
+  'ground nutmeg': 112,
+  'cloves': 110,
+  'ground cloves': 110,
+  'allspice': 96,
+  'ground allspice': 96,
+  'paprika': 108,
+  'smoked paprika': 108,
+  'chili powder': 120,
+  'cayenne': 90,
+  'cayenne pepper': 90,
+  'turmeric': 120,
+  'ground turmeric': 120,
+  'garlic powder': 153,
+  'onion powder': 115,
+  'oregano': 45,
+  'dried oregano': 45,
+  'basil': 40,
+  'dried basil': 40,
+  'thyme': 48,
+  'dried thyme': 48,
+  'rosemary': 55,
+  'dried rosemary': 55,
+  'parsley': 30,
+  'dried parsley': 30,
+  'curry powder': 108,
+  'mustard powder': 120,
+  'dry mustard': 120,
+
+  // Other dry
   'baking soda': 220,
   'baking powder': 230,
   'yeast': 192,
-  'cinnamon': 125,
-  'ground cinnamon': 125,
+  'dry yeast': 192,
+  'active dry yeast': 192,
 };
 
 // ---------------------------------------------------------------------------
@@ -376,11 +419,17 @@ export function isLiquidIngredient(ingredientName: string): boolean {
 }
 
 /**
- * Look up the grams-per-cup for a dry ingredient.
- * Returns null if no density data is available.
+ * Generic fallback density for unknown dry ingredients (g per cup).
+ * ~120g/cup is a reasonable middle ground for ground spices & powders.
  */
-function getDryGramsPerCup(ingredientName: string): number | null {
-  if (!ingredientName) return null;
+const GENERIC_DRY_GRAMS_PER_CUP = 120;
+
+/**
+ * Look up the grams-per-cup for a dry ingredient.
+ * Falls back to a generic density when `useFallback` is true.
+ */
+function getDryGramsPerCup(ingredientName: string, useFallback = false): number | null {
+  if (!ingredientName) return useFallback ? GENERIC_DRY_GRAMS_PER_CUP : null;
 
   const normalized = ingredientName
     .toLowerCase()
@@ -398,7 +447,7 @@ function getDryGramsPerCup(ingredientName: string): number | null {
     if (normalized.includes(key)) return value;
   }
 
-  return null;
+  return useFallback ? GENERIC_DRY_GRAMS_PER_CUP : null;
 }
 
 /**
@@ -408,9 +457,10 @@ function getDryGramsPerCup(ingredientName: string): number | null {
 function convertDryVolumeToGrams(
   amount: number,
   fromUnit: string,
-  ingredientName: string
+  ingredientName: string,
+  useFallback = false
 ): number | null {
-  const gramsPerCup = getDryGramsPerCup(ingredientName);
+  const gramsPerCup = getDryGramsPerCup(ingredientName, useFallback);
   if (gramsPerCup === null) return null;
 
   // Convert the amount to cups first, then multiply by grams-per-cup
@@ -566,17 +616,16 @@ export function displayAmount(
     if (preference === 'metric') {
       // Imperial volume → metric
       if (!liquid) {
-        // Dry ingredient: try to convert to grams
-        const grams = convertDryVolumeToGrams(amount, normalized, ingredientContext);
+        // Dry ingredient: convert to grams (use generic fallback if no exact density)
+        const grams = convertDryVolumeToGrams(amount, normalized, ingredientContext, true);
         if (grams !== null) {
-          // Use kg for large amounts
           if (grams >= 1000) {
             return formatConvertedDisplay(grams / 1000, 'kg', amount, unit, safeOriginal);
           }
           return formatConvertedDisplay(grams, 'g', amount, unit, safeOriginal);
         }
       }
-      // Liquid or unknown dry: convert to ml (original behavior)
+      // Liquid: convert to ml
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertVolume(amount, normalized, targetUnit);
       return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);

@@ -234,9 +234,10 @@ describe('Unit Conversions', () => {
       expect(result).toContain('g');
     });
 
-    it('falls back to ml for unknown dry ingredient', () => {
+    it('falls back to grams with generic density for unknown dry ingredient', () => {
       const result = displayAmount(1, 'cup', 'metric', '1 cup mystery ingredient', 'mystery ingredient');
-      expect(result).toContain('ml');
+      expect(result).toContain('g');
+      expect(result).toContain('mystery ingredient');
     });
 
     it('converts ml to cup for imperial preference', () => {
