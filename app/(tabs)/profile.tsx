@@ -73,6 +73,35 @@ export default function ProfileScreen() {
   } = useSubscription();
   const [paywallVisible, setPaywallVisible] = useState(false);
 
+  /** Present the RevenueCat native paywall directly (iOS/Android).
+   *  Falls back to the custom PaywallPlaceholder if the UI module isn't available. */
+  async function handleNativeUpgrade() {
+    try {
+      const mod = await import("react-native-purchases-ui").catch(() => null);
+      if (!mod) {
+        setPaywallVisible(true);
+        return;
+      }
+      const RevenueCatUI = mod.default;
+      const { PAYWALL_RESULT } = mod;
+      const result = await RevenueCatUI.presentPaywall();
+
+      switch (result) {
+        case PAYWALL_RESULT.PURCHASED:
+        case PAYWALL_RESULT.RESTORED:
+          await refreshSubscription();
+          break;
+        case PAYWALL_RESULT.ERROR:
+          showAlert("Error", "Something went wrong. Please try again.");
+          break;
+        // CANCELLED — user dismissed, nothing to do
+      }
+    } catch (err) {
+      console.warn("[Profile] native paywall failed:", err instanceof Error ? err.message : String(err));
+      setPaywallVisible(true);
+    }
+  }
+
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [unitPref, setUnitPrefState] = useState<UnitSystem>("imperial");
   const [isLoading, setIsLoading] = useState(true);
@@ -741,7 +770,13 @@ export default function ProfileScreen() {
 
               {/* Upgrade button — uses app CTA color */}
               <Pressable
-                onPress={() => setPaywallVisible(true)}
+                onPress={() => {
+                  if (Platform.OS === "web") {
+                    setPaywallVisible(true);
+                  } else {
+                    handleNativeUpgrade();
+                  }
+                }}
                 style={{
                   backgroundColor: accentWarm,
                   paddingVertical: 14,

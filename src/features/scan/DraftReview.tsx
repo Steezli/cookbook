@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Platform,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
@@ -19,10 +20,12 @@ import { useSession } from '@/features/auth/session';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
 import {
   fontFamilyDisplay,
+  fontFamilyDisplayBold,
   fontFamilyBody,
   fontFamilyBodyMedium,
   fontFamilyBodyBold,
   fontSize2xl,
+  fontSize3xl,
   fontSizeXl,
   fontSizeLg,
   fontSizeBase,
@@ -34,6 +37,7 @@ import {
   accentBlue,
   accentCoral,
   accentGreen,
+  accentWarm,
   bgPage,
   bgCard,
   borderDefault,
@@ -46,20 +50,27 @@ import {
   shadowMd,
   noPhotoBg,
   noPhotoIcon,
+  badgeGreenBg,
 } from '@/lib/tokens';
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
 interface DraftReviewProps {
-  /** Pass a ScanDraft directly to skip internal fetch (multi-draft path) */
   draft?: ScanDraft;
-  /** Job ID used to fetch the draft when `draft` prop is not provided (backward compat) */
   draftId?: string;
   onDraftUpdated?: (draft: ScanDraft) => void;
-  /** Called when the draft is saved as a recipe (multi-draft parent coordination) */
   onDraftSaved?: (draft: ScanDraft) => void;
   onEdit?: () => void;
-  /** Called after a draft is discarded. When provided, replaces the default router.back() navigation. */
   onDiscarded?: () => void;
 }
+
+type ContentTab = 'ingredients' | 'instructions' | 'notes';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 const getConfidenceColor = (confidence: number): { bg: string; text: string } => {
   if (confidence >= 0.85) return { bg: '#DCFCE7', text: '#166534' };
@@ -67,60 +78,39 @@ const getConfidenceColor = (confidence: number): { bg: string; text: string } =>
   return { bg: '#FEF2F2', text: '#991B1B' };
 };
 
-const getConfidenceLabel = (confidence: number): string => {
-  if (confidence >= 0.85) return 'High';
-  if (confidence >= 0.65) return 'Medium';
-  return 'Low';
-};
-
-function ConfidenceBadge({ confidence, label }: { confidence: number; label?: string }) {
+function ConfidenceBadge({ confidence }: { confidence: number }) {
   const color = getConfidenceColor(confidence);
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-      }}
-    >
-      {label && (
-        <Text
-          style={{
-            fontFamily: fontFamilyBodyMedium,
-            fontSize: fontSizeXs,
-            color: textSecondary,
-          }}
-        >
-          {label}
-        </Text>
-      )}
-      <View
-        style={{
-          backgroundColor: color.bg,
-          paddingHorizontal: 8,
-          paddingVertical: 3,
-          borderRadius: radiusPill,
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: fontFamilyBodyMedium,
-            fontSize: fontSizeXs,
-            color: color.text,
-          }}
-        >
-          {getConfidenceLabel(confidence)} ({Math.round(confidence * 100)}%)
-        </Text>
-      </View>
+    <View style={{ backgroundColor: color.bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radiusPill }}>
+      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: color.text }}>
+        {Math.round(confidence * 100)}% confidence
+      </Text>
     </View>
   );
 }
+
+function formatTime(minutes?: number): string {
+  if (!minutes) return '';
+  if (minutes < 60) return `${minutes} min`;
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+}
+
+function getTotalTime(recipe: ParsedRecipe): string {
+  const total = (recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0);
+  return total > 0 ? formatTime(total) : '';
+}
+
+// ---------------------------------------------------------------------------
+// DraftReview — Option B: Immersive photo-forward with tabbed content
+// ---------------------------------------------------------------------------
 
 export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraftSaved, onEdit, onDiscarded }: DraftReviewProps) {
   const { session, isLoading: authLoading } = useSession();
   const { breakpoint } = useBreakpoint();
   const isMobile = breakpoint === 'mobile';
-  const isSideBySide = breakpoint === 'tablet' || breakpoint === 'web';
+  const isWeb = breakpoint === 'web' || breakpoint === 'tablet';
 
   const [draft, setDraft] = useState<ScanDraft | null>(draftProp ?? null);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
@@ -128,45 +118,34 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
   const [loading, setLoading] = useState(!draftProp);
   const [jobStatus, setJobStatus] = useState<string>(draftProp ? 'completed' : 'checking');
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ContentTab>('ingredients');
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [discarding, setDiscarding] = useState(false);
 
-  // Animated value for mobile collapsible photo
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Resolve the job ID: from the passed draft, or from the legacy draftId prop (which is actually a jobId)
   const jobId = draftProp?.jobId ?? draftId;
 
-  // When draft prop is provided, sync it into local state and load photos only
+  // --- Data loading (unchanged logic) ---
+
   useEffect(() => {
     if (!draftProp) return;
-
     setDraft(draftProp);
     setLoading(false);
     setJobStatus('completed');
 
-    // Still load photos via the job ID
     const loadPhotos = async () => {
       try {
         const photos = await getJobPhotos(draftProp.jobId);
-        const urls = photos.map((photoUrl: string) => {
-          if (photoUrl.startsWith('http')) {
-            return photoUrl;
-          }
-          return getScanPhotoUrl(photoUrl);
-        });
+        const urls = photos.map((u: string) => u.startsWith('http') ? u : getScanPhotoUrl(u));
         setPhotoUrls(urls);
-      } catch {
-        // Photos unavailable — draft review still functional
-      }
+      } catch { /* non-critical */ }
     };
-
     loadPhotos();
   }, [draftProp]);
 
-  // When draft prop is NOT provided, use the legacy fetch/subscribe path
   useEffect(() => {
-    if (draftProp) return; // Skip — draft was passed directly
+    if (draftProp) return;
     if (!draftId || !session?.user?.id) return;
 
     let channel: ReturnType<typeof subscribeToJob> | null = null;
@@ -176,38 +155,22 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     const loadPhotos = async (resolvedJobId: string) => {
       try {
         const photos = await getJobPhotos(resolvedJobId);
-        const urls = photos.map((photoUrl: string) => {
-          if (photoUrl.startsWith('http')) {
-            return photoUrl;
-          }
-          return getScanPhotoUrl(photoUrl);
-        });
+        const urls = photos.map((u: string) => u.startsWith('http') ? u : getScanPhotoUrl(u));
         setPhotoUrls(urls);
-      } catch {
-        // Photos unavailable — draft review still functional
-      }
+      } catch { /* non-critical */ }
     };
 
-    const finalizeDraft = async (draftData: ScanDraft) => {
-      setDraft(draftData);
-      onDraftUpdated?.(draftData);
-      await loadPhotos(draftData.jobId);
+    const finalizeDraft = async (d: ScanDraft) => {
+      setDraft(d);
+      onDraftUpdated?.(d);
+      await loadPhotos(d.jobId);
       setLoading(false);
     };
 
     const unsubscribe = () => {
-      if (channel) {
-        channel.unsubscribe();
-        channel = null;
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      if (pollIntervalId) {
-        clearInterval(pollIntervalId);
-        pollIntervalId = null;
-      }
+      if (channel) { channel.unsubscribe(); channel = null; }
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      if (pollIntervalId) { clearInterval(pollIntervalId); pollIntervalId = null; }
     };
 
     const loadDraft = async () => {
@@ -215,76 +178,55 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
         setLoading(true);
         setJobStatus('checking');
         const userId = session!.user.id;
-        const draftData = await scanDraftService.getDraftByJobId(draftId, userId);
+        const d = await scanDraftService.getDraftByJobId(draftId, userId);
+        if (d) { setJobStatus('completed'); await finalizeDraft(d); return; }
 
-        if (draftData) {
-          // Draft already exists — edge function has completed
-          setJobStatus('completed');
-          await finalizeDraft(draftData);
-          return;
-        }
-
-        // Draft not found yet — subscribe to job status changes and wait
         setJobStatus('processing');
-
-        // Safety timeout: 60 seconds
-        timeoutId = setTimeout(() => {
-          unsubscribe();
-          setError('Processing is taking longer than expected. Please try again.');
-          setLoading(false);
-        }, 60000);
+        timeoutId = setTimeout(() => { unsubscribe(); setError('Processing is taking longer than expected.'); setLoading(false); }, 60000);
 
         channel = subscribeToJob(draftId, async (job) => {
           if (job.status === 'completed') {
             unsubscribe();
             try {
-              const retryDraft = await scanDraftService.getDraftByJobId(draftId, userId);
-              if (retryDraft) {
-                setJobStatus('completed');
-                await finalizeDraft(retryDraft);
-              } else {
-                setError('Draft not found after processing completed. Please try again.');
-                setLoading(false);
-              }
-            } catch (err) {
-              setError(err instanceof Error ? err.message : 'Failed to load draft');
-              setLoading(false);
-            }
+              const retry = await scanDraftService.getDraftByJobId(draftId, userId);
+              if (retry) { setJobStatus('completed'); await finalizeDraft(retry); }
+              else { setError('Draft not found after processing.'); setLoading(false); }
+            } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load draft'); setLoading(false); }
           } else if (job.status === 'failed') {
-            unsubscribe();
-            setError('Scan processing failed. Please try again.');
-            setLoading(false);
+            unsubscribe(); setError('Scan processing failed.'); setLoading(false);
           }
         });
 
-        // Polling fallback: Supabase Realtime can silently fail to deliver events.
-        // Poll every 4 seconds as a safety net alongside the subscription.
         pollIntervalId = setInterval(async () => {
           try {
-            const polledDraft = await scanDraftService.getDraftByJobId(draftId, userId);
-            if (polledDraft) {
-              unsubscribe();
-              setJobStatus('completed');
-              await finalizeDraft(polledDraft);
-            }
-          } catch {
-            // Ignore polling errors — subscription or next poll will handle it
-          }
+            const polled = await scanDraftService.getDraftByJobId(draftId, userId);
+            if (polled) { unsubscribe(); setJobStatus('completed'); await finalizeDraft(polled); }
+          } catch { /* ignore */ }
         }, 4000);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load draft');
-        setLoading(false);
-      }
+      } catch (err) { setError(err instanceof Error ? err.message : 'Failed to load draft'); setLoading(false); }
     };
 
     loadDraft();
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, [draftProp, draftId, session, onDraftUpdated]);
 
-  // --- Loading / Auth / Error states ---
+  // --- Discard handler ---
+
+  const handleDiscard = async () => {
+    if (!draft || !session?.user?.id) return;
+    try {
+      setDiscarding(true);
+      await scanDraftService.deleteDraft(draft.id, session.user.id);
+      setShowDiscardDialog(false);
+      if (onDiscarded) onDiscarded();
+      else router.back();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to discard draft');
+      setDiscarding(false);
+    }
+  };
+
+  // --- Loading / Error states ---
 
   if (authLoading) {
     return (
@@ -297,39 +239,21 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
   if (!session) {
     return (
       <View style={{ flex: 1, padding: 16, backgroundColor: bgPage }}>
-        <View
-          style={{
-            backgroundColor: '#FEFCE8',
-            borderWidth: 1,
-            borderColor: '#FDE68A',
-            borderRadius: radiusSm,
-            padding: 20,
-          }}
-        >
-          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#92400E', marginBottom: 8 }}>
-            Authentication Required
-          </Text>
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#A16207' }}>
-            Please log in to review drafts
-          </Text>
+        <View style={{ backgroundColor: '#FEFCE8', borderWidth: 1, borderColor: '#FDE68A', borderRadius: radiusSm, padding: 20 }}>
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#92400E', marginBottom: 8 }}>Authentication Required</Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#A16207' }}>Please log in to review drafts</Text>
         </View>
       </View>
     );
   }
 
   if (loading) {
-    const isProcessing = jobStatus === 'processing';
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
         <ActivityIndicator size="large" color={accentBlue} />
         <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 12 }}>
-          {isProcessing ? 'Processing your scan...' : 'Loading draft...'}
+          {jobStatus === 'processing' ? 'Processing your scan...' : 'Loading draft...'}
         </Text>
-        {isProcessing && (
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginTop: 6 }}>
-            This usually takes 10-30 seconds
-          </Text>
-        )}
       </View>
     );
   }
@@ -337,21 +261,9 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
   if (error || !draft) {
     return (
       <View style={{ flex: 1, padding: 16, backgroundColor: bgPage }}>
-        <View
-          style={{
-            backgroundColor: '#FEF2F2',
-            borderWidth: 1,
-            borderColor: '#FCA5A5',
-            borderRadius: radiusSm,
-            padding: 20,
-          }}
-        >
-          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#991B1B', marginBottom: 8 }}>
-            Error Loading Draft
-          </Text>
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#DC2626' }}>
-            {error || 'Draft not found'}
-          </Text>
+        <View style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: radiusSm, padding: 20 }}>
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#991B1B', marginBottom: 8 }}>Error Loading Draft</Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#DC2626' }}>{error || 'Draft not found'}</Text>
         </View>
       </View>
     );
@@ -359,408 +271,221 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
 
   const recipe = draft.recipe;
   const fieldConfidence = draft.fieldConfidence;
+  const totalTime = getTotalTime(recipe);
+  const ingredientCount = recipe.ingredients?.length || 0;
+  const instructionCount = recipe.instructions?.length || 0;
 
-  // --- Photo Section ---
+  // --- Shared Sub-components ---
 
-  const PhotoSection = ({ height }: { height?: number | Animated.AnimatedInterpolation<number> }) => (
-    <View>
-      {photoUrls.length > 0 ? (
-        <View>
-          {/* Main photo */}
-          <Animated.View style={{ height: height || 300, overflow: 'hidden', borderRadius: radiusSm }}>
-            <Image
-              source={{ uri: photoUrls[activePhotoIndex] }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
-          </Animated.View>
+  const TabBar = () => {
+    const tabs: { key: ContentTab; label: string; count?: number }[] = [
+      { key: 'ingredients', label: 'Ingredients', count: ingredientCount },
+      { key: 'instructions', label: 'Instructions', count: instructionCount },
+      { key: 'notes', label: 'Notes' },
+    ];
 
-          {/* Thumbnail strip for multi-photo */}
-          {photoUrls.length > 1 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, paddingVertical: 8 }}
-            >
-              {photoUrls.map((url, index) => (
-                <Pressable
-                  key={index}
-                  onPress={() => setActivePhotoIndex(index)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View photo ${index + 1}`}
-                  accessibilityState={{ selected: index === activePhotoIndex }}
-                  style={{
-                    borderWidth: 2,
-                    borderColor: index === activePhotoIndex ? accentBlue : borderDefault,
-                    borderRadius: radiusSm / 2,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Image
-                    source={{ uri: getScanThumbnailUrl(url, 80) }}
-                    style={{ width: 56, height: 56 }}
-                    resizeMode="cover"
-                  />
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-      ) : (
-        <View
-          style={{
-            height: 200,
-            backgroundColor: noPhotoBg,
-            borderRadius: radiusSm,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: noPhotoIcon }}>
-            No photo available
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-
-  // --- Draft Fields Section ---
-
-  const DraftFields = () => (
-    <View style={{ gap: 16 }}>
-      {/* Header + Overall Confidence */}
-      <View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <Text style={{ fontFamily: fontFamilyDisplay, fontSize: fontSize2xl, color: textPrimary, marginBottom: 4 }}>
-              Recipe Draft Review
-            </Text>
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>
-              Review extracted recipe data before saving
-            </Text>
-          </View>
-          <ConfidenceBadge confidence={draft.overallConfidence.score} label="Overall" />
-        </View>
-
-        {/* Action buttons */}
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-          <Pressable
-            onPress={onEdit}
-            accessibilityRole="button"
-            accessibilityLabel="Edit draft"
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? '#0066DD' : accentBlue,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: radiusSm,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>
-              Edit Draft
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Back to scans"
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? borderDefault : bgCard,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: radiusSm,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textPrimary }}>
-              Back to Scans
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Recipe Title */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
-            Recipe Title
-          </Text>
-          <ConfidenceBadge confidence={fieldConfidence.title} />
-        </View>
-        <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXl, color: textPrimary }}>
-          {recipe.title || 'No title detected'}
-        </Text>
-      </View>
-
-      {/* Recipe Details */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
-        <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary, marginBottom: 12 }}>
-          Recipe Details
-        </Text>
-        <View style={{ gap: 10 }}>
-          <DetailRow
-            label="Servings"
-            value={recipe.servings ? String(recipe.servings) : 'Not detected'}
-            confidence={fieldConfidence.servings}
-          />
-          <DetailRow
-            label="Prep Time"
-            value={recipe.prepTimeMinutes ? `${recipe.prepTimeMinutes} min` : 'Not detected'}
-            confidence={fieldConfidence.prepTime}
-          />
-          <DetailRow
-            label="Cook Time"
-            value={recipe.cookTimeMinutes ? `${recipe.cookTimeMinutes} min` : 'Not detected'}
-            confidence={fieldConfidence.cookTime}
-          />
-          <DetailRow label="Category" value={recipe.category || 'Not detected'} />
-          <DetailRow label="Cuisine" value={recipe.cuisine || 'Not detected'} />
-        </View>
-      </View>
-
-      {/* Ingredients */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
-            Ingredients ({recipe.ingredients?.length || 0})
-          </Text>
-          <ConfidenceBadge confidence={fieldConfidence.ingredients} />
-        </View>
-        <View style={{ gap: 6 }}>
-          {recipe.ingredients?.map((ingredient, index) => {
-            const ingConfidence = typeof ingredient.confidence === 'number' ? ingredient.confidence : fieldConfidence.ingredients;
-            const ingColor = getConfidenceColor(ingConfidence);
-            return (
-              <View
-                key={index}
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  backgroundColor: white,
-                  borderRadius: radiusSm / 2,
-                  padding: 10,
-                }}
-              >
-                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary, flex: 1, marginRight: 8 }}>
-                  {ingredient.amount && `${ingredient.amount} `}
-                  {ingredient.unit && `${ingredient.unit} `}
-                  {ingredient.name}
-                  {ingredient.preparation && `, ${ingredient.preparation}`}
-                </Text>
-                <View style={{ backgroundColor: ingColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                  <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: ingColor.text }}>
-                    {Math.round(ingConfidence * 100)}%
-                  </Text>
-                </View>
-              </View>
-            );
-          }) || (
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary, textAlign: 'center', paddingVertical: 16 }}>
-              No ingredients detected
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Instructions */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
-            Instructions ({recipe.instructions?.length || 0})
-          </Text>
-          <ConfidenceBadge confidence={fieldConfidence.instructions} />
-        </View>
-        <View style={{ gap: 8 }}>
-          {recipe.instructions?.map((instruction, index) => (
-            <View
-              key={index}
+    return (
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: borderDefault }}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
               style={{
-                flexDirection: 'row',
-                alignItems: 'flex-start',
-                backgroundColor: white,
-                borderRadius: radiusSm / 2,
-                padding: 10,
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 12,
+                borderBottomWidth: 2,
+                borderBottomColor: isActive ? accentBlue : 'transparent',
               }}
             >
-              <View
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
-                  backgroundColor: accentBlue,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 10,
-                  flexShrink: 0,
-                }}
-              >
-                <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>
-                  {index + 1}
-                </Text>
-              </View>
-              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary, flex: 1 }}>
-                {instruction}
+              <Text style={{
+                fontFamily: isActive ? fontFamilyBodyBold : fontFamilyBodyMedium,
+                fontSize: fontSizeSm,
+                color: isActive ? accentBlue : textTertiary,
+              }}>
+                {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ''}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const TabContent = () => {
+    if (activeTab === 'ingredients') {
+      if (!recipe.ingredients || recipe.ingredients.length === 0) {
+        return (
+          <View style={{ padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary }}>No ingredients detected</Text>
+          </View>
+        );
+      }
+      return (
+        <View style={{ gap: 0 }}>
+          {recipe.ingredients.map((ing, i) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: isMobile ? 16 : 24, borderBottomWidth: i < recipe.ingredients!.length - 1 ? 1 : 0, borderBottomColor: borderSubtle }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: accentWarm, flexShrink: 0 }} />
+              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textPrimary, flex: 1 }}>
+                {ing.amount && `${ing.amount} `}{ing.unit && `${ing.unit} `}{ing.name}{ing.preparation && `, ${ing.preparation}`}
               </Text>
             </View>
-          )) || (
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary, textAlign: 'center', paddingVertical: 16 }}>
-              No instructions detected
-            </Text>
-          )}
+          ))}
         </View>
-      </View>
+      );
+    }
 
-      {/* Raw OCR Text */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
-            Raw Extracted Text
-          </Text>
-          <ConfidenceBadge confidence={draft.ocrConfidence} label="OCR" />
-        </View>
-        <View style={{ backgroundColor: white, borderRadius: radiusSm / 2, padding: 12 }}>
-          <Text style={{ fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier', fontSize: fontSizeXs, color: textSecondary }}>
-            {draft.rawText}
-          </Text>
-        </View>
-      </View>
-
-      {/* Status + Actions */}
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 16, marginBottom: 24 }}>
-        <View style={{ flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary }}>
-              Draft Status
-            </Text>
-            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 4 }}>
-              {draft.status === 'ready' && 'This draft is ready to be saved as a recipe'}
-              {draft.status === 'needs_review' && 'This draft needs review - check extracted fields'}
-              {draft.status === 'enhanced' && 'This draft has been AI-enhanced'}
-            </Text>
+    if (activeTab === 'instructions') {
+      if (!recipe.instructions || recipe.instructions.length === 0) {
+        return (
+          <View style={{ padding: 24, alignItems: 'center' }}>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textTertiary }}>No instructions detected</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Pressable
-              onPress={onEdit}
-              accessibilityRole="button"
-              accessibilityLabel="Save as recipe"
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#0066DD' : accentBlue,
-                paddingVertical: 12,
-                paddingHorizontal: 20,
-                borderRadius: radiusMd,
-                flex: isMobile ? 1 : undefined,
-                alignItems: 'center',
-              })}
-            >
-              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
-                Save as Recipe
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setShowDiscardDialog(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Discard draft"
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#FEE2E2' : 'transparent',
-                borderWidth: 1,
-                borderColor: accentCoral,
-                paddingVertical: 12,
-                paddingHorizontal: 20,
-                borderRadius: radiusMd,
-                flex: isMobile ? 1 : undefined,
-                alignItems: 'center',
-              })}
-            >
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: accentCoral }}>
-                Discard Draft
-              </Text>
-            </Pressable>
+        );
+      }
+      return (
+        <View style={{ gap: 0 }}>
+          {recipe.instructions.map((step, i) => (
+            <View key={i} style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: isMobile ? 16 : 24, borderBottomWidth: i < recipe.instructions!.length - 1 ? 1 : 0, borderBottomColor: borderSubtle }}>
+              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: accentBlue, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>{i + 1}</Text>
+              </View>
+              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textPrimary, flex: 1, lineHeight: 24 }}>{step}</Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    // Notes tab
+    return (
+      <View style={{ padding: isMobile ? 16 : 24, gap: 12 }}>
+        {recipe.category && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>Category</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>{recipe.category}</Text>
+          </View>
+        )}
+        {recipe.cuisine && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>Cuisine</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>{recipe.cuisine}</Text>
+          </View>
+        )}
+        {recipe.prepTimeMinutes && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>Prep Time</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>{formatTime(recipe.prepTimeMinutes)}</Text>
+          </View>
+        )}
+        {recipe.cookTimeMinutes && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>Cook Time</Text>
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>{formatTime(recipe.cookTimeMinutes)}</Text>
+          </View>
+        )}
+        <View style={{ marginTop: 8 }}>
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary, marginBottom: 6 }}>Raw Extracted Text</Text>
+          <View style={{ backgroundColor: bgCard, borderRadius: radiusSm, padding: 12 }}>
+            <Text style={{ fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier', fontSize: fontSizeXs, color: textSecondary, lineHeight: 18 }}>
+              {draft.rawText}
+            </Text>
           </View>
         </View>
       </View>
+    );
+  };
+
+  const StickyActionBar = () => (
+    <View style={{
+      flexDirection: 'row',
+      gap: 10,
+      paddingVertical: 14,
+      paddingHorizontal: isMobile ? 16 : 24,
+      backgroundColor: bgPage,
+      borderTopWidth: 1,
+      borderTopColor: borderDefault,
+    }}>
+      <Pressable
+        onPress={onEdit}
+        style={({ pressed }) => ({
+          flex: 1,
+          height: 46,
+          backgroundColor: pressed ? '#D4652F' : accentWarm,
+          borderRadius: radiusSm,
+          alignItems: 'center',
+          justifyContent: 'center',
+        })}
+      >
+        <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>Save Recipe</Text>
+      </Pressable>
+      <Pressable
+        onPress={onEdit}
+        style={({ pressed }) => ({
+          height: 46,
+          paddingHorizontal: 20,
+          backgroundColor: pressed ? borderDefault : bgCard,
+          borderRadius: radiusSm,
+          borderWidth: 1,
+          borderColor: borderDefault,
+          alignItems: 'center',
+          justifyContent: 'center',
+        })}
+      >
+        <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textPrimary }}>Edit</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => setShowDiscardDialog(true)}
+        style={({ pressed }) => ({
+          height: 46,
+          paddingHorizontal: 20,
+          borderRadius: radiusSm,
+          borderWidth: 1,
+          borderColor: accentCoral,
+          backgroundColor: pressed ? '#FEF2F2' : 'transparent',
+          alignItems: 'center',
+          justifyContent: 'center',
+        })}
+      >
+        <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentCoral }}>Discard</Text>
+      </Pressable>
     </View>
   );
 
-  const handleDiscard = async () => {
-    if (!draft || !session?.user?.id) return;
-    try {
-      setDiscarding(true);
-      await scanDraftService.deleteDraft(draft.id, session.user.id);
-      setShowDiscardDialog(false);
-      if (onDiscarded) {
-        onDiscarded();
-      } else {
-        router.back();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to discard draft');
-      setDiscarding(false);
-    }
+  const PhotoPagination = () => {
+    if (photoUrls.length <= 1) return null;
+    return (
+      <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingTop: 12 }}>
+        {photoUrls.map((_, i) => (
+          <Pressable key={i} onPress={() => setActivePhotoIndex(i)}>
+            <View style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: i === activePhotoIndex ? accentBlue : borderDefault,
+            }} />
+          </Pressable>
+        ))}
+      </View>
+    );
   };
 
   const DiscardDialog = () => (
-    <Modal
-      visible={showDiscardDialog}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowDiscardDialog(false)}
-    >
-      <Pressable
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
-        onPress={() => setShowDiscardDialog(false)}
-      >
-        <Pressable
-          style={{
-            backgroundColor: white,
-            borderRadius: radiusMd,
-            padding: 24,
-            maxWidth: 360,
-            width: '90%',
-            ...shadowMd,
-          }}
-          onPress={() => {}} // prevent dismiss on inner press
-        >
-          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary, marginBottom: 8 }}>
-            Discard Draft?
-          </Text>
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textSecondary, marginBottom: 8 }}>
-            This will permanently delete this draft. This can't be undone.
-          </Text>
-          {draft && (
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textTertiary, marginBottom: 16 }}>
-              "{draft.recipe.title || 'Untitled'}"
-            </Text>
-          )}
+    <Modal visible={showDiscardDialog} transparent animationType="fade" onRequestClose={() => setShowDiscardDialog(false)}>
+      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setShowDiscardDialog(false)}>
+        <Pressable style={{ backgroundColor: white, borderRadius: radiusMd, padding: 24, maxWidth: 360, width: '90%', ...shadowMd }} onPress={() => {}}>
+          <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeLg, color: textPrimary, marginBottom: 8 }}>Discard Draft?</Text>
+          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: textSecondary, marginBottom: 8 }}>This will permanently delete this draft.</Text>
+          {draft && <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textTertiary, marginBottom: 16 }}>"{draft.recipe.title || 'Untitled'}"</Text>}
           <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'flex-end' }}>
-            <Pressable
-              onPress={() => setShowDiscardDialog(false)}
-              disabled={discarding}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? borderDefault : 'transparent',
-                borderWidth: 1,
-                borderColor: borderDefault,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: radiusSm,
-              })}
-            >
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary }}>
-                Cancel
-              </Text>
+            <Pressable onPress={() => setShowDiscardDialog(false)} disabled={discarding} style={({ pressed }) => ({ backgroundColor: pressed ? borderDefault : 'transparent', borderWidth: 1, borderColor: borderDefault, paddingVertical: 10, paddingHorizontal: 20, borderRadius: radiusSm })}>
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary }}>Cancel</Text>
             </Pressable>
-            <Pressable
-              onPress={handleDiscard}
-              disabled={discarding}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? '#DC2626' : accentCoral,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: radiusSm,
-                opacity: discarding ? 0.6 : 1,
-              })}
-            >
-              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
-                {discarding ? 'Discarding...' : 'Discard'}
-              </Text>
+            <Pressable onPress={handleDiscard} disabled={discarding} style={({ pressed }) => ({ backgroundColor: pressed ? '#DC2626' : accentCoral, paddingVertical: 10, paddingHorizontal: 20, borderRadius: radiusSm, opacity: discarding ? 0.6 : 1 })}>
+              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>{discarding ? 'Discarding...' : 'Discard'}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -768,86 +493,145 @@ export function DraftReview({ draft: draftProp, draftId, onDraftUpdated, onDraft
     </Modal>
   );
 
-  // --- Mobile Layout (collapsible photo) ---
+  // =========================================================================
+  // MOBILE LAYOUT — Hero photo + metadata bar + tabbed content + sticky bar
+  // =========================================================================
 
   if (isMobile) {
     const photoHeight = scrollY.interpolate({
       inputRange: [0, 200],
-      outputRange: [300, 60],
+      outputRange: [280, 80],
       extrapolate: 'clamp',
     });
 
     return (
       <>
-      <View style={{ flex: 1, backgroundColor: bgPage }}>
-        {/* Collapsible photo */}
-        <PhotoSection height={photoHeight} />
+        <View style={{ flex: 1, backgroundColor: bgPage }}>
+          {/* Hero photo */}
+          <Animated.View style={{ height: photoHeight, overflow: 'hidden' }}>
+            {photoUrls.length > 0 ? (
+              <Image source={{ uri: photoUrls[activePhotoIndex] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: '100%', height: '100%', backgroundColor: noPhotoBg, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: noPhotoIcon }}>No photo available</Text>
+              </View>
+            )}
+          </Animated.View>
 
-        {/* Scrollable draft fields */}
-        <Animated.ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-          scrollEventThrottle={16}
-        >
-          <DraftFields />
-        </Animated.ScrollView>
-      </View>
-      <DiscardDialog />
+          {/* Content */}
+          <Animated.ScrollView
+            style={{ flex: 1 }}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+            scrollEventThrottle={16}
+          >
+            {/* Metadata bar */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, gap: 8 }}>
+              {/* Back link */}
+              <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentBlue }}>← Back to Scanner</Text>
+              </Pressable>
+
+              {/* Title */}
+              <Text style={{ fontFamily: fontFamilyDisplayBold, fontSize: fontSize2xl, color: textPrimary }}>
+                {recipe.title || 'Untitled Recipe'}
+              </Text>
+
+              {/* Meta row */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {recipe.category && <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>{recipe.category}</Text>}
+                {recipe.servings && (
+                  <>
+                    <Text style={{ fontSize: fontSizeSm, color: textTertiary }}>·</Text>
+                    <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>{recipe.servings} servings</Text>
+                  </>
+                )}
+                {totalTime && (
+                  <>
+                    <Text style={{ fontSize: fontSizeSm, color: textTertiary }}>·</Text>
+                    <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary }}>{totalTime}</Text>
+                  </>
+                )}
+              </View>
+
+              {/* Confidence + photo pagination */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <ConfidenceBadge confidence={draft.overallConfidence.score} />
+                <PhotoPagination />
+              </View>
+            </View>
+
+            {/* Tabs */}
+            <TabBar />
+
+            {/* Tab content */}
+            <TabContent />
+
+            {/* Bottom padding */}
+            <View style={{ height: 24 }} />
+          </Animated.ScrollView>
+
+          {/* Sticky bottom action bar */}
+          <StickyActionBar />
+        </View>
+        <DiscardDialog />
       </>
     );
   }
 
-  // --- Tablet / Web Layout — scrollable form filling left panel ---
+  // =========================================================================
+  // WEB / TABLET — Side-by-side: photo viewer left, recipe panel right
+  // =========================================================================
 
   return (
     <>
-    <ScrollView
-      style={{ flex: 1, backgroundColor: bgPage }}
-      contentContainerStyle={{
-        padding: 24,
-        paddingBottom: 40,
-        maxWidth: 720,
-      }}
-    >
-      {/* Compact photo area */}
-      <View style={{ marginBottom: 20 }}>
-        <PhotoSection height={200} />
-      </View>
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: bgPage }}>
+        {/* LEFT: Photo viewer */}
+        <View style={{ flex: 1, backgroundColor: noPhotoBg, justifyContent: 'center', alignItems: 'center' }}>
+          {photoUrls.length > 0 ? (
+            <View style={{ flex: 1, width: '100%' }}>
+              <Image source={{ uri: photoUrls[activePhotoIndex] }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+              <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center' }}>
+                <PhotoPagination />
+              </View>
+            </View>
+          ) : (
+            <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeLg, color: noPhotoIcon }}>Recipe Photo</Text>
+          )}
+        </View>
 
-      {/* Draft fields */}
-      <DraftFields />
-    </ScrollView>
-    <DiscardDialog />
+        {/* RIGHT: Recipe panel */}
+        <View style={{ width: 480, borderLeftWidth: 1, borderLeftColor: borderDefault, backgroundColor: bgPage }}>
+          {/* Header */}
+          <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16, gap: 8 }}>
+            <Pressable onPress={() => router.back()}>
+              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentBlue }}>← Back to Scanner</Text>
+            </Pressable>
+            <Text style={{ fontFamily: fontFamilyDisplayBold, fontSize: 22, color: textPrimary }}>
+              {recipe.title || 'Untitled Recipe'}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {recipe.category && <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>{recipe.category}</Text>}
+              {(recipe.servings || totalTime) && <Text style={{ fontSize: fontSizeSm, color: textTertiary }}>·  {recipe.servings ? `${recipe.servings} servings` : ''}{recipe.servings && totalTime ? '  ·  ' : ''}{totalTime}</Text>}
+            </View>
+            <ConfidenceBadge confidence={draft.overallConfidence.score} />
+          </View>
+
+          {/* Divider */}
+          <View style={{ height: 1, backgroundColor: borderDefault }} />
+
+          {/* Tabs */}
+          <TabBar />
+
+          {/* Scrollable tab content */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
+            <TabContent />
+          </ScrollView>
+
+          {/* Sticky action bar */}
+          <StickyActionBar />
+        </View>
+      </View>
+      <DiscardDialog />
     </>
-  );
-}
-
-// --- Helper components ---
-
-function DetailRow({
-  label,
-  value,
-  confidence,
-}: {
-  label: string;
-  value: string;
-  confidence?: number;
-}) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
-        {label}
-      </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textPrimary }}>
-          {value}
-        </Text>
-        {confidence !== undefined && <ConfidenceBadge confidence={confidence} />}
-      </View>
-    </View>
   );
 }

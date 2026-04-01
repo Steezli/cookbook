@@ -21,7 +21,7 @@ export function formatMetadataLine(
   const parts: string[] = [];
   if (totalTime > 0) parts.push(`${totalTime} min`);
   if (servings) parts.push(`${servings} servings`);
-  return parts.join(' . ');
+  return parts.join(' · ');
 }
 
 /**

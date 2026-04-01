@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAlert, confirmAction } from "@/lib/alert";
 import { useFocusEffect } from "@react-navigation/native";
-import { ChevronLeft, UtensilsCrossed } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import { getRecipeById, deleteRecipe } from "@/features/recipes/api";
 import type { Recipe } from "@/features/recipes/types";
 import { useSession } from "@/features/auth/session";
@@ -52,7 +52,6 @@ import {
   fontFamilyBody,
   fontFamilyBodyBold,
   fontFamilyDisplay,
-  noPhotoBg,
   fontSizeBase,
   fontSizeLg,
   fontSizeSm,
@@ -289,30 +288,16 @@ export default function RecipeDetailScreen() {
   // ------------------------------------------------------------------
 
   function renderHeroImage() {
-    if (photos.length > 0) {
-      return (
-        <Image
-          source={{ uri: getPhotoUrl(photos[0].storage_path) }}
-          style={{
-            width: "100%",
-            height: isWideLayout ? 360 : 280,
-            resizeMode: "cover",
-          }}
-        />
-      );
-    }
+    if (photos.length === 0) return null;
     return (
-      <View
+      <Image
+        source={{ uri: getPhotoUrl(photos[0].storage_path) }}
         style={{
           width: "100%",
-          height: 200,
-          backgroundColor: noPhotoBg,
-          alignItems: "center",
-          justifyContent: "center",
+          height: isWideLayout ? 360 : 280,
+          resizeMode: "cover",
         }}
-      >
-        <UtensilsCrossed size={48} color={textSecondary} />
-      </View>
+      />
     );
   }
 
@@ -1086,30 +1071,29 @@ export default function RecipeDetailScreen() {
               alignItems: "flex-start",
             }}
           >
-            {/* Left column: hero image + gallery */}
-            <View style={{ flex: 1 }}>
-              <View
-                style={{
-                  borderRadius: radiusMd,
-                  overflow: "hidden",
-                  backgroundColor: noPhotoBg,
-                }}
-              >
-                {renderHeroImage()}
+            {/* Left column: hero image + gallery (only if photos exist) */}
+            {photos.length > 0 && (
+              <View style={{ flex: 1 }}>
+                <View
+                  style={{
+                    borderRadius: radiusMd,
+                    overflow: "hidden",
+                  }}
+                >
+                  {renderHeroImage()}
+                </View>
+                {renderPhotoGallery()}
               </View>
-              {renderPhotoGallery()}
-            </View>
+            )}
 
-            {/* Right column: all recipe content */}
+            {/* Recipe content — full width if no photos, right column otherwise */}
             <View style={{ flex: 1 }}>{renderRecipeContent()}</View>
           </View>
         ) : (
           /* Mobile: single column */
           <View>
             {/* Hero image — full width, no radius on mobile */}
-            <View style={{ backgroundColor: noPhotoBg }}>
-              {renderHeroImage()}
-            </View>
+            {renderHeroImage()}
             {renderPhotoGallery() && (
               <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
                 {renderPhotoGallery()}

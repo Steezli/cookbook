@@ -42,11 +42,12 @@ export function displayIngredient(
     }
   }
 
-  // Build original display text: "amount unit name"
-  // For legacy data without `text`, reconstruct from structured fields
-  const originalDisplay = (ing.text && ing.text !== ingredientText)
-    ? (ing.original_text || ing.text)
-    : (ing.original_text || [ing.amount, ing.unit, ingredientText].filter(Boolean).join(' '));
+  // Build original display text: prefer original_text or text as-is.
+  // Only reconstruct from structured fields if neither text nor original_text exists.
+  const originalDisplay = ing.original_text
+    || ing.text
+    || ing.name
+    || [ing.amount, ing.unit].filter(Boolean).join(' ');
 
   // 1. Structured amount/unit available
   if (numericAmount !== null && ing.unit !== undefined && ing.unit !== null && !ing.is_ambiguous) {

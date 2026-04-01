@@ -5,9 +5,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { TabTrigger } from "expo-router/ui";
-import { router } from "expo-router";
 import AdSlot from "@/components/public/AdSlot";
-// router is retained for Scan navigation
 import {
   BookOpen,
   Camera,
@@ -67,12 +65,9 @@ export function WebSidebar() {
           <SidebarItem icon={<Folder />} label="Collections" />
         </TabTrigger>
 
-        {/* Scan: navigates to the scan tab */}
-        <SidebarItem
-          icon={<Camera />}
-          label="Scan Recipe"
-          onPress={() => router.navigate("/scan")}
-        />
+        <TabTrigger name="scan" asChild>
+          <SidebarItem icon={<Camera />} label="Scan Recipe" />
+        </TabTrigger>
 
         <TabTrigger name="family" asChild>
           <SidebarItem icon={<Heart />} label="Family" />

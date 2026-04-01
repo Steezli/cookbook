@@ -88,6 +88,7 @@ export function DraftManager({
     tags: []
   });
   const [error, setError] = useState<string | null>(null);
+  const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
 
   // Responsive layout values
   const isMobile = breakpoint === 'mobile';
@@ -134,7 +135,7 @@ export function DraftManager({
         tags: conversionOptions.tags || []
       });
 
-      onConverted?.(result.recipeId);
+      setSavedRecipeId(result.recipeId);
       setShowSaveDialog(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save recipe');
@@ -597,6 +598,111 @@ export function DraftManager({
                 }}>
                   {saving ? 'Saving...' : 'Save Recipe'}
                 </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Recipe Saved — choice dialog */}
+      <Modal
+        visible={savedRecipeId !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          const id = savedRecipeId!;
+          setSavedRecipeId(null);
+          setTimeout(() => onConverted?.(id), 150);
+        }}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 16,
+        }}>
+          <View style={{
+            backgroundColor: white,
+            borderRadius: 8,
+            maxWidth: modalMaxWidth,
+            width: '100%',
+            padding: modalPadding,
+          }}>
+            <View style={{
+              backgroundColor: badgeGreenBg,
+              borderRadius: radiusPill,
+              paddingHorizontal: 14,
+              paddingVertical: 6,
+              alignSelf: 'flex-start',
+              marginBottom: 12,
+            }}>
+              <Text style={{
+                fontFamily: fontFamilyBodyMedium,
+                fontSize: fontSizeSm,
+                color: accentGreen,
+              }}>✓ Saved</Text>
+            </View>
+
+            <Text style={{
+              fontFamily: fontFamilyDisplay,
+              fontSize: fontSizeLg,
+              color: textPrimary,
+              marginBottom: 6,
+            }}>Recipe Saved!</Text>
+
+            <Text style={{
+              fontFamily: fontFamilyBody,
+              fontSize: fontSizeBase - 1,
+              color: textSecondary,
+              marginBottom: 20,
+            }}>
+              What would you like to do next?
+            </Text>
+
+            <View style={{ gap: 10 }}>
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? '#0066DD' : accentBlue,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  alignItems: 'center' as const,
+                })}
+                onPress={() => {
+                  const id = savedRecipeId!;
+                  setSavedRecipeId(null);
+                  // Small delay to let modal dismiss before navigation
+                  setTimeout(() => onConverted?.(id), 150);
+                }}
+              >
+                <Text style={{
+                  fontFamily: fontFamilyBodyBold,
+                  color: white,
+                  fontSize: fontSizeBase - 1,
+                }}>View Recipe</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? borderDefault : bgCard,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  alignItems: 'center' as const,
+                  borderWidth: 1,
+                  borderColor: borderDefault,
+                })}
+                onPress={() => {
+                  setSavedRecipeId(null);
+                  onDiscarded?.();
+                }}
+              >
+                <Text style={{
+                  fontFamily: fontFamilyBodyMedium,
+                  color: textPrimary,
+                  fontSize: fontSizeBase - 1,
+                }}>Back to Drafts</Text>
               </Pressable>
             </View>
           </View>

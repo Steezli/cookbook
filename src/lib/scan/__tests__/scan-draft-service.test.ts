@@ -9,10 +9,12 @@ const mockOrder = jest.fn();
 const mockRange = jest.fn();
 const mockLimit = jest.fn();
 const mockFrom = jest.fn();
+const mockRpc = jest.fn();
 
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     from: mockFrom,
+    rpc: mockRpc,
   },
 }));
 
@@ -88,59 +90,27 @@ describe('ScanDraftService', () => {
         updatedAt: '2026-01-01',
       };
 
-      // Mock getDraft chain: from('scan_drafts').select('*').eq('id', ...).eq('user_id', ...).single()
+      // Mock getDraft chain
       const draftSingle = jest.fn().mockResolvedValue({
         data: {
-          id: 'draft-1',
-          job_id: 'job-1',
-          user_id: 'user-1',
-          raw_text: 'test',
-          ocr_confidence: 0.9,
-          structured_data: { recipe: {} },
-          field_confidence: {},
-          status: 'draft',
-          ai_model_version: '1.0',
-          processing_time_ms: 100,
-          created_at: '2026-01-01',
-          updated_at: '2026-01-01',
+          id: 'draft-1', job_id: 'job-1', user_id: 'user-1', raw_text: 'test',
+          ocr_confidence: 0.9, structured_data: { recipe: {} }, field_confidence: {},
+          status: 'draft', ai_model_version: '1.0', processing_time_ms: 100,
+          created_at: '2026-01-01', updated_at: '2026-01-01',
         },
         error: null,
       });
-
       const draftEq2 = jest.fn().mockReturnValue({ single: draftSingle });
       const draftEq1 = jest.fn().mockReturnValue({ eq: draftEq2 });
       const draftSelect = jest.fn().mockReturnValue({ eq: draftEq1 });
 
-      // Mock insert chain: from('recipes').insert(...).select('id').single()
-      const recipeSingle = jest.fn().mockResolvedValue({
-        data: { id: 'recipe-1' },
-        error: null,
-      });
-      const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
-      const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
-
-      // Mock update chain for status update: from('scan_drafts').update(...).eq(...).eq(...)
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
-
-      let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'scan_drafts') {
-          callCount++;
-          if (callCount <= 1) {
-            // First call: getDraft
-            return { select: draftSelect };
-          } else {
-            // Second call: updateDraftStatus
-            return { update: updateFn };
-          }
-        }
-        if (table === 'recipes') {
-          return { insert: recipeInsert };
-        }
+        if (table === 'scan_drafts') return { select: draftSelect };
         return { select: mockSelect, insert: mockInsert };
       });
+
+      // Mock RPC — atomic insert + delete in DB
+      mockRpc.mockResolvedValue({ data: 'recipe-1', error: null });
 
       const recipeData = {
         title: 'Grandma\'s Cookies',
@@ -157,52 +127,27 @@ describe('ScanDraftService', () => {
 
       expect(result).toEqual({ recipeId: 'recipe-1' });
 
-      // Verify the insert was called with correct column names
-      const insertArg = recipeInsert.mock.calls[0][0];
+      // Verify RPC was called with convert_draft_to_recipe
+      expect(mockRpc).toHaveBeenCalledWith('convert_draft_to_recipe', expect.objectContaining({
+        p_draft_id: 'draft-1',
+        p_user_id: 'user-1',
+        p_title: 'Grandma\'s Cookies',
+        p_description: 'Family recipe',
+      }));
 
-      // MUST use owner_user_id (not user_id)
-      expect(insertArg).toHaveProperty('owner_user_id', 'user-1');
-      expect(insertArg).not.toHaveProperty('user_id');
-
-      // MUST use steps (not instructions)
-      expect(insertArg).toHaveProperty('steps', [
-        { sort_order: 0, text: 'Mix ingredients' },
-        { sort_order: 1, text: 'Bake at 350' },
-      ]);
-      expect(insertArg).not.toHaveProperty('instructions');
-
-      // MUST NOT have status column
-      expect(insertArg).not.toHaveProperty('status');
-
-      // MUST NOT have scan_draft_id column
-      expect(insertArg).not.toHaveProperty('scan_draft_id');
-
-      // MUST have visibility set to 'private'
-      expect(insertArg).toHaveProperty('visibility', 'private');
-
-      // MUST NOT have created_at (database auto-generates)
-      expect(insertArg).not.toHaveProperty('created_at');
-
-      // MUST NOT have category (not a column on recipes table)
-      expect(insertArg).not.toHaveProperty('category');
+      // Verify structured data was passed correctly
+      const rpcArgs = mockRpc.mock.calls[0][1];
+      expect(rpcArgs.p_tags).toEqual(['cookies', 'dessert']);
     });
 
-    it('includes standard recipe columns', async () => {
+    it('passes structured ingredients and steps to RPC', async () => {
       // Mock getDraft chain
       const draftSingle = jest.fn().mockResolvedValue({
         data: {
-          id: 'draft-1',
-          job_id: 'job-1',
-          user_id: 'user-1',
-          raw_text: 'test',
-          ocr_confidence: 0.9,
-          structured_data: { recipe: {} },
-          field_confidence: {},
-          status: 'draft',
-          ai_model_version: '1.0',
-          processing_time_ms: 100,
-          created_at: '2026-01-01',
-          updated_at: '2026-01-01',
+          id: 'draft-1', job_id: 'job-1', user_id: 'user-1', raw_text: 'test',
+          ocr_confidence: 0.9, structured_data: { recipe: {} }, field_confidence: {},
+          status: 'draft', ai_model_version: '1.0', processing_time_ms: 100,
+          created_at: '2026-01-01', updated_at: '2026-01-01',
         },
         error: null,
       });
@@ -210,52 +155,23 @@ describe('ScanDraftService', () => {
       const draftEq1 = jest.fn().mockReturnValue({ eq: draftEq2 });
       const draftSelect = jest.fn().mockReturnValue({ eq: draftEq1 });
 
-      const recipeSingle = jest.fn().mockResolvedValue({
-        data: { id: 'recipe-2' },
-        error: null,
-      });
-      const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
-      const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
-
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
-
-      let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'scan_drafts') {
-          callCount++;
-          if (callCount <= 1) {
-            return { select: draftSelect };
-          } else {
-            return { update: updateFn };
-          }
-        }
-        if (table === 'recipes') {
-          return { insert: recipeInsert };
-        }
+        if (table === 'scan_drafts') return { select: draftSelect };
         return { select: mockSelect };
       });
 
-      const recipeData = {
+      mockRpc.mockResolvedValue({ data: 'recipe-2', error: null });
+
+      await service.convertToRecipe('draft-1', 'user-1', {
         title: 'Test Recipe',
         ingredients: [{ name: 'sugar', confidence: 0.8 }],
         instructions: ['Step 1'],
-      };
+      });
 
-      await service.convertToRecipe('draft-1', 'user-1', recipeData);
-
-      const insertArg = recipeInsert.mock.calls[0][0];
-
-      // Verify standard columns are present
-      expect(insertArg).toHaveProperty('title', 'Test Recipe');
-      expect(insertArg).toHaveProperty('ingredients');
-      expect(insertArg).toHaveProperty('steps', [
-        { sort_order: 0, text: 'Step 1' },
-      ]);
-      expect(insertArg).toHaveProperty('owner_user_id', 'user-1');
-      expect(insertArg).toHaveProperty('visibility', 'private');
-      expect(insertArg).toHaveProperty('tags');
+      const rpcArgs = mockRpc.mock.calls[0][1];
+      expect(rpcArgs.p_title).toBe('Test Recipe');
+      // Steps should be structured with sort_order
+      expect(rpcArgs.p_steps).toEqual([{ sort_order: 0, text: 'Step 1' }]);
     });
   });
 
@@ -337,23 +253,14 @@ describe('ScanDraftService', () => {
     });
   });
 
-  describe('convertToRecipe status value', () => {
-    it('calls updateDraftStatus with "ready" (not "approved")', async () => {
-      // Mock getDraft chain
+  describe('convertToRecipe uses atomic RPC', () => {
+    it('calls convert_draft_to_recipe RPC (not separate insert + delete)', async () => {
       const draftSingle = jest.fn().mockResolvedValue({
         data: {
-          id: 'draft-1',
-          job_id: 'job-1',
-          user_id: 'user-1',
-          raw_text: 'test',
-          ocr_confidence: 0.9,
-          structured_data: { recipe: {} },
-          field_confidence: {},
-          status: 'ready',
-          ai_model_version: '1.0',
-          processing_time_ms: 100,
-          created_at: '2026-01-01',
-          updated_at: '2026-01-01',
+          id: 'draft-1', job_id: 'job-1', user_id: 'user-1', raw_text: 'test',
+          ocr_confidence: 0.9, structured_data: { recipe: {} }, field_confidence: {},
+          status: 'ready', ai_model_version: '1.0', processing_time_ms: 100,
+          created_at: '2026-01-01', updated_at: '2026-01-01',
         },
         error: null,
       });
@@ -361,32 +268,12 @@ describe('ScanDraftService', () => {
       const draftEq1 = jest.fn().mockReturnValue({ eq: draftEq2 });
       const draftSelect = jest.fn().mockReturnValue({ eq: draftEq1 });
 
-      const recipeSingle = jest.fn().mockResolvedValue({
-        data: { id: 'recipe-1' },
-        error: null,
-      });
-      const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
-      const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
-
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
-
-      let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
-        if (table === 'scan_drafts') {
-          callCount++;
-          if (callCount <= 1) {
-            return { select: draftSelect };
-          } else {
-            return { update: updateFn };
-          }
-        }
-        if (table === 'recipes') {
-          return { insert: recipeInsert };
-        }
+        if (table === 'scan_drafts') return { select: draftSelect };
         return { select: mockSelect };
       });
+
+      mockRpc.mockResolvedValue({ data: 'recipe-1', error: null });
 
       await service.convertToRecipe('draft-1', 'user-1', {
         title: 'Test',
@@ -394,9 +281,14 @@ describe('ScanDraftService', () => {
         instructions: ['Step 1'],
       });
 
-      // The updateDraftStatus call should pass 'ready' (not 'approved')
-      const statusUpdateArg = updateFn.mock.calls[0][0];
-      expect(statusUpdateArg).toHaveProperty('status', 'ready');
+      // Must use RPC for atomic insert + delete
+      expect(mockRpc).toHaveBeenCalledWith(
+        'convert_draft_to_recipe',
+        expect.objectContaining({ p_draft_id: 'draft-1', p_user_id: 'user-1' })
+      );
+      // Must NOT call from('recipes').insert directly
+      const recipeCalls = mockFrom.mock.calls.filter(([t]: [string]) => t === 'recipes');
+      expect(recipeCalls).toHaveLength(0);
     });
   });
 

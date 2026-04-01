@@ -1,7 +1,7 @@
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { TextInput as TextInputType } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -47,11 +47,26 @@ export default function LoginScreen() {
   const passwordRef = useRef<TextInputType>(null);
 
   async function onLogin() {
+    // On web, browser autofill may populate inputs without triggering onChangeText.
+    // Read DOM values as fallback when React state is empty.
+    let loginEmail = email;
+    let loginPassword = password;
+    if (Platform.OS === 'web' && typeof document !== 'undefined' && (!loginEmail || !loginPassword)) {
+      const emailEl = document.getElementById('email') as HTMLInputElement | null;
+      const passEl = document.getElementById('password') as HTMLInputElement | null;
+      if (emailEl?.value) loginEmail = emailEl.value;
+      if (passEl?.value) loginPassword = passEl.value;
+    }
+    const trimmedEmail = loginEmail.trim().toLowerCase();
+    if (!trimmedEmail || !loginPassword) {
+      showAlert('Login failed', 'Please enter both email and password.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
+        email: trimmedEmail,
+        password: loginPassword,
       });
       if (error) throw error;
       const target = typeof next === 'string' && next.startsWith('/') ? next : '/(tabs)';
@@ -147,6 +162,7 @@ export default function LoginScreen() {
             Email
           </Text>
           <TextInput
+            nativeID="email"
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
@@ -177,6 +193,7 @@ export default function LoginScreen() {
           </Text>
           <TextInput
             ref={passwordRef}
+            nativeID="password"
             autoCapitalize="none"
             autoComplete="password"
             placeholder="Enter your password"
@@ -186,6 +203,9 @@ export default function LoginScreen() {
             secureTextEntry
             returnKeyType="go"
             onSubmitEditing={onLogin}
+            onKeyPress={(e) => {
+              if (e.nativeEvent.key === 'Enter') onLogin();
+            }}
             style={{
               height: 48,
               backgroundColor: bgCard,

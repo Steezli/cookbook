@@ -728,7 +728,7 @@ export default function FamilyDetailScreen() {
               color: textTertiary,
             }}
           >
-            Enter their email address. They'll need a Cookbook account to receive the invite.
+            The person must already have a Cookbook account. Once invited, they can accept from their Family tab.
           </Text>
         </View>
 

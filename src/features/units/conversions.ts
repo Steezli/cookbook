@@ -7,20 +7,29 @@ import { UnitSystem } from './types';
 const VOLUME_TO_ML: Record<string, number> = {
   // US customary
   tsp: 4.92892,
+  'tsp.': 4.92892,
+  't': 4.92892,
+  't.': 4.92892,
   teaspoon: 4.92892,
   teaspoons: 4.92892,
   tbsp: 14.7868,
+  'tbsp.': 14.7868,
   tablespoon: 14.7868,
   tablespoons: 14.7868,
   'fl oz': 29.5735,
   cup: 236.588,
   cups: 236.588,
+  'c.': 236.588,
+  'c': 236.588,
   pint: 473.176,
   pints: 473.176,
+  'pt.': 473.176,
   quart: 946.353,
   quarts: 946.353,
+  'qt.': 946.353,
   gallon: 3785.41,
   gallons: 3785.41,
+  'gal.': 3785.41,
   // Metric
   ml: 1,
   milliliter: 1,
@@ -104,13 +113,56 @@ const DRY_GRAMS_PER_CUP: Record<string, number> = {
   'cocoa powder': 86,
   'cocoa': 86,
 
-  // Other dry
+  // Spices & seasonings (ground unless noted)
   'salt': 288,
+  'kosher salt': 241,
+  'sea salt': 288,
+  'black pepper': 116,
+  'pepper': 116,
+  'white pepper': 116,
+  'cardamom': 100,
+  'ground cardamom': 100,
+  'cumin': 120,
+  'ground cumin': 120,
+  'cinnamon': 125,
+  'ground cinnamon': 125,
+  'ginger': 96,
+  'ground ginger': 96,
+  'nutmeg': 112,
+  'ground nutmeg': 112,
+  'cloves': 110,
+  'ground cloves': 110,
+  'allspice': 96,
+  'ground allspice': 96,
+  'paprika': 108,
+  'smoked paprika': 108,
+  'chili powder': 120,
+  'cayenne': 90,
+  'cayenne pepper': 90,
+  'turmeric': 120,
+  'ground turmeric': 120,
+  'garlic powder': 153,
+  'onion powder': 115,
+  'oregano': 45,
+  'dried oregano': 45,
+  'basil': 40,
+  'dried basil': 40,
+  'thyme': 48,
+  'dried thyme': 48,
+  'rosemary': 55,
+  'dried rosemary': 55,
+  'parsley': 30,
+  'dried parsley': 30,
+  'curry powder': 108,
+  'mustard powder': 120,
+  'dry mustard': 120,
+
+  // Other dry
   'baking soda': 220,
   'baking powder': 230,
   'yeast': 192,
-  'cinnamon': 125,
-  'ground cinnamon': 125,
+  'dry yeast': 192,
+  'active dry yeast': 192,
 };
 
 // ---------------------------------------------------------------------------
@@ -220,6 +272,95 @@ const METRIC_WEIGHT_PREFERRED: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Canonical display units — maps every accepted variant to a single standard
+// abbreviation. Output is always one of these canonical forms.
+// ---------------------------------------------------------------------------
+const CANONICAL_UNIT: Record<string, string> = {
+  // Volume – imperial
+  tsp: 'tsp',
+  'tsp.': 'tsp',
+  t: 'tsp',
+  't.': 'tsp',
+  teaspoon: 'tsp',
+  teaspoons: 'tsp',
+  tbsp: 'tbsp',
+  'tbsp.': 'tbsp',
+  tablespoon: 'tbsp',
+  tablespoons: 'tbsp',
+  'fl oz': 'fl oz',
+  cup: 'cup',
+  cups: 'cup',
+  c: 'cup',
+  'c.': 'cup',
+  pint: 'pint',
+  pints: 'pint',
+  'pt.': 'pint',
+  quart: 'quart',
+  quarts: 'quart',
+  'qt.': 'quart',
+  gallon: 'gallon',
+  gallons: 'gallon',
+  'gal.': 'gallon',
+  // Volume – metric
+  ml: 'ml',
+  milliliter: 'ml',
+  milliliters: 'ml',
+  l: 'L',
+  liter: 'L',
+  liters: 'L',
+  // Weight – imperial
+  oz: 'oz',
+  ounce: 'oz',
+  ounces: 'oz',
+  lb: 'lb',
+  lbs: 'lb',
+  'lbs.': 'lb',
+  'lb.': 'lb',
+  pound: 'lb',
+  pounds: 'lb',
+  // Weight – metric
+  g: 'g',
+  gram: 'g',
+  grams: 'g',
+  kg: 'kg',
+  kilogram: 'kg',
+  kilograms: 'kg',
+  mg: 'mg',
+  milligram: 'mg',
+  milligrams: 'mg',
+};
+
+/** Units that have a distinct plural form (word-length units only). */
+const PLURAL_UNITS: Record<string, string> = {
+  cup: 'cups',
+  pint: 'pints',
+  quart: 'quarts',
+  gallon: 'gallons',
+};
+
+/** Resolve any unit variant to its canonical display form, pluralizing word-length units. */
+function canonicalUnit(unit: string, amount?: number): string {
+  const normalized = unit === 'T.' || unit === 'T' ? 'tbsp' : unit.toLowerCase();
+  const canonical = CANONICAL_UNIT[normalized] || unit;
+  // Pluralize word-length units when amount > 1 (standard recipe convention)
+  if (amount !== undefined && amount > 1) {
+    const plural = PLURAL_UNITS[canonical];
+    if (plural) return plural;
+  }
+  return canonical;
+}
+
+/** Units that are written without a space after the number (250g, 10ml).
+ *  Only metric abbreviations — imperial units always use a space (2 oz, 1 lb). */
+const COMPACT_UNITS = new Set(['g', 'kg', 'mg', 'ml', 'L']);
+
+/** Imperial units — these use vulgar fractions (½, ¼) instead of decimals. */
+const IMPERIAL_UNITS = new Set([
+  'tsp', 'tbsp', 'fl oz', 'cup', 'cups', 'pint', 'pints',
+  'quart', 'quarts', 'gallon', 'gallons', 'oz', 'lb',
+]);
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -278,11 +419,17 @@ export function isLiquidIngredient(ingredientName: string): boolean {
 }
 
 /**
- * Look up the grams-per-cup for a dry ingredient.
- * Returns null if no density data is available.
+ * Generic fallback density for unknown dry ingredients (g per cup).
+ * ~120g/cup is a reasonable middle ground for ground spices & powders.
  */
-function getDryGramsPerCup(ingredientName: string): number | null {
-  if (!ingredientName) return null;
+const GENERIC_DRY_GRAMS_PER_CUP = 120;
+
+/**
+ * Look up the grams-per-cup for a dry ingredient.
+ * Falls back to a generic density when `useFallback` is true.
+ */
+function getDryGramsPerCup(ingredientName: string, useFallback = false): number | null {
+  if (!ingredientName) return useFallback ? GENERIC_DRY_GRAMS_PER_CUP : null;
 
   const normalized = ingredientName
     .toLowerCase()
@@ -300,7 +447,7 @@ function getDryGramsPerCup(ingredientName: string): number | null {
     if (normalized.includes(key)) return value;
   }
 
-  return null;
+  return useFallback ? GENERIC_DRY_GRAMS_PER_CUP : null;
 }
 
 /**
@@ -310,9 +457,10 @@ function getDryGramsPerCup(ingredientName: string): number | null {
 function convertDryVolumeToGrams(
   amount: number,
   fromUnit: string,
-  ingredientName: string
+  ingredientName: string,
+  useFallback = false
 ): number | null {
-  const gramsPerCup = getDryGramsPerCup(ingredientName);
+  const gramsPerCup = getDryGramsPerCup(ingredientName, useFallback);
   if (gramsPerCup === null) return null;
 
   // Convert the amount to cups first, then multiply by grams-per-cup
@@ -366,14 +514,47 @@ export function getTargetUnit(unit: string, preference: UnitSystem): string {
   return unit;
 }
 
-export function formatAmount(num: number): string {
-  // For very small amounts, show one decimal
-  if (num > 0 && num < 1) {
-    const rounded = Math.round(num * 10) / 10;
-    if (rounded === 0) return '< 1';
-    return rounded.toString();
+/** Common fraction lookup — maps decimal to Unicode vulgar fraction. */
+const FRACTION_MAP: [number, string][] = [
+  [0.125, '⅛'],
+  [0.25,  '¼'],
+  [0.333, '⅓'],
+  [0.375, '⅜'],
+  [0.5,   '½'],
+  [0.625, '⅝'],
+  [0.667, '⅔'],
+  [0.75,  '¾'],
+  [0.875, '⅞'],
+];
+
+/**
+ * Format a numeric amount for display.
+ *
+ * @param num - The numeric amount
+ * @param useFractions - When true, use vulgar fractions (½, ¼, ¾) for imperial.
+ *                       When false (metric), round to whole numbers.
+ */
+export function formatAmount(num: number, useFractions = false): string {
+  if (num === 0) return '0';
+
+  const whole = Math.floor(num);
+  const frac = num - whole;
+
+  // Pure whole number
+  if (frac < 0.05) return Math.round(num).toString();
+  // Close enough to next whole number (e.g. 2.96)
+  if (frac > 0.95) return (whole + 1).toString();
+
+  // For imperial: try to match a common fraction
+  if (useFractions) {
+    for (const [value, symbol] of FRACTION_MAP) {
+      if (Math.abs(frac - value) < 0.03) {
+        return whole > 0 ? `${whole} ${symbol}` : symbol;
+      }
+    }
   }
-  // Round to nearest whole number for larger amounts
+
+  // No matching fraction or metric — round to whole
   return Math.round(num).toString();
 }
 
@@ -400,7 +581,8 @@ export function displayAmount(
     return safeOriginal;
   }
 
-  const normalized = unit.toLowerCase();
+  // "T." = tablespoon (uppercase), "t." = teaspoon — resolve before lowercasing
+  const normalized = unit === 'T.' || unit === 'T' ? 'tbsp' : unit.toLowerCase();
 
   if (!canConvert(normalized)) {
     return safeOriginal;
@@ -416,7 +598,8 @@ export function displayAmount(
     (preference === 'imperial' && isMetricUnit);
 
   if (!needsConversion) {
-    return safeOriginal;
+    // No conversion needed, but still standardize the display format
+    return formatStandardDisplay(amount, normalized, safeOriginal);
   }
 
   // Extract ingredient name from original text if not provided
@@ -433,17 +616,16 @@ export function displayAmount(
     if (preference === 'metric') {
       // Imperial volume → metric
       if (!liquid) {
-        // Dry ingredient: try to convert to grams
-        const grams = convertDryVolumeToGrams(amount, normalized, ingredientContext);
+        // Dry ingredient: convert to grams (use generic fallback if no exact density)
+        const grams = convertDryVolumeToGrams(amount, normalized, ingredientContext, true);
         if (grams !== null) {
-          // Use kg for large amounts
           if (grams >= 1000) {
             return formatConvertedDisplay(grams / 1000, 'kg', amount, unit, safeOriginal);
           }
           return formatConvertedDisplay(grams, 'g', amount, unit, safeOriginal);
         }
       }
-      // Liquid or unknown dry: convert to ml (original behavior)
+      // Liquid: convert to ml
       const targetUnit = getTargetUnit(normalized, preference);
       const convertedAmount = convertVolume(amount, normalized, targetUnit);
       return formatConvertedDisplay(convertedAmount, targetUnit, amount, unit, safeOriginal);
@@ -502,21 +684,42 @@ export function displayAmount(
 function extractIngredientFromText(text: string): string {
   return (text || '')
     .replace(/^[\d\s/½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+/, '')
-    .replace(/^(tsp|teaspoons?|tbsp|tablespoons?|oz|ounces?|fl oz|cups?|pints?|quarts?|gallons?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lb|pounds?)\b\s*/i, '')
+    .replace(/^(tsp\.?|teaspoons?|tbsp\.?|tablespoons?|oz\.?|ounces?|fl\.?\s*oz\.?|cups?|c\.?|pints?|pt\.?|quarts?|qt\.?|gallons?|gal\.?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lbs?\.?|pounds?|[tT]\.?)\s+/i, '')
     .trim();
 }
 
 /**
- * Format a converted display string.
- * Shows: "250 g (2 cups) flour"
+ * Format a non-converted ingredient with standardized unit display.
+ * "2 Cups flour" → "2 cups flour", "250 grams sugar" → "250g sugar"
+ */
+function formatStandardDisplay(
+  amount: number,
+  normalizedUnit: string,
+  originalText: string
+): string {
+  const ingredientName = extractIngredientFromText(originalText);
+  const displayUnit = canonicalUnit(normalizedUnit, amount);
+  const useFractions = IMPERIAL_UNITS.has(displayUnit);
+  const formattedAmount = formatAmount(amount, useFractions);
+  const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
+  return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
+}
+
+/**
+ * Format a converted display string with canonical units.
+ * Shows: "250g flour", "2 cups flour"
  */
 function formatConvertedDisplay(
   convertedAmount: number,
   targetUnit: string,
-  originalAmount: number,
-  originalUnit: string,
+  _originalAmount: number,
+  _originalUnit: string,
   originalText: string
 ): string {
   const ingredientName = extractIngredientFromText(originalText);
-  return `${formatAmount(convertedAmount)} ${targetUnit} (${originalAmount} ${originalUnit}) ${ingredientName}`.trim();
+  const displayUnit = canonicalUnit(targetUnit, convertedAmount);
+  const useFractions = IMPERIAL_UNITS.has(displayUnit);
+  const formattedAmount = formatAmount(convertedAmount, useFractions);
+  const separator = COMPACT_UNITS.has(displayUnit) ? '' : ' ';
+  return `${formattedAmount}${separator}${displayUnit} ${ingredientName}`.trim();
 }

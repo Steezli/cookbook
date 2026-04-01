@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,19 +11,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { ScanDraft, scanDraftService } from '@/lib/scan/scan-draft-service';
 import { getJobPhotos, subscribeToJob } from '@/features/scan/scan-service';
-import { getScanPhotoUrl, getScanThumbnailUrl } from '@/features/scan/scan-photos';
+import { getScanPhotoUrl } from '@/features/scan/scan-photos';
 import { useSession } from '@/features/auth/session';
 import { useBreakpoint } from '@/lib/hooks/useBreakpoint';
-import {
-  getDraftProgress,
-  getDraftDisplayStatus,
-  canSaveAll,
-  DraftDisplayStatus,
-} from '@/lib/scan/multi-draft-helpers';
 import { DraftReview } from './DraftReview';
 import { DraftEditor } from './DraftEditor';
 import {
   fontFamilyDisplay,
+  fontFamilyDisplayBold,
   fontFamilyBody,
   fontFamilyBodyMedium,
   fontFamilyBodyBold,
@@ -49,11 +44,8 @@ import {
   radiusPill,
   white,
   shadowSm,
-  shadowMd,
   noPhotoBg,
-  noPhotoIcon,
   badgeGreenBg,
-  badgeCoralBg,
   badgeYellowBg,
 } from '@/lib/tokens';
 
@@ -61,31 +53,10 @@ interface DraftListViewProps {
   jobId: string;
 }
 
-// --- Confidence helpers ---
-
-const getConfidenceColor = (confidence: number): { bg: string; text: string } => {
-  if (confidence >= 0.85) return { bg: '#DCFCE7', text: '#166534' };
-  if (confidence >= 0.65) return { bg: '#FEF9C3', text: '#854D0E' };
+const getConfidenceStyle = (confidence: number) => {
+  if (confidence >= 0.85) return { bg: badgeGreenBg, text: '#166534' };
+  if (confidence >= 0.65) return { bg: badgeYellowBg, text: '#854D0E' };
   return { bg: '#FEF2F2', text: '#991B1B' };
-};
-
-const getConfidenceLabel = (confidence: number): string => {
-  if (confidence >= 0.85) return 'High';
-  if (confidence >= 0.65) return 'Medium';
-  return 'Low';
-};
-
-// --- Display status helpers ---
-
-const getStatusStyle = (status: DraftDisplayStatus): { bg: string; text: string; label: string } => {
-  switch (status) {
-    case 'saved':
-      return { bg: badgeGreenBg, text: '#166534', label: 'Saved' };
-    case 'needs_review':
-      return { bg: badgeCoralBg, text: '#991B1B', label: 'Needs Review' };
-    case 'pending':
-      return { bg: badgeYellowBg, text: '#854D0E', label: 'Pending' };
-  }
 };
 
 export function DraftListView({ jobId }: DraftListViewProps) {
@@ -99,15 +70,16 @@ export function DraftListView({ jobId }: DraftListViewProps) {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savedDraftIds, setSavedDraftIds] = useState<Set<string>>(new Set());
+  const [initialTotal, setInitialTotal] = useState<number | null>(null);
 
-  // Batch save state
+  // Batch state
   const [batchSaving, setBatchSaving] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
-  const [batchFailures, setBatchFailures] = useState<string[]>([]);
 
   const userId = session?.user?.id;
 
-  // Load drafts and photos on mount
+  // Load drafts on mount
   useEffect(() => {
     if (!userId) return;
 
@@ -126,66 +98,30 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       try {
         setLoading(true);
         setError(null);
-
         const [draftResults, photos] = await Promise.all([
           scanDraftService.getDraftsByJobId(jobId, userId),
           getJobPhotos(jobId).catch(() => [] as string[]),
         ]);
-
         if (cancelled) return;
+        setPhotoUrls(photos.filter((u: string) => !u.startsWith('inline://')).map((u: string) => u.startsWith('http') ? u : getScanPhotoUrl(u)));
+        if (draftResults.length > 0) { setDrafts(draftResults); setInitialTotal(t => t ?? draftResults.length); setLoading(false); return; }
 
-        const urls = photos
-          .filter((u: string) => !u.startsWith('inline://'))
-          .map((photoUrl: string) => {
-            if (photoUrl.startsWith('http')) return photoUrl;
-            return getScanPhotoUrl(photoUrl);
-          });
-        setPhotoUrls(urls);
-
-        if (draftResults.length > 0) {
-          setDrafts(draftResults);
-          setLoading(false);
-          return;
-        }
-
-        timeoutId = setTimeout(() => {
-          unsubscribe();
-          if (!cancelled) {
-            setError('Processing is taking longer than expected. Please try again.');
-            setLoading(false);
-          }
-        }, 120000);
+        timeoutId = setTimeout(() => { unsubscribe(); if (!cancelled) { setError('Processing is taking longer than expected.'); setLoading(false); } }, 120000);
 
         channel = subscribeToJob(jobId, async (job) => {
           if (cancelled) return;
           if (job.status === 'completed') {
             unsubscribe();
-            try {
-              const retryDrafts = await scanDraftService.getDraftsByJobId(jobId, userId);
-              if (!cancelled) { setDrafts(retryDrafts); setLoading(false); }
-            } catch (err) {
-              if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed to load drafts'); setLoading(false); }
-            }
-          } else if (job.status === 'failed') {
-            unsubscribe();
-            if (!cancelled) { setError('Scan processing failed. Please try again.'); setLoading(false); }
-          }
+            try { const r = await scanDraftService.getDraftsByJobId(jobId, userId); if (!cancelled) { setDrafts(r); setInitialTotal(t => t ?? r.length); setLoading(false); } }
+            catch (err) { if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed'); setLoading(false); } }
+          } else if (job.status === 'failed') { unsubscribe(); if (!cancelled) { setError('Scan processing failed.'); setLoading(false); } }
         });
 
         pollIntervalId = setInterval(async () => {
           if (cancelled) return;
-          try {
-            const polledDrafts = await scanDraftService.getDraftsByJobId(jobId, userId);
-            if (polledDrafts.length > 0 && !cancelled) {
-              unsubscribe();
-              setDrafts(polledDrafts);
-              setLoading(false);
-            }
-          } catch { /* ignore */ }
+          try { const p = await scanDraftService.getDraftsByJobId(jobId, userId); if (p.length > 0 && !cancelled) { unsubscribe(); setDrafts(p); setInitialTotal(t => t ?? p.length); setLoading(false); } } catch {}
         }, 4000);
-      } catch (err) {
-        if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed to load drafts'); setLoading(false); }
-      }
+      } catch (err) { if (!cancelled) { setError(err instanceof Error ? err.message : 'Failed'); setLoading(false); } }
     };
 
     loadDrafts();
@@ -198,335 +134,276 @@ export function DraftListView({ jobId }: DraftListViewProps) {
       const updated = await scanDraftService.getDraftsByJobId(jobId, userId);
       setDrafts(updated);
       setIsEditing(false);
-      // Clamp index if a draft was removed and we're past the end
       setCurrentIndex(i => Math.min(i, Math.max(0, updated.length - 1)));
-    } catch { /* ignore */ }
+    } catch {}
   };
 
-  const handleDraftConverted = (_recipeId: string) => { refreshDrafts(); };
+  const handleDraftConverted = (recipeId: string, draftId?: string) => {
+    if (draftId) setSavedDraftIds(prev => new Set(prev).add(draftId));
+    refreshDrafts();
+  };
 
   // Batch save
   const handleSaveAll = async () => {
     if (!userId || batchSaving) return;
-    const unsavedDrafts = drafts.filter((d) => d.status !== 'ready');
-    if (unsavedDrafts.length === 0) return;
-
+    const unsaved = drafts.filter(d => !savedDraftIds.has(d.id));
+    if (unsaved.length === 0) return;
     setBatchSaving(true);
-    setBatchProgress({ current: 0, total: unsavedDrafts.length });
-    setBatchFailures([]);
-    const failures: string[] = [];
-
-    for (let i = 0; i < unsavedDrafts.length; i++) {
-      const draft = unsavedDrafts[i];
-      setBatchProgress({ current: i + 1, total: unsavedDrafts.length });
+    setBatchProgress({ current: 0, total: unsaved.length });
+    for (let i = 0; i < unsaved.length; i++) {
+      setBatchProgress({ current: i + 1, total: unsaved.length });
       try {
-        await scanDraftService.convertToRecipe(draft.id, userId, {
-          title: draft.recipe.title || `Recipe ${(draft.draftIndex ?? i) + 1}`,
-          ingredients: draft.recipe.ingredients || [],
-          instructions: draft.recipe.instructions || [],
-          prepTimeMinutes: draft.recipe.prepTimeMinutes,
-          cookTimeMinutes: draft.recipe.cookTimeMinutes,
-          servings: draft.recipe.servings,
+        await scanDraftService.convertToRecipe(unsaved[i].id, userId, {
+          title: unsaved[i].recipe.title || `Recipe ${i + 1}`,
+          ingredients: unsaved[i].recipe.ingredients || [],
+          instructions: unsaved[i].recipe.instructions || [],
+          prepTimeMinutes: unsaved[i].recipe.prepTimeMinutes,
+          cookTimeMinutes: unsaved[i].recipe.cookTimeMinutes,
+          servings: unsaved[i].recipe.servings,
           tags: [],
         });
-      } catch { failures.push(draft.id); }
+        setSavedDraftIds(prev => new Set(prev).add(unsaved[i].id));
+      } catch {}
     }
-
-    try {
-      const updated = await scanDraftService.getDraftsByJobId(jobId, userId);
-      setDrafts(updated);
-    } catch { /* ignore */ }
-
-    setBatchFailures(failures);
     setBatchSaving(false);
     setBatchProgress(null);
+    refreshDrafts();
   };
 
-  // --- Computed ---
-  const progress = getDraftProgress(drafts);
-  const showSaveAll = canSaveAll(drafts);
+  // Computed — derive progress from DB state, not ephemeral counters.
+  // initialTotal is set once on first load; saved = initialTotal - remaining drafts.
+  const total = initialTotal ?? drafts.length;
+  const saved = Math.max(0, total - drafts.length);
   const currentDraft = drafts[currentIndex] ?? null;
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < drafts.length - 1;
+  const allSaved = total > 0 && drafts.length === 0;
 
-  // --- Loading ---
+  // --- Loading / Error ---
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgPage }}>
         <ActivityIndicator size="large" color={accentBlue} />
-        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 12 }}>
-          Loading drafts...
-        </Text>
+        <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeSm, color: textSecondary, marginTop: 12 }}>Loading drafts...</Text>
       </View>
     );
   }
 
-  // --- Error ---
   if (error) {
     return (
       <View style={{ flex: 1, padding: 16, backgroundColor: bgPage }}>
         <View style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: radiusSm, padding: 20 }}>
-          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#991B1B', marginBottom: 8 }}>
-            Error Loading Drafts
-          </Text>
+          <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeLg, color: '#991B1B', marginBottom: 8 }}>Error</Text>
           <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeBase, color: '#DC2626' }}>{error}</Text>
         </View>
       </View>
     );
   }
 
-  // --- Progress Bar ---
-  const ProgressSection = () => {
-    const progressPercent = progress.total > 0 ? (progress.saved / progress.total) * 100 : 0;
+  // --- Progress bar ---
+  const ProgressBar = () => {
+    const pct = total > 0 ? (saved / total) * 100 : 0;
     return (
-      <View style={{ backgroundColor: bgCard, borderRadius: radiusMd, padding: 16, marginHorizontal: 16, ...shadowSm }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      <View style={{ backgroundColor: bgCard, borderRadius: radiusMd, padding: 16, gap: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary }}>
-            {progress.allSaved ? 'All recipes saved!' : `${progress.saved} of ${progress.total} recipes saved`}
+            {allSaved ? 'All recipes saved!' : `${saved} of ${total} recipes saved`}
           </Text>
-          {progress.allSaved && (
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓ Complete</Text>
-          )}
+          {allSaved && <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓ Complete</Text>}
         </View>
         <View style={{ height: 8, backgroundColor: borderDefault, borderRadius: 4, overflow: 'hidden' }}>
-          <View style={{ height: '100%', width: `${progressPercent}%` as `${number}%`, backgroundColor: progress.allSaved ? accentGreen : accentBlue, borderRadius: 4 }} />
+          <View style={{ height: '100%', width: `${pct}%` as any, backgroundColor: allSaved ? accentGreen : accentBlue, borderRadius: 4 }} />
         </View>
-        {showSaveAll && !progress.allSaved && (
-          <Pressable
-            onPress={handleSaveAll}
-            disabled={batchSaving}
-            style={({ pressed }) => ({
-              backgroundColor: batchSaving ? borderDefault : pressed ? '#16A34A' : accentGreen,
-              paddingVertical: 10, paddingHorizontal: 20, borderRadius: radiusSm, alignItems: 'center' as const, marginTop: 12, opacity: batchSaving ? 0.7 : 1,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>
-              {batchSaving && batchProgress ? `Saving ${batchProgress.current} of ${batchProgress.total}...` : 'Save All as Recipes'}
-            </Text>
-          </Pressable>
-        )}
-        {batchFailures.length > 0 && (
-          <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: accentCoral, marginTop: 8 }}>
-            {batchFailures.length} draft{batchFailures.length !== 1 ? 's' : ''} failed to save.
-          </Text>
-        )}
-        {progress.allSaved && (
-          <Pressable
-            onPress={() => router.replace('/scan')}
-            style={({ pressed }) => ({
-              backgroundColor: pressed ? '#16A34A' : accentGreen,
-              paddingVertical: 10, paddingHorizontal: 20, borderRadius: radiusSm, alignItems: 'center' as const, marginTop: 12,
-            })}
-          >
-            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>Back to Scans</Text>
+        {allSaved && (
+          <Pressable onPress={() => router.replace('/scan')} style={({ pressed }) => ({ backgroundColor: pressed ? '#16A34A' : accentGreen, paddingVertical: 10, borderRadius: radiusSm, alignItems: 'center' as const, marginTop: 4 })}>
+            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>Back to Scanner</Text>
           </Pressable>
         )}
       </View>
     );
   };
 
-  // --- Mobile Layout ---
+  // =========================================================================
+  // MOBILE — Card list view (Screen 4 design)
+  // =========================================================================
+
   if (isMobile) {
+    // If viewing a specific draft's detail
+    if (currentIndex >= 0 && currentDraft && (isEditing || drafts.length === 1)) {
+      if (isEditing) {
+        return (
+          <DraftEditor draft={currentDraft} onCancel={() => setIsEditing(false)} onConverted={(id) => handleDraftConverted(id, currentDraft.id)} />
+        );
+      }
+      return (
+        <View style={{ flex: 1 }}>
+          <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
+        </View>
+      );
+    }
+
+    // Card list
     return (
       <View style={{ flex: 1, backgroundColor: bgPage }}>
-        {/* Header + Progress */}
-        <View style={{ paddingTop: 16, gap: 12 }}>
-          <Text
-            style={{
-              fontFamily: fontFamilyDisplay,
-              fontSize: fontSize2xl,
-              color: textPrimary,
-              textAlign: 'center',
-            }}
-          >
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}>
+          {/* Header */}
+          <Text style={{ fontFamily: fontFamilyDisplayBold, fontSize: fontSize2xl, color: textPrimary, textAlign: 'center' }}>
             {drafts.length} Recipe{drafts.length !== 1 ? 's' : ''} Found
           </Text>
-          <ProgressSection />
-        </View>
 
-        {/* Draft navigation */}
-        {drafts.length > 1 && (
-          <View style={{ marginTop: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8 }}>
-              <Pressable
-                onPress={() => { setCurrentIndex(i => Math.max(0, i - 1)); setIsEditing(false); }}
-                disabled={!canGoPrev}
-                style={{ opacity: canGoPrev ? 1 : 0.25, padding: 8 }}
-                hitSlop={8}
-              >
-                <ChevronLeft size={24} color={accentBlue} />
-              </Pressable>
+          <ProgressBar />
 
-              <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textSecondary }}>
-                Recipe {currentIndex + 1} of {drafts.length}
+          {/* Draft cards */}
+          {drafts.map((draft, index) => {
+            const isSaved = savedDraftIds.has(draft.id);
+            const confidence = Math.round(draft.overallConfidence.score * 100);
+            const confStyle = getConfidenceStyle(draft.overallConfidence.score);
+            const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
+            const ingredientCount = draft.recipe.ingredients?.length ?? 0;
+            const stepCount = draft.recipe.instructions?.length ?? 0;
+
+            return (
+              <View key={draft.id} style={{ backgroundColor: bgCard, borderRadius: 14, padding: 16, gap: 10 }}>
+                {/* Title + confidence */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeBase, color: textPrimary, flex: 1, marginRight: 8 }}>
+                    {title}
+                  </Text>
+                  <View style={{ backgroundColor: confStyle.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill }}>
+                    <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confStyle.text }}>{confidence}%</Text>
+                  </View>
+                </View>
+
+                {/* Meta */}
+                <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textSecondary }}>
+                  {draft.recipe.category || 'Recipe'} · {ingredientCount} ingredients · {stepCount} steps
+                </Text>
+
+                {/* Action row */}
+                {isSaved ? (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ backgroundColor: badgeGreenBg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radiusPill }}>
+                        <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓ Saved</Text>
+                      </View>
+                    </View>
+                    <Pressable onPress={() => { /* TODO: navigate to recipe */ }}>
+                      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: accentBlue }}>View Recipe →</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => { setCurrentIndex(index); }}
+                    style={{ backgroundColor: accentBlue, paddingVertical: 10, borderRadius: 8, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>Review & Save</Text>
+                  </Pressable>
+                )}
+              </View>
+            );
+          })}
+
+          {/* Save All button */}
+          {!allSaved && drafts.length > 1 && (
+            <Pressable
+              onPress={handleSaveAll}
+              disabled={batchSaving}
+              style={({ pressed }) => ({
+                backgroundColor: batchSaving ? borderDefault : pressed ? '#16A34A' : accentGreen,
+                paddingVertical: 14, borderRadius: radiusMd, alignItems: 'center' as const, opacity: batchSaving ? 0.7 : 1,
+              })}
+            >
+              <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeBase, color: white }}>
+                {batchSaving && batchProgress ? `Saving ${batchProgress.current} of ${batchProgress.total}...` : 'Save All as Recipes'}
               </Text>
-
-              <Pressable
-                onPress={() => { setCurrentIndex(i => Math.min(drafts.length - 1, i + 1)); setIsEditing(false); }}
-                disabled={!canGoNext}
-                style={{ opacity: canGoNext ? 1 : 0.25, padding: 8 }}
-                hitSlop={8}
-              >
-                <ChevronRight size={24} color={accentBlue} />
-              </Pressable>
-            </View>
-
-            {/* Dot indicators */}
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
-              {drafts.map((_, i) => (
-                <Pressable key={i} onPress={() => { setCurrentIndex(i); setIsEditing(false); }}>
-                  <View
-                    style={{
-                      width: i === currentIndex ? 20 : 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: i === currentIndex ? accentBlue : borderDefault,
-                    }}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Draft detail */}
-        <View style={{ flex: 1, marginTop: 12 }}>
-          {currentDraft && (
-            isEditing ? (
-              <DraftEditor
-                draft={currentDraft}
-                onCancel={() => setIsEditing(false)}
-                onConverted={handleDraftConverted}
-              />
-            ) : (
-              <DraftReview
-                draft={currentDraft}
-                onEdit={() => setIsEditing(true)}
-                onDraftSaved={() => refreshDrafts()}
-                onDiscarded={() => refreshDrafts()}
-              />
-            )
+            </Pressable>
           )}
-        </View>
+        </ScrollView>
       </View>
     );
   }
 
-  // --- Tablet / Web Layout — two-panel: recipe content (primary) + context sidebar ---
+  // =========================================================================
+  // WEB / TABLET — Two-panel: recipe content left, card sidebar right
+  // =========================================================================
+
   return (
     <View style={{ flex: 1, backgroundColor: bgPage, flexDirection: 'row' }}>
-      {/* LEFT PANEL — Primary: recipe content (scrollable) */}
+      {/* LEFT: Recipe detail */}
       <View style={{ flex: 1, minWidth: 0 }}>
         {currentDraft && (
           isEditing ? (
-            <DraftEditor
-              draft={currentDraft}
-              onCancel={() => setIsEditing(false)}
-              onConverted={handleDraftConverted}
-            />
+            <DraftEditor draft={currentDraft} onCancel={() => setIsEditing(false)} onConverted={(id) => handleDraftConverted(id, currentDraft.id)} />
           ) : (
-            <DraftReview
-              draft={currentDraft}
-              onEdit={() => setIsEditing(true)}
-              onDraftSaved={() => refreshDrafts()}
-              onDiscarded={() => refreshDrafts()}
-            />
+            <DraftReview draft={currentDraft} onEdit={() => setIsEditing(true)} onDraftSaved={() => { setSavedDraftIds(prev => new Set(prev).add(currentDraft.id)); refreshDrafts(); }} onDiscarded={() => refreshDrafts()} />
           )
         )}
       </View>
 
-      {/* RIGHT PANEL — Context sidebar: nav, photos, progress, actions */}
+      {/* RIGHT: Draft card sidebar */}
       <ScrollView
-        style={{
-          width: 320,
-          maxWidth: 320,
-          flexShrink: 0,
-          borderLeftWidth: 1,
-          borderLeftColor: borderSubtle,
-          backgroundColor: bgCard,
-        }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 20 }}
+        style={{ width: 320, maxWidth: 320, flexShrink: 0, borderLeftWidth: 1, borderLeftColor: borderSubtle, backgroundColor: bgCard }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 16 }}
       >
-        {/* Title + count */}
-        <Text style={{ fontFamily: fontFamilyDisplay, fontSize: fontSizeXl, color: textPrimary }}>
+        <Text style={{ fontFamily: fontFamilyDisplayBold, fontSize: fontSizeXl, color: textPrimary }}>
           {drafts.length} Recipe{drafts.length !== 1 ? 's' : ''} Found
         </Text>
 
-        {/* Progress */}
-        <ProgressSection />
+        <ProgressBar />
 
-        {/* Draft list cards */}
-        {drafts.length > 1 && (
-          <View style={{ gap: 8 }}>
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
-              Drafts
-            </Text>
-            {drafts.map((draft, index) => {
-              const displayStatus = getDraftDisplayStatus(draft);
-              const statusStyle = getStatusStyle(displayStatus);
-              const confidenceColor = getConfidenceColor(draft.overallConfidence.score);
-              const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
-              const isSelected = currentIndex === index;
-              const ingredientCount = draft.recipe.ingredients?.length ?? 0;
-              return (
-                <Pressable
-                  key={draft.id}
-                  onPress={() => { setCurrentIndex(index); setIsEditing(false); }}
-                  style={({ pressed }) => ({
-                    backgroundColor: isSelected ? white : 'transparent',
-                    borderWidth: isSelected ? 2 : 1,
-                    borderColor: isSelected ? accentBlue : borderDefault,
-                    borderRadius: radiusSm,
-                    padding: 12,
-                    opacity: pressed ? 0.85 : 1,
-                  })}
-                >
-                  <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: textPrimary, marginBottom: 4 }}>
-                    {title}
-                  </Text>
-                  <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary, marginBottom: 6 }}>
-                    {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
-                      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: statusStyle.text }}>{statusStyle.label}</Text>
-                    </View>
-                    <View style={{ backgroundColor: confidenceColor.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
-                      <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confidenceColor.text }}>
-                        {Math.round(draft.overallConfidence.score * 100)}%
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
+        {/* Draft cards */}
+        {drafts.map((draft, index) => {
+          const isSelected = currentIndex === index;
+          const isSaved = savedDraftIds.has(draft.id);
+          const confidence = Math.round(draft.overallConfidence.score * 100);
+          const confStyle = getConfidenceStyle(draft.overallConfidence.score);
+          const title = draft.recipe.title || `Recipe ${(draft.draftIndex ?? index) + 1}`;
 
-        {/* Source photos */}
-        {photoUrls.length > 0 && (
-          <View style={{ gap: 8 }}>
-            <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textSecondary }}>
-              Source Photos
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {photoUrls.map((url, index) => (
-                <View
-                  key={index}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: radiusSm / 2,
-                    overflow: 'hidden',
-                    borderWidth: 1,
-                    borderColor: borderDefault,
-                  }}
-                >
-                  <View style={{ width: '100%', height: '100%', backgroundColor: noPhotoBg }} />
+          return (
+            <Pressable
+              key={draft.id}
+              onPress={() => { setCurrentIndex(index); setIsEditing(false); }}
+              style={({ pressed }) => ({
+                backgroundColor: isSelected ? white : 'transparent',
+                borderWidth: isSelected ? 2 : 1,
+                borderColor: isSelected ? accentBlue : borderDefault,
+                borderRadius: 14,
+                padding: 14,
+                gap: 8,
+                opacity: pressed ? 0.85 : 1,
+              })}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text numberOfLines={1} style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeSm, color: textPrimary, flex: 1, marginRight: 8 }}>{title}</Text>
+                <View style={{ backgroundColor: confStyle.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                  <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: confStyle.text }}>{confidence}%</Text>
                 </View>
-              ))}
-            </View>
-          </View>
+              </View>
+              <Text style={{ fontFamily: fontFamilyBody, fontSize: fontSizeXs, color: textTertiary }}>
+                {draft.recipe.ingredients?.length ?? 0} ingredients · {draft.recipe.instructions?.length ?? 0} steps
+              </Text>
+              {isSaved ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ backgroundColor: badgeGreenBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radiusPill }}>
+                    <Text style={{ fontFamily: fontFamilyBodyMedium, fontSize: fontSizeXs, color: '#166534' }}>✓ Saved</Text>
+                  </View>
+                </View>
+              ) : (
+                <Pressable onPress={() => { setCurrentIndex(index); }} style={{ backgroundColor: accentBlue, paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}>
+                  <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeXs, color: white }}>Review & Save</Text>
+                </Pressable>
+              )}
+            </Pressable>
+          );
+        })}
+
+        {!allSaved && drafts.length > 1 && (
+          <Pressable onPress={handleSaveAll} disabled={batchSaving} style={({ pressed }) => ({
+            backgroundColor: batchSaving ? borderDefault : pressed ? '#16A34A' : accentGreen,
+            paddingVertical: 12, borderRadius: radiusSm, alignItems: 'center' as const,
+          })}>
+            <Text style={{ fontFamily: fontFamilyBodyBold, fontSize: fontSizeSm, color: white }}>
+              {batchSaving && batchProgress ? `Saving ${batchProgress.current}/${batchProgress.total}...` : 'Save All'}
+            </Text>
+          </Pressable>
         )}
       </ScrollView>
     </View>

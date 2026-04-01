@@ -4,6 +4,8 @@
 module.exports = {
   default: {
     presentPaywallIfNeeded: async () => 'NOT_PRESENTED',
+    presentPaywall: async () => 'NOT_PRESENTED',
+    presentCustomerCenter: async () => {},
   },
   PAYWALL_RESULT: {
     NOT_PRESENTED: 'NOT_PRESENTED',

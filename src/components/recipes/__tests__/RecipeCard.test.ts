@@ -18,8 +18,8 @@ describe('formatMetadataLine', () => {
     expect(formatMetadataLine(0, 0, 4)).toBe('4 servings');
   });
 
-  it('returns "45 min . 6 servings" when both time and servings are present', () => {
-    expect(formatMetadataLine(15, 30, 6)).toBe('45 min . 6 servings');
+  it('returns "45 min · 6 servings" when both time and servings are present', () => {
+    expect(formatMetadataLine(15, 30, 6)).toBe('45 min · 6 servings');
   });
 
   it('returns "" when all values are null', () => {
