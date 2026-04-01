@@ -1,0 +1,44 @@
+# Claude Code
+.claude/
+.claude-worktrees/
+
+# GSD / planning
+.gsd/
+.planning/
+.intent/
+.bg-shell/
+
+# Design files
+cookbook.pen
+
+# Supabase (not needed in app bundle)
+supabase/
+
+# Docs
+docs/
+images/
+README.md
+CLAUDE.md
+
+# Tests
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+__mocks__/
+jest.config.*
+coverage/
+
+# Scripts
+scripts/
+
+# E2E artifacts
+e2e-test.mjs
+.env.test
+
+# Misc
+.DS_Store
+*.log
+*.md
+!app.config.ts
