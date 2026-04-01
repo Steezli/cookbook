@@ -109,7 +109,8 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
     const loadDraft = async () => {
       try {
         setLoading(true);
-        const userId = session!.user.id;
+        const userId = session?.user?.id;
+        if (!userId) { setError('Not authenticated'); return; }
         const draftData = await scanDraftService.getDraftByJobId(draftId!, userId);
 
         if (!draftData) {
@@ -142,7 +143,8 @@ export function DraftEditor({ draft: draftProp, draftId, onSave, onCancel, onCon
       setSaving(true);
       setAutoSaveStatus('saving');
 
-      const userId = session!.user.id;
+      const userId = session?.user?.id;
+      if (!userId) return;
       await scanDraftService.updateDraftRecipe(draft.id, userId, recipeToSave);
 
       setLastSaved(new Date());

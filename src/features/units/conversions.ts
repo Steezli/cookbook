@@ -7,20 +7,28 @@ import { UnitSystem } from './types';
 const VOLUME_TO_ML: Record<string, number> = {
   // US customary
   tsp: 4.92892,
+  'tsp.': 4.92892,
+  't.': 4.92892,
   teaspoon: 4.92892,
   teaspoons: 4.92892,
   tbsp: 14.7868,
+  'tbsp.': 14.7868,
   tablespoon: 14.7868,
   tablespoons: 14.7868,
   'fl oz': 29.5735,
   cup: 236.588,
   cups: 236.588,
+  'c.': 236.588,
+  'c': 236.588,
   pint: 473.176,
   pints: 473.176,
+  'pt.': 473.176,
   quart: 946.353,
   quarts: 946.353,
+  'qt.': 946.353,
   gallon: 3785.41,
   gallons: 3785.41,
+  'gal.': 3785.41,
   // Metric
   ml: 1,
   milliliter: 1,
@@ -400,7 +408,8 @@ export function displayAmount(
     return safeOriginal;
   }
 
-  const normalized = unit.toLowerCase();
+  // "T." = tablespoon (uppercase), "t." = teaspoon — resolve before lowercasing
+  const normalized = unit === 'T.' || unit === 'T' ? 'tbsp' : unit.toLowerCase();
 
   if (!canConvert(normalized)) {
     return safeOriginal;
@@ -502,7 +511,7 @@ export function displayAmount(
 function extractIngredientFromText(text: string): string {
   return (text || '')
     .replace(/^[\d\s/½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+/, '')
-    .replace(/^(tsp|teaspoons?|tbsp|tablespoons?|oz|ounces?|fl oz|cups?|pints?|quarts?|gallons?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lb|pounds?)\b\s*/i, '')
+    .replace(/^(tsp\.?|teaspoons?|tbsp\.?|tablespoons?|oz\.?|ounces?|fl\.?\s*oz\.?|cups?|c\.?|pints?|pt\.?|quarts?|qt\.?|gallons?|gal\.?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lbs?\.?|pounds?|[tT]\.)\s*/i, '')
     .trim();
 }
 

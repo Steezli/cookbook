@@ -443,7 +443,7 @@ export class ScanDraftService {
         throw new Error('No data returned from recipe creation')
       }
 
-      await this.updateDraftStatus(draftId, userId, 'ready')
+      await this.deleteDraft(draftId, userId)
 
       return { recipeId: data.id }
 

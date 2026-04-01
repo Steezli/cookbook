@@ -119,10 +119,10 @@ describe('ScanDraftService', () => {
       const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
       const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
 
-      // Mock update chain for status update: from('scan_drafts').update(...).eq(...).eq(...)
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
+      // Mock delete chain for draft deletion: from('scan_drafts').delete().eq(...).eq(...)
+      const deleteEq2 = jest.fn().mockResolvedValue({ error: null });
+      const deleteEq1 = jest.fn().mockReturnValue({ eq: deleteEq2 });
+      const deleteFn = jest.fn().mockReturnValue({ eq: deleteEq1 });
 
       let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
@@ -132,8 +132,8 @@ describe('ScanDraftService', () => {
             // First call: getDraft
             return { select: draftSelect };
           } else {
-            // Second call: updateDraftStatus
-            return { update: updateFn };
+            // Second call: deleteDraft
+            return { delete: deleteFn };
           }
         }
         if (table === 'recipes') {
@@ -217,9 +217,9 @@ describe('ScanDraftService', () => {
       const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
       const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
 
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
+      const deleteEq2 = jest.fn().mockResolvedValue({ error: null });
+      const deleteEq1 = jest.fn().mockReturnValue({ eq: deleteEq2 });
+      const deleteFn = jest.fn().mockReturnValue({ eq: deleteEq1 });
 
       let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
@@ -228,7 +228,7 @@ describe('ScanDraftService', () => {
           if (callCount <= 1) {
             return { select: draftSelect };
           } else {
-            return { update: updateFn };
+            return { delete: deleteFn };
           }
         }
         if (table === 'recipes') {
@@ -337,8 +337,8 @@ describe('ScanDraftService', () => {
     });
   });
 
-  describe('convertToRecipe status value', () => {
-    it('calls updateDraftStatus with "ready" (not "approved")', async () => {
+  describe('convertToRecipe deletes draft after creating recipe', () => {
+    it('calls deleteDraft (not updateDraftStatus) after recipe creation', async () => {
       // Mock getDraft chain
       const draftSingle = jest.fn().mockResolvedValue({
         data: {
@@ -368,9 +368,9 @@ describe('ScanDraftService', () => {
       const recipeSelect = jest.fn().mockReturnValue({ single: recipeSingle });
       const recipeInsert = jest.fn().mockReturnValue({ select: recipeSelect });
 
-      const updateEq2 = jest.fn().mockResolvedValue({ error: null });
-      const updateEq1 = jest.fn().mockReturnValue({ eq: updateEq2 });
-      const updateFn = jest.fn().mockReturnValue({ eq: updateEq1 });
+      const deleteEq2 = jest.fn().mockResolvedValue({ error: null });
+      const deleteEq1 = jest.fn().mockReturnValue({ eq: deleteEq2 });
+      const deleteFn = jest.fn().mockReturnValue({ eq: deleteEq1 });
 
       let callCount = 0;
       mockFrom.mockImplementation((table: string) => {
@@ -379,7 +379,7 @@ describe('ScanDraftService', () => {
           if (callCount <= 1) {
             return { select: draftSelect };
           } else {
-            return { update: updateFn };
+            return { delete: deleteFn };
           }
         }
         if (table === 'recipes') {
@@ -394,9 +394,10 @@ describe('ScanDraftService', () => {
         instructions: ['Step 1'],
       });
 
-      // The updateDraftStatus call should pass 'ready' (not 'approved')
-      const statusUpdateArg = updateFn.mock.calls[0][0];
-      expect(statusUpdateArg).toHaveProperty('status', 'ready');
+      // After creating the recipe, the draft should be deleted (not status-updated)
+      expect(deleteFn).toHaveBeenCalled();
+      expect(deleteEq1).toHaveBeenCalledWith('id', 'draft-1');
+      expect(deleteEq2).toHaveBeenCalledWith('user_id', 'user-1');
     });
   });
 

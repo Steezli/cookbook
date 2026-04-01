@@ -4,7 +4,7 @@ import { X, Check, RefreshCw } from 'lucide-react-native';
 import { showAlert } from '@/lib/alert';
 import { useSubscription } from '@/features/subscriptions/SubscriptionContext';
 import { useSession } from '@/features/auth/session';
-import { ENTITLEMENT_ID } from '@/features/subscriptions/constants';
+import { OFFERING_ID, PACKAGE_ID } from '@/features/subscriptions/constants';
 import {
   fontFamilyDisplay,
   fontFamilyBody,
@@ -48,32 +48,32 @@ export function PaywallPlaceholder({ visible, onDismiss }: PaywallPlaceholderPro
   async function handleSubscribe() {
     if (Platform.OS !== 'web') {
       try {
-        const mod = await import('react-native-purchases-ui').catch(() => null);
+        const mod = await import('react-native-purchases').catch(() => null);
         if (!mod) {
-          console.warn('[Paywall] RevenueCatUI unavailable — using alert fallback');
-          showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
+          showAlert('Error', 'Purchase module is not available.');
           return;
         }
-        const RevenueCatUI = mod.default;
-        const { PAYWALL_RESULT } = mod;
-        const result = await RevenueCatUI.presentPaywallIfNeeded({
-          requiredEntitlementIdentifier: ENTITLEMENT_ID,
-        });
-
-        switch (result) {
-          case PAYWALL_RESULT.PURCHASED:
-          case PAYWALL_RESULT.RESTORED:
-            await refreshSubscription();
-            onDismiss();
-            break;
-          case PAYWALL_RESULT.ERROR:
-            showAlert('Error', 'Something went wrong. Please try again.');
-            break;
-          // CANCELLED / NOT_PRESENTED — do nothing, paywall stays open
+        const Purchases = mod.default;
+        const offerings = await Purchases.getOfferings();
+        const offering = offerings.current ?? offerings.all[OFFERING_ID];
+        if (!offering) {
+          showAlert('Error', 'No subscription offering found. Please try again later.');
+          return;
         }
-      } catch {
-        console.warn('[Paywall] RevenueCatUI unavailable — using alert fallback');
-        showAlert('Subscribe', 'Please visit Settings > Subscriptions to manage your subscription.');
+        const pkg = offering.availablePackages.find((p: any) => p.identifier === `$rc_${PACKAGE_ID}`)
+          ?? offering.availablePackages[0];
+        if (!pkg) {
+          showAlert('Error', 'No subscription package found. Please try again later.');
+          return;
+        }
+        await Purchases.purchasePackage(pkg);
+        await refreshSubscription();
+        onDismiss();
+      } catch (err: any) {
+        // RevenueCat uses userCancelled flag when the user dismisses the StoreKit sheet
+        if (err?.userCancelled) return;
+        console.warn('[Paywall] purchase failed:', err instanceof Error ? err.message : String(err));
+        showAlert('Purchase Failed', 'Something went wrong. Please try again.');
       }
     } else {
       try {
@@ -84,7 +84,6 @@ export function PaywallPlaceholder({ visible, onDismiss }: PaywallPlaceholderPro
           await refreshSubscription();
           onDismiss();
         }
-        // result === null means UserCancelledError — do nothing (silent)
       } catch (err) {
         showAlert('Subscription Error', 'Could not complete checkout. Please try again.');
       }

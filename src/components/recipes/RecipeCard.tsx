@@ -117,6 +117,7 @@ export function RecipeCard({ recipe, thumbnailUrl, onPress, style }: RecipeCardP
         {/* Metadata line */}
         {metadataLine ? (
           <Text
+            numberOfLines={1}
             style={{
               fontFamily: fontFamilyBody,
               fontSize: fontSizeSm,

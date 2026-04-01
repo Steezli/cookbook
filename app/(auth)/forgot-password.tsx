@@ -33,6 +33,10 @@ export default function ForgotPasswordScreen() {
   const [isSent, setIsSent] = useState(false);
 
   async function onSubmit() {
+    if (!email.trim()) {
+      showAlert('Email required', 'Please enter your email address.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const redirectTo = Linking.createURL('/(auth)/reset-password');

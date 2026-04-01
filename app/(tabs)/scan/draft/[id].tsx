@@ -87,7 +87,9 @@ export default function DraftReviewScreen() {
 
   const userId = session?.user?.id;
 
-  const containerStyle = Platform.OS !== 'web' ? { paddingTop: 0 } : undefined;
+  const containerStyle = Platform.OS !== 'web'
+    ? { paddingTop: 0, paddingHorizontal: 0 }
+    : { paddingHorizontal: 0 };
 
   // Elapsed time ticker
   useEffect(() => {
