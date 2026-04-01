@@ -8,6 +8,7 @@ const VOLUME_TO_ML: Record<string, number> = {
   // US customary
   tsp: 4.92892,
   'tsp.': 4.92892,
+  't': 4.92892,
   't.': 4.92892,
   teaspoon: 4.92892,
   teaspoons: 4.92892,
@@ -235,6 +236,7 @@ const CANONICAL_UNIT: Record<string, string> = {
   // Volume – imperial
   tsp: 'tsp',
   'tsp.': 'tsp',
+  t: 'tsp',
   't.': 'tsp',
   teaspoon: 'tsp',
   teaspoons: 'tsp',
@@ -633,7 +635,7 @@ export function displayAmount(
 function extractIngredientFromText(text: string): string {
   return (text || '')
     .replace(/^[\d\s/½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞.]+/, '')
-    .replace(/^(tsp\.?|teaspoons?|tbsp\.?|tablespoons?|oz\.?|ounces?|fl\.?\s*oz\.?|cups?|c\.?|pints?|pt\.?|quarts?|qt\.?|gallons?|gal\.?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lbs?\.?|pounds?|[tT]\.)\s*/i, '')
+    .replace(/^(tsp\.?|teaspoons?|tbsp\.?|tablespoons?|oz\.?|ounces?|fl\.?\s*oz\.?|cups?|c\.?|pints?|pt\.?|quarts?|qt\.?|gallons?|gal\.?|ml|milliliters?|l|liters?|g|grams?|kg|kilograms?|lbs?\.?|pounds?|[tT]\.?)\s+/i, '')
     .trim();
 }
 
